@@ -11,7 +11,7 @@
             </li>    
            
             <li>
-                <a href="notulen">
+                <a href="notulen.php">
                     <i class="fa fa-files-o"></i>
                     <span>Notulen Rapat</span>
                 </a>

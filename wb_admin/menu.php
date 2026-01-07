@@ -81,7 +81,7 @@
                     <span>Informasi</span> <b class="caret"></b>
                 </a>
                  <ul class="submenu">
-                    <li><a href="informasi">Informasi</a></li>
+                    <li><a href="index.php?page=informasi">Informasi</a></li>
                 </ul>
             </li>  			
 			
@@ -95,10 +95,6 @@
                     <li><a href="index.php?page=kepsekdprd">Keputusan_Sekretaris_DPRD</a></li>
                 </ul>
             </li>  
-			
-			
-			
-			
 
             <li>
                 <a class="dropdown-toggle" href="#">              

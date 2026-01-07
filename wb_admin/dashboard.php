@@ -69,7 +69,7 @@ ol, ul {
         </li></a>
       
       
-        <a href='notulen'><li>
+        <a href='index.php?page=notulen'><li>
           <span class="" aria-hidden="true"></span>
 		   <img src="images/notulen.png" width="120" height="120"></img>
           <span class="glyphicon-class">Produk Hukum</span>
@@ -105,7 +105,7 @@ ol, ul {
           <span class="glyphicon-class">Dashboard</span>
         </li></a>
       
-        <a href='notulen'><li>
+        <a href='notulen.php'><li>
           <span class="glyphicon glyphicon-paste" aria-hidden="true"></span>
           <span class="glyphicon-class">Notulen Rapat</span>
         </li></a>

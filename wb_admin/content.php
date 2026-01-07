@@ -96,6 +96,12 @@ if(!isset($_SESSION['login']) || !isset($_SESSION['level'])) {
                 case 'account':
                     include "account.php";
                     break;
+                case 'ruang':
+                    include "ruang.php";
+                    break;
+                case 'notulen':
+                    include "notulen.php";
+                    break;
                 default:
                     include "dashboard.php";
                     break;
