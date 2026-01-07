@@ -1,0 +1,19 @@
+# Blok akses langsung ke file .php di dalam folder ini
+<FilesMatch "\.(php|php5|php7|phtml)$">
+    Order deny,allow
+    Deny from all
+</FilesMatch>
+
+# Cegah listing isi folder
+Options -Indexes
+
+# Hanya izinkan akses file tertentu (PDF, JPG, PNG)
+<FilesMatch "\.(pdf|jpg|jpeg|png)$">
+    Order allow,deny
+    Allow from all
+</FilesMatch>
+
+# Cegah eksekusi script (jaga-jaga kalau ada upload .htaccess jahat)
+RemoveHandler .php .phtml .php3 .php4 .php5 .php7
+RemoveType .php .phtml .php3 .php4 .php5 .php7
+php_flag engine off
