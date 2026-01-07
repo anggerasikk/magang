@@ -70,8 +70,8 @@
                     <span>Produk_Hukum</span> <b class="caret"></b>
                 </a>
                  <ul class="submenu">
-                    <li><a href="kepdprd.php">Keputusan_DPRD</a></li>
-                    <li><a href="kepsekdprd.php">Keputusan_Sekretaris_DPRD</a></li>
+                    <li><a href="index.php?page=kepdprd">Keputusan_DPRD</a></li>
+                    <li><a href="index.php?page=kepsekdprd">Keputusan_Sekretaris_DPRD</a></li>
                 </ul>
             </li>  
 
@@ -91,8 +91,8 @@
                     <span>Monografi</span> <b class="caret"></b>
                 </a>
                  <ul class="submenu">
-                    <li><a href="prokum">Keputusan_DPRD</a></li>
-                    <li><a href="index.php?page=user&stat=3">Keputusan_Sekretaris_DPRD</a></li>
+                    <li><a href="index.php?page=kepdprd">Keputusan_DPRD</a></li>
+                    <li><a href="index.php?page=kepsekdprd">Keputusan_Sekretaris_DPRD</a></li>
                 </ul>
             </li>  
 			

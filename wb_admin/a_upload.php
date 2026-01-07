@@ -77,7 +77,7 @@ if (
     move_uploaded_file($_FILES['image']['tmp_name'], $image_path)
 ) {
     // Simpan ke DB
-    $stmt = $conn->prepare("INSERT INTO uploads (
+    $stmt = $koneksi->prepare("INSERT INTO uploads (
         tahun_pengundangan, tanggal_pengundangan, tanggal_penetapan, jenis, noPeraturan, judul, singkatanJenis, tempatTerbit, sumber, status, bahasa, operasi, display, noPanggil, penerbit, subjek, isbn, bidangHukum, nomorIndukBuku, urlDetailPeraturan, teuBadan, deskripsiFisik,
         fileDownload, pdf_path, urlDownload, image_name, image_path, uploaded_at
     ) VALUES (
