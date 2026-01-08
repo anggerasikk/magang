@@ -89,7 +89,7 @@ if(!isset($_SESSION['login']) || !isset($_SESSION['level'])) {
                     break;
                 case 'tambahprokum':
                     include "a_tambah_prokum.php";
-                    break;
+                    break; 
                 case 'user':
                     include "user.php";
                     break;
