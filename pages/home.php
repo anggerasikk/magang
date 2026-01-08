@@ -26,7 +26,48 @@
 TemplateMo 590 topic listing
 
 https://templatemo.com/tm-590-topic-listing
-
+    <?php
+            // SISTEM ROUTING UNTUK MENAMPILKAN HALAMAN BERDASARKAN PARAMETER GET
+            $page = isset($_GET['page']) ? $_GET['page'] : '';
+            
+            switch($page) {
+                case 'Beranda': 
+                    include "home.php"; 
+                case 'struktur-organisasi':
+                    include "struktur-organisasi.php";
+                    break;
+                case 'Profil-JDIH':
+                    include "profil-jdih.php"; 
+                    break;
+                case 'alur-pengelolaan':
+                    include "alur-pengelolaan.php"; 
+                    break;
+                case 'sop-pengelola':
+                    include "sop-pengelola.php"; 
+                    break;
+                case 'dasar-hukum':
+                    include "dasar-hukum.php";
+                    break;
+           
+                case 'visi-misi':           
+                    include "visi-misi.php"; 
+                    break;
+                case 'video-profile':
+                    include "video-profile.php";
+                    break;
+                default:
+                    include "home_content.php";
+                case 'keputusan-dprd':
+                    include "keputusan-dprd.php";
+                    break;
+                case 'keputusan-pimpinan':
+                    include "keputusan-pimpinan.php";
+                    break;
+                case 'keputusan-sekretariat':
+                    include "keputusan-sekretariat.php";
+                    break;
+            }
+            ?>
 -->
     </head>
     
@@ -34,73 +75,116 @@ https://templatemo.com/tm-590-topic-listing
 
         <main>
 
-            <nav class="navbar navbar-expand-lg">
-                <div class="container">
-                    <a class="navbar-brand" href="index.html">
-                        <i class="bi-back"></i>
-                        <span>JDIH DPRD</span>
-                    </a>
+            <nav class="navbar navbar-expand-lg fixed-top navbar-custom">
+        <div class="container">
 
-                    <div class="d-lg-none ms-auto me-4">
-                        <a href="#top" class="navbar-icon bi-person smoothscroll"></a>
-                    </div>
-    
-                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                        <span class="navbar-toggler-icon"></span>
-                    </button>
-    
-                    <div class="collapse navbar-collapse" id="navbarNav">
-                        <ul class="navbar-nav ms-lg-5 me-lg-auto">
-                            <li class="nav-item">
-                                <a class="nav-link click-scroll" href="/">Beranda</a>
-                            </li>
+            <!-- BRAND -->
+            <a class="navbar-brand d-flex align-items-center" href="home.php">
+                <span class="fw-bold">JDIH DPRD</span>
+            </a>
 
-                            <li class="nav-item">
-                                <a  href="?page=tentang" class="nav-link click">Tentang</a>
-                            </li>
-    
-	                        <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" id="navbarLightDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">Perpu</a>
+            <!-- TOGGLER -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarNav" aria-controls="navbarNav"
+                aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
 
-                                <ul class="dropdown-menu dropdown-menu-light" aria-labelledby="navbarLightDropdownMenuLink">
-                                    <li><a class="dropdown-item" href="?page=perpu">Keputusan DPRD</a></li>
+            <!-- MENU -->
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mx-auto mb-2 mb-lg-0 gap-lg-2">
 
-                                    <li><a class="dropdown-item" href="?page=perpusekdprd">Keputusan Sekretaris DPRD</a></li>
-                                </ul>
-                            </li>
-							
-							<li class="nav-item">
-                               <a  href="?page=monografi" class="nav-link click">Monografi</a>
-                            </li>
-							
-							<li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" id="navbarLightDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">Yurisprudensi</a>
+                    <li class="nav-item">
+                        <a class="nav-link" href="home.php?page=home">Beranda</a>
+                    </li>
 
-                                <ul class="dropdown-menu dropdown-menu-light" aria-labelledby="navbarLightDropdownMenuLink">
-                                    <li><a class="dropdown-item" href="topics-listing.html">Artikel Hukum</a></li>
-
-                                    <li><a class="dropdown-item" href="?page=informasi">Informasi</a></li>
-                                </ul>
-                            </li>
-
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" id="navbarLightDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">Kontak &Saran</a>
-
-                                <ul class="dropdown-menu dropdown-menu-light" aria-labelledby="navbarLightDropdownMenuLink">
-                                    <li><a class="dropdown-item" href="topics-listing.html">Topics Listing</a></li>
-
-                                    <li><a class="dropdown-item" href="contact.html">Contact Form</a></li>
-                                </ul>
-                            </li>
+                    <li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" href="#" id="dropdownTentangKami"
+        role="button" data-bs-toggle="dropdown">
+        Tentang Kami
+    </a>
+    <ul class="dropdown-menu">
+        <li><a class="dropdown-item" href="?page=Profil-JDIH">Profil JDIH Sekretariat DPRD</a></li>
+        <li><a class="dropdown-item" href="?page=struktur-organisasi">Struktur Organisasi</a></li>
+        <li><a class="dropdown-item" href="?page=alur-pengelolaan">Alur Pengelolaan Produk Hukum</a></li>
+        <li><a class="dropdown-item" href="?page=sop-pengelola">SOP Pengelola JDIH DPRD Kota Surakarta</a></li>
+        <li><a class="dropdown-item" href="?page=dasar-hukum">Dasar Hukum JDIH Sekretariat DPRD Kota Surakarta</a></li>
+        <li><a class="dropdown-item" href="?page=surat-keputusan">Surat Keputusan Pengelola JDIH Sekretariat DPRD Kota Surakarta</a></li>
+        <li><a class="dropdown-item" href="?page=video-profile">Video Profile JDIH</a></li>
+    </ul>
+</li>
+                    <!-- PERUNDANGAN -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="dropdownPerundangan"
+                            role="button" data-bs-toggle="dropdown">
+                            Perundang-undangan
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="?page=keputusan-dprd">Keputusan DPRD</a></li>
+                            <li><a class="dropdown-item" href="?page=keputusan-pimpinan">Keputusan Pimpinan DPRD</a></li>
+                            <li><a class="dropdown-item" href="?page=keputusan-sekretariat">Keputusan Sekretariat DPRD</a></li>
+                            <li><a class="dropdown-item" href="?page=peraturan-dprd">Peraturan DPRD</a></li>
+                            <li><a class="dropdown-item" href="?page=perda">Peraturan Daerah</a></li>
+                            <li><a class="dropdown-item" href="?page=english-legal">English Legal Product</a></li>
                         </ul>
+                    </li>
 
-                        <div class="d-none d-lg-block">
-                            <a href="#top" class="navbar-icon bi-person smoothscroll"></a>
-                        </div>
-                    </div>
-                </div>
-            </nav>
-            
+                    <!-- MONOGRAFI -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="dropdownMonografi"
+                            role="button" data-bs-toggle="dropdown">
+                            Monografi Hukum
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="?page=kajian-raperda">Kajian Raperda</a></li>
+                            <li><a class="dropdown-item" href="?page=naskah-akademik">Naskah Akademik</a></li>
+                            <li><a class="dropdown-item" href="?page=dokumen-langka">Dokumen Langka</a></li>
+                            <li><a class="dropdown-item" href="?page=risalah">Risalah</a></li>
+                            <li><a class="dropdown-item" href="?page=fasilitasi">Hasil Fasilitasi Raperda</a></li>
+                            <li><a class="dropdown-item" href="?page=karya-ilmiah">Penulisan Karya Ilmiah</a></li>
+                            <li><a class="dropdown-item" href="?page=himpunan">Himpunan Peraturan</a></li>
+                        </ul>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="?page=artikel">Artikel Hukum</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="?page=yurisprudensi">Yurisprudensi</a>
+                    </li>
+
+                    <!-- INFORMASI -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="dropdownInformasi"
+                            role="button" data-bs-toggle="dropdown">
+                            Informasi
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="?page=kegiatan">Kegiatan JDIH</a></li>
+                            <li><a class="dropdown-item" href="?page=infografis">Infografis & Videografis</a></li>
+                            <li><a class="dropdown-item" href="?page=galeri">Galeri Foto</a></li>
+                            <li><a class="dropdown-item" href="?page=penghargaan">Penghargaan</a></li>
+                            <li><a class="dropdown-item" href="?page=buku">Koleksi Buku</a></li>
+                        </ul>
+                    </li>
+
+                    <!-- KONTAK -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="dropdownKontak"
+                            role="button" data-bs-toggle="dropdown">
+                            Kontak & Saran
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="?page=kontak">Form Kontak</a></li>
+                            <li><a class="dropdown-item" href="?page=saran">Saran & Masukan</a></li>
+                        </ul>
+                    </li>
+
+                </ul>
+            </div>
+        </div>
+    </nav>
 
             <section class="hero-section d-flex justify-content-center align-items-center" id="section_1">
                 <div class="container">
