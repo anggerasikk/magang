@@ -446,10 +446,8 @@
         }
     </style>
 </head>
-
-<body id="top">
-
-    <!-- NAVBAR SAMA DENGAN HOME -->
+</body>
+<!-- NAVBAR SAMA DENGAN HOME -->
     <nav class="navbar navbar-expand-lg fixed-top navbar-custom">
         <div class="container">
             <!-- BRAND -->
@@ -477,6 +475,7 @@
                             Tentang Kami
                         </a>
                         <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="?page=profil-jdih">Profil JDIH</a></li>
                             <li><a class="dropdown-item" href="?page=struktur-organisasi">Struktur Organisasi</a></li>
                             <li><a class="dropdown-item" href="?page=alur-pengelolaan">Alur Pengelolaan Produk Hukum</a></li>
                             <li><a class="dropdown-item" href="?page=sop-pengelola">SOP Pengelola JDIH DPRD Kota Surakarta</a></li>
@@ -520,7 +519,7 @@
                     </li>
 
                     <li class="nav-item">
-                        <a class="nav-link" href="?page=artikel">Artikel Hukum</a>
+                        <a class="nav-link" href="?page=artikel-hukum">Artikel Hukum</a>
                     </li>
 
                     <li class="nav-item">
@@ -558,25 +557,7 @@
         </div>
     </nav>
 
-    <!-- HEADER SECTION -->
-    <section class="page-header">
-        <div class="container">
-            <div class="row">
-                <div class="col-12">
-                    <h1 class="text-white">ALUR PENGELOLAAN PRODUK HUKUM</h1>
-                    <p class="subtitle">JDIH Sekretariat Dewan Perwakilan Rakyat Daerah Kota Surakarta</p>
-                    <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb">
-                            <li class="breadcrumb-item"><a href="index.php">Beranda</a></li>
-                            <li class="breadcrumb-item"><a href="#">Tentang Kami</a></li>
-                            <li class="breadcrumb-item active" aria-current="page">Alur Pengelolaan</li>
-                        </ol>
-                    </nav>
-                </div>
-            </div>
-        </div>
-    </section>
-
+        
     <!-- MAIN CONTENT -->
     <section class="main-content">
         <div class="container">
