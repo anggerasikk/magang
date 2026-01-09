@@ -446,7 +446,7 @@
                     </li>
 
                     <li class="nav-item">
-                        <a class="nav-link" href="?page=artikel">Artikel Hukum</a>
+                        <a class="nav-link" href="?page=artikel-hukum">Artikel Hukum</a>
                     </li>
 
                     <li class="nav-item">
