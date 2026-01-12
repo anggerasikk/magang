@@ -10,7 +10,7 @@ if(!isset($_SESSION['login']) || !isset($_SESSION['level'])) {
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <title>Dashboard - JDIH DPRD</title>
+    <title>JDIH DPRD Surakarta</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
@@ -26,12 +26,167 @@ if(!isset($_SESSION['login']) || !isset($_SESSION['level'])) {
     <link rel="stylesheet" type="text/css" href="css/elements/dataTables.bootstrap.css" />
     <link rel="stylesheet" type="text/css" href="css/elements/tables.css" />
     <link rel="stylesheet" type="text/css" href="css/elements/form.css" />
-    <link rel="stylesheet" type="text/css" href="css/elements/bootstrap-wysihtml5.css" />
     
     <!-- Google Font -->
-    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700,800" rel="stylesheet" type="text/css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- HTML5 Shim for IE8 -->
+    <style>
+    :root{
+    --c:#0ea5a4;
+    --d:#0f766e;
+    --bg:#f0fdfa;
+    --w:#fff;
+    --t:#134e4a;
+    --b:#d1fae5;
+    --r:14px;
+    --s:0 8px 24px rgba(0,0,0,.08);
+    }
+
+    *{font-family:Inter,sans-serif}
+    body{background:var(--bg);color:var(--t);padding-top:70px}
+
+    /* NAVBAR BARU - BUKAN PUTIH LAGI */
+    .navbar{
+        background: linear-gradient(135deg, var(--d) 0%, var(--c) 100%)!important;
+        box-shadow: var(--s);
+        border: none;
+    }
+    
+    .navbar-brand{
+        color: var(--w)!important;
+        font-weight: 700;
+        font-size: 1.4em;
+    }
+    .navbar-brand i{
+        margin-right: 8px;
+    }
+
+    .navbar-nav>li>a{
+        color: rgba(255,255,255,0.9)!important;
+        border-radius: 20px;
+        margin: 0 2px;
+        padding: 10px 18px!important;
+        transition: all 0.3s;
+    }
+    
+    .navbar-nav>li>a:hover,
+    .navbar-nav>li>a:focus,
+    .navbar-nav>.active>a,
+    .navbar-nav>.active>a:hover,
+    .navbar-nav>.active>a:focus,
+    .navbar-nav>.open>a,
+    .navbar-nav>.open>a:hover,
+    .navbar-nav>.open>a:focus{
+        background: rgba(255,255,255,0.15)!important;
+        color: #fff!important;
+        backdrop-filter: blur(10px);
+    }
+
+    /* Dropdown menu styling */
+    .dropdown-menu{
+        background: var(--w);
+        border: none;
+        border-radius: var(--r);
+        box-shadow: var(--s);
+        margin-top: 5px;
+    }
+    .dropdown-menu>li>a{
+        color: var(--t)!important;
+        padding: 10px 20px;
+        transition: 0.3s;
+    }
+    .dropdown-menu>li>a:hover{
+        background: var(--bg);
+        color: var(--c)!important;
+    }
+
+    /* Navbar toggle button for mobile */
+    .navbar-toggle{
+        border-color: rgba(255,255,255,0.5);
+    }
+    .navbar-toggle .icon-bar{
+        background-color: #fff;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .navbar-nav{
+            margin: 0 -15px;
+        }
+        .navbar-nav>li>a{
+            border-radius: 0;
+            margin: 0;
+            padding: 12px 20px!important;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .dropdown-menu{
+            position: static;
+            float: none;
+            width: auto;
+            margin-top: 0;
+            background: rgba(15, 118, 110, 0.95);
+            box-shadow: none;
+            border-radius: 0;
+            border: none;
+        }
+        .dropdown-menu>li>a{
+            color: rgba(255,255,255,0.9)!important;
+            padding-left: 40px;
+        }
+        .dropdown-menu>li>a:hover{
+            background: rgba(255,255,255,0.1)!important;
+            color: #fff!important;
+        }
+    }
+
+    #pad-wrapper{background:var(--w);border-radius:var(--r);padding:30px;box-shadow:var(--s)}
+
+    .page-title{color:var(--d);font-weight:600;border-bottom:2px solid var(--b);padding-bottom:12px}
+
+    .card{
+    text-align:center;
+    padding:24px;
+    border-radius:var(--r);
+    border:1px solid var(--b);
+    transition:.3s;
+    }
+    .card:hover{transform:translateY(-5px);box-shadow:var(--s)}
+
+    .card img,.card i{
+    width:56px;height:56px;
+    border-radius:50%;
+    background:rgba(14,165,164,.12);
+    padding:14px;color:var(--c);
+    }
+
+    .table thead{background:var(--c);color:#fff}
+    .table tbody tr:hover{background:#ecfeff}
+
+    .btn-primary{background:var(--c);border:none;border-radius:20px}
+    .btn-primary:hover{background:var(--d)}
+
+    /* FIX SIDEBAR & BACKGROUND */
+    .content,
+    .wrapper,
+    .main-content{
+    margin-left:0!important;
+    padding-left:0!important;
+    }
+
+    .sidebar,
+    .left-side{
+    display:none!important;
+    }
+
+    body,
+    .content,
+    #pad-wrapper{
+    background-image:none!important;
+    }
+
+</style>
+    
+    
     <!--[if lt IE 9]>
       <script src="js/html5.js"></script>
     <![endif]-->
@@ -39,43 +194,45 @@ if(!isset($_SESSION['login']) || !isset($_SESSION['level'])) {
 <body>
 
     <!-- Navbar -->
-    <header class="navbar navbar-inverse navbar-fixed-top" role="banner">
-        <?php include "header.php"; ?>
-    </header>
-    <!-- End Navbar -->
-
-    <!-- Sidebar -->
-    <div id="sidebar-nav">
-        <div class="profile-hidder">
-            <ul class="nav">
-                <li class="nav-profile">
-                    <div class="image">
-                        <a href="javascript:void(0);"><img src="images/caption.png" alt="Profile"></a>
-                    </div>
-                    <div class="info">
-                        <a href="javascript:void(0);"><?php echo htmlspecialchars($_SESSION['name_lengkap'] ?? 'User'); ?> <b class="caret"></b></a>
-                    </div>
-                </li>
-            </ul>
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#main-navbar">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="index.php">
+                    <i class="fa fa-balance-scale"></i> JDIH
+                </a>
+            </div>
+            
+            <!-- Include navbar content -->
+            <?php include "header.php"; ?>
         </div>
-
-        <?php 
-        // TAMPIL MENU BERDASARKAN LEVEL USER
-        if ($_SESSION['level'] == 'user_admin'){
-            include "menu.php"; 
-        } else {
-            include "menu_user.php";
-        }
-        ?>
-    </div>
-    <!-- End Sidebar -->
+    </nav>
 
     <!-- Main Container -->
     <div class="content">
         <div id="pad-wrapper">
             <?php
-            // SISTEM ROUTING UNTUK MENAMPILKAN HALAMAN BERDASARKAN PARAMETER GET
             $page = isset($_GET['page']) ? $_GET['page'] : '';
+            
+            $pageTitles = [
+                'kepdprd' => 'Keputusan DPRD',
+                'kepsekdprd' => 'Keputusan Sekretaris DPRD',
+                'informasi' => 'Informasi',
+                'tambahprokum' => 'Tambah Produk Hukum',
+                'user' => 'Manajemen User',
+                'account' => 'Pengaturan Akun',
+                'ruang' => 'Manajemen Ruangan',
+                'notulen' => 'Notulen Rapat'
+            ];
+            
+            $currentTitle = isset($pageTitles[$page]) ? $pageTitles[$page] : 'Dashboard';
+            $icon = $page ? 'file-text' : 'dashboard';
+            
+            echo '<h2 class="page-title"><i class="fa fa-'.$icon.'"></i> '.$currentTitle.'</h2>';
             
             switch($page) {
                 case 'kepdprd':
@@ -107,24 +264,23 @@ if(!isset($_SESSION['login']) || !isset($_SESSION['level'])) {
                     break;
             }
             ?>
-        </div><!-- /pad-wrapper -->
-    </div><!-- content --> 
-    <!-- /Main Container -->
+        </div>
+    </div>
 
     <!-- Modal Konfirmasi Hapus -->
-    <div id="myModal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+    <div id="myModal" class="modal fade">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                    <h4><strong>Konfirmasi Hapus</strong></h4>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">Konfirmasi Hapus</h4>
                 </div>
                 <div class="modal-body">
                     <p>Apakah Anda yakin ingin menghapus data ini?</p>
                 </div>
                 <div class="modal-footer">
-                    <button class="btn btn-default btn-sm" data-dismiss="modal" aria-hidden="true">Tutup</button>
-                    <button data-dismiss="modal" class="btn btn-danger btn-sm" id="btnYes">Konfirmasi</button> 
+                    <button class="btn btn-default" data-dismiss="modal">Batal</button>
+                    <button class="btn btn-primary" id="btnYes">Hapus</button>
                 </div>
             </div>
         </div>
@@ -135,66 +291,46 @@ if(!isset($_SESSION['login']) || !isset($_SESSION['level'])) {
     <script src="js/bootstrap.js"></script>
     <script src="js/theme.js"></script>
 
-    <!-- Dashboard Scripts -->
-    <script src="js/dashboard/jquery-jvectormap-1.2.2.min.js"></script>
-    <script src="js/dashboard/jquery-jvectormap-world-mill-en.js"></script>
-    <script src="js/dashboard/jquery.sparkline.min.js"></script>
-    <script src="js/dashboard/waypoints.min.js"></script>
-    <script src="js/dashboard/jquery.counterup.min.js"></script>
-    <script src="js/bootstrap-modal.js"></script>
-
-    <!-- Chart Scripts -->
-    <script src="js/flot/jquery.flot.js"></script>
-    <script src="js/flot/jquery.flot.resize.js"></script>
-
     <!-- Table Scripts -->
-    <script src="js/tables/jquery.jeditable.js"></script>
     <script src="js/tables/jquery.dataTables.js"></script>
     <script src="js/tables/dataTables.bootstrap.js"></script>
-    <script src="js/tables/jquery.peity.min.js"></script>
-    <script src="js/tables/peity-demo.js"></script>
-    <script src="js/tables/icheck.min.js"></script>
 
-    <!-- Form Scripts -->
-    <script src="js/form/app.js"></script>
-    <script src="js/form/app.plugin.js"></script>
-    <script src="js/form/datepicker/bootstrap-datepicker.js"></script>
-    <script src="js/form/slider/bootstrap-slider.js"></script>
-    <script src="js/form/bootstrap.file-input.js"></script>    
-    <script src="js/form/combodate/moment.min.js"></script>
-    <script src="js/form/combodate/combodate1.js"></script>
-    <script src="js/form/parsley/parsley.min.js"></script>
-
-    <!-- WYSIWYG Editor -->
-    <script src="js/editor/wysihtml5-0.3.0.js"></script>
-    <script src="js/editor/bootstrap3-wysihtml5.js"></script>
-
-    <!-- Custom Scripts -->
-    <script type="text/javascript">
-        // Inisialisasi WYSIWYG Editor
-        $('.textarea').wysihtml5({
-            "font-styles": true,
-            "emphasis": true,
-            "lists": true,
-            "html": true,
-            "link": true,
-            "image": true,
-            "color": false,
-            "size": 'sm'
-        });
-
-        // Inisialisasi iCheck
-        $(document).ready(function () {
-            $('.i-checks').iCheck({
-                checkboxClass: 'icheckbox_square-green',
-                radioClass: 'iradio_square-green',
-            });
-        });
-
+    <!-- Custom Script -->
+    <script>
+    $(document).ready(function() {
         // Inisialisasi DataTables
-        $(document).ready(function() {
-            $('.dataTables-example').dataTable();
+        $('.dataTables-example').DataTable({
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Indonesian.json"
+            }
         });
+        
+        // Smooth hover effects
+        $('.card, .btn').hover(
+            function() { $(this).addClass('shadow-sm'); },
+            function() { $(this).removeClass('shadow-sm'); }
+        );
+        
+        // Form validation
+        $('form').submit(function(e) {
+            var required = $(this).find('[required]');
+            var valid = true;
+            
+            required.each(function() {
+                if (!$(this).val()) {
+                    $(this).addClass('is-invalid');
+                    valid = false;
+                } else {
+                    $(this).removeClass('is-invalid');
+                }
+            });
+            
+            if (!valid) {
+                e.preventDefault();
+                return false;
+            }
+        });
+    });
     </script>
 
 </body>
