@@ -26,6 +26,12 @@
         case '': // Jika kosong
             include "beranda.php"; // GANTI dari home_content.php ke beranda.php
             break;
+        case 'perundang-undangan':
+            include "perundang-undangan.php"; 
+            break;
+        case 'detail-perundangan':
+            include "detail-perundangan.php"; 
+            break;
         case 'struktur-organisasi':
             include "struktur-organisasi.php";
             break;
