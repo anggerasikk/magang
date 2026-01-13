@@ -44,10 +44,10 @@
         
         .page-header .subtitle {
             font-size: 1.1rem;
-            opacity: 0.9;
             margin-bottom: 20px;
             position: relative;
             z-index: 2;
+            color: white;
         }
         
         .page-header .breadcrumb {
@@ -685,14 +685,7 @@
                 <div class="col-12">
                     <h1 class="text-white">PROFIL JDIH</h1>
                     <p class="subtitle">Sekretariat Dewan Perwakilan Rakyat Daerah Kota Surakarta</p>
-                    <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb">
-                            <li class="breadcrumb-item"><a href="index.php">Beranda</a></li>
-                            <li class="breadcrumb-item"><a href="#">Tentang Kami</a></li>
-                            <li class="breadcrumb-item active" aria-current="page">Profil JDIH</li>
-                        </ol>
-                    </nav>
-                </div>
+
             </div>
         </div>
     </section>

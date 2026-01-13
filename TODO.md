@@ -1,8 +1,25 @@
-# TODO: Fix Artikel Hukum Page
+# TODO: Add Risalah to Monografi Hukum Dropdown
 
-## Tasks
-- [x] Fix routing in index.php (change 'artikelhukum' to 'artikel-hukum')
-- [ ] Modify artikel-hukum.php to display dynamic legal articles from database
-- [ ] Add database connection and query to fetch uploads
-- [ ] Display articles in a structured format with title, type, date, and download links
-- [ ] Test the page to ensure articles appear correctly
+## Completed
+- [x] pages/kajian-raperda.php
+- [x] pages/surat-keputusan.php (already has it)
+- [x] pages/struktur-organisasi.php (already has it)
+- [x] pages/sop-pengelola.php (already has it)
+- [x] pages/Profil-JDIH.php (already has it)
+- [x] pages/pokok-pikiran-dprd.php (already has it)
+
+## Remaining
+- [ ] pages/video-profile.php (already has it)
+- [ ] pages/perda.php
+- [ ] pages/peraturan-dprd.php
+- [ ] pages/naskah-akademik.php
+- [ ] pages/keputusan-sekretariat.php
+- [ ] pages/keputusan-pimpinan.php
+- [ ] pages/keputusan-dprd.php
+- [ ] pages/hasil-harmonisasi.php
+- [ ] pages/hasil-fasilitasi.php
+- [ ] pages/english-legal.php
+- [ ] pages/dasar-hukum.php
+- [ ] pages/beranda.php (already has it)
+- [ ] pages/artikel-hukum.php
+- [ ] pages/alur-pengelolaan.php
