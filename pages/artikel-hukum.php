@@ -870,15 +870,8 @@
                     </li>
 
                     <!-- KONTAK -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="dropdownKontak"
-                            role="button" data-bs-toggle="dropdown">
-                            Kontak & Saran
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="?page=kontak">Form Kontak</a></li>
-                            <li><a class="dropdown-item" href="?page=saran">Saran & Masukan</a></li>
-                        </ul>
+                    <li class="nav-item">
+                        <a class="nav-link" href="?page=kontak-kami">Kontak Kami</a>
                     </li>
                 </ul>
             </div>

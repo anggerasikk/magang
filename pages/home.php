@@ -77,8 +77,8 @@
         case 'risalah':          
             include "risalah.php"; 
             break;      
-        case 'fasilitasi':          
-            include "fasilitasi.php";
+        case 'hasil-fasilitasi':          
+            include "hasil-fasilitasi.php";
             break;
         case 'karya-ilmiah':          
             include "karya-ilmiah.php";
@@ -96,7 +96,35 @@
         case 'surat-keputusan':
             include "surat-keputusan.php";
             break;
+        case 'pokok-pikiran':
+            include "pokok-pikiran-dprd.php";
+            break;
+        case 'hasil-harmonisasi':
+            include "hasil-harmonisasi.php";
+            break;
+        case 'kegiatan':
+            include "kegiatan-jdih.php";
+            break;
+        case 'infografis':
+            include "infografis.php";
+            break;
+        case 'penghargaan':
+            include "penghargaan.php";
+            break;
+        case 'yurisprudensi':
+            include "yurispudensi.php";
+            break;  
+        case 'buku':
+            include "buku.php";
+            break;
+        case 'galeri':
+            include "galeri.php";
+            break;
+        case 'kontak-kami':
+            include "kontak-kami.php";
+            break;
     }
+            
     ?>
     
     <!-- JS Files jika ada -->

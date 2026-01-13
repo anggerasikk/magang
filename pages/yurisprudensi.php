@@ -1,373 +1,575 @@
+<?php
+// yurisprudensi.php
+?>
 <!doctype html>
-<html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+<html lang="id">
+<head>
+    <meta charset="utf-8">
+    <title>Yurisprudensi - JDIH DPRD Kota Surakarta</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <!-- CSS FILES -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Open+Sans&display=swap" rel="stylesheet">
+                        
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/bootstrap-icons.css" rel="stylesheet">
+    <link href="css/templatemo-topic-listing.css" rel="stylesheet">
+    
+    <!-- NAVBAR CSS -->
+    <link href="css/navbar.css" rel="stylesheet">
 
-        <meta name="description" content="">
-        <meta name="author" content="">
-
-        <title>Topic Listing Page</title>
-
-        <!-- CSS FILES -->        
-        <link rel="preconnect" href="https://fonts.googleapis.com">
+    <style>
+        /* OVERRIDE UNTUK HALAMAN YURISPRUDENSI */
+        body {
+            padding-top: 80px;
+            background: #f0f8ff;
+        }
         
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
-        <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Open+Sans&display=swap" rel="stylesheet">
-                        
-        <link href="css/bootstrap.min.css" rel="stylesheet">
-
-        <link href="css/bootstrap-icons.css" rel="stylesheet">
-
-        <link href="css/templatemo-topic-listing.css" rel="stylesheet">
-<!--
-
-TemplateMo 590 topic listing
-
-https://templatemo.com/tm-590-topic-listing
-
--->
-    </head>
-    
-    <body class="topics-listing-page" id="top">
-
-        <main>
-
-            <nav class="navbar navbar-expand-lg">
-                <div class="container">
-                    <a class="navbar-brand" href="index.html">
-                        <i class="bi-back"></i>
-                        <span>Topic</span>
-                    </a>
-
-                    <div class="d-lg-none ms-auto me-4">
-                        <a href="#top" class="navbar-icon bi-person smoothscroll"></a>
-                    </div>
-    
-                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                        <span class="navbar-toggler-icon"></span>
-                    </button>
-    
-                    <div class="collapse navbar-collapse" id="navbarNav">
-                        <ul class="navbar-nav ms-lg-5 me-lg-auto">
-                            <li class="nav-item">
-                                <a class="nav-link click-scroll" href="index.html#section_1">Home</a>
-                            </li>
-
-                            <li class="nav-item">
-                                <a class="nav-link click-scroll" href="index.html#section_2">Browse Topics</a>
-                            </li>
-    
-                            <li class="nav-item">
-                                <a class="nav-link click-scroll" href="index.html#section_3">How it works</a>
-                            </li>
-
-                            <li class="nav-item">
-                                <a class="nav-link click-scroll" href="index.html#section_4">FAQs</a>
-                            </li>
-    
-                            <li class="nav-item">
-                                <a class="nav-link click-scroll" href="index.html#section_5">Contact</a>
-                            </li>
-
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#section_5" id="navbarLightDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">Pages</a>
-
-                                <ul class="dropdown-menu dropdown-menu-light" aria-labelledby="navbarLightDropdownMenuLink">
-                                    <li><a class="dropdown-item active" href="topics-listing.html">Topics Listing</a></li>
-
-                                    <li><a class="dropdown-item" href="contact.html">Contact Form</a></li>
-                                </ul>
-                            </li>
-                        </ul>
-
-                        <div class="d-none d-lg-block">
-                            <a href="#top" class="navbar-icon bi-person smoothscroll"></a>
-                        </div>
-                    </div>
-                </div>
-            </nav>
-
-
-            <header class="site-header d-flex flex-column justify-content-center align-items-center">
-                <div class="container">
-                    <div class="row align-items-center">
-
-                        <div class="col-lg-5 col-12">
-                            <nav aria-label="breadcrumb">
-                                <ol class="breadcrumb">
-                                    <li class="breadcrumb-item"><a href="index.html">Homepage</a></li>
-
-                                    <li class="breadcrumb-item active" aria-current="page">Topics Listing</li>
-                                </ol>
-                            </nav>
-
-                            <h2 class="text-white">Topics Listing</h2>
-                        </div>
-
-                    </div>
-                </div>
-            </header>
-
-
-            <section class="section-padding">
-                <div class="container">
-                    <div class="row">
-
-                        <div class="col-lg-12 col-12 text-center">
-                            <h3 class="mb-4">Popular Topics</h3>
-                        </div>
-
-                        <div class="col-lg-8 col-12 mt-3 mx-auto">
-                            <div class="custom-block custom-block-topics-listing bg-white shadow-lg mb-5">
-                                <div class="d-flex">
-                                    <img src="images/topics/undraw_Remote_design_team_re_urdx.png" class="custom-block-image img-fluid" alt="">
-
-                                    <div class="custom-block-topics-listing-info d-flex">
-                                        <div>
-                                            <h5 class="mb-2">Web Design</h5>
-
-                                            <p class="mb-0">Topic Listing includes home, listing, detail and contact pages. Feel free to modify this template for your custom websites.</p>
-
-                                            <a href="topics-detail.html" class="btn custom-btn mt-3 mt-lg-4">Learn More</a>
-                                        </div>
-
-                                        <span class="badge bg-design rounded-pill ms-auto">14</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="custom-block custom-block-topics-listing bg-white shadow-lg mb-5">
-                                <div class="d-flex">
-                                    <img src="images/topics/undraw_online_ad_re_ol62.png" class="custom-block-image img-fluid" alt="">
-
-                                    <div class="custom-block-topics-listing-info d-flex">
-                                        <div>
-                                            <h5 class="mb-2">Advertising</h5>
-
-                                            <p class="mb-0">Visit TemplateMo website to download free CSS templates. Lorem ipsum dolor, sit amet consectetur adipisicing elit animi necessitatibus</p>
-
-                                            <a href="topics-detail.html" class="btn custom-btn mt-3 mt-lg-4">Learn More</a>
-                                        </div>
-
-                                        <span class="badge bg-advertising rounded-pill ms-auto">30</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="custom-block custom-block-topics-listing bg-white shadow-lg mb-5">
-                                <div class="d-flex">
-                                    <img src="images/topics/undraw_Podcast_audience_re_4i5q.png" class="custom-block-image img-fluid" alt="">
-
-                                    <div class="custom-block-topics-listing-info d-flex">
-                                        <div>
-                                            <h5 class="mb-2">Podcast</h5>
-
-                                            <p class="mb-0">Lorem ipsum dolor, sit amet consectetur adipisicing elit animi necessitatibus</p>
-
-                                            <a href="topics-detail.html" class="btn custom-btn mt-3 mt-lg-4">Learn More</a>
-                                        </div>
-
-                                        <span class="badge bg-music rounded-pill ms-auto">20</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-lg-12 col-12">
-                            <nav aria-label="Page navigation example">
-                                <ul class="pagination justify-content-center mb-0">
-                                    <li class="page-item">
-                                        <a class="page-link" href="#" aria-label="Previous">
-                                            <span aria-hidden="true">Prev</span>
-                                        </a>
-                                    </li>
-
-                                    <li class="page-item active" aria-current="page">
-                                        <a class="page-link" href="#">1</a>
-                                    </li>
-                                    
-                                    <li class="page-item">
-                                        <a class="page-link" href="#">2</a>
-                                    </li>
-                                    
-                                    <li class="page-item">
-                                        <a class="page-link" href="#">3</a>
-                                    </li>
-
-                                    <li class="page-item">
-                                        <a class="page-link" href="#">4</a>
-                                    </li>
-
-                                    <li class="page-item">
-                                        <a class="page-link" href="#">5</a>
-                                    </li>
-                                    
-                                    <li class="page-item">
-                                        <a class="page-link" href="#" aria-label="Next">
-                                            <span aria-hidden="true">Next</span>
-                                        </a>
-                                    </li>
-                                </ul>
-                            </nav>
-                        </div>
-
-                    </div>
-                </div>
-            </section>
-
-
-            <section class="section-padding section-bg">
-                <div class="container">
-                    <div class="row">
-
-                        <div class="col-lg-12 col-12">
-                            <h3 class="mb-4">Trending Topics</h3>
-                        </div>
-
-                        <div class="col-lg-6 col-md-6 col-12 mt-3 mb-4 mb-lg-0">
-                            <div class="custom-block bg-white shadow-lg">
-                                <a href="topics-detail.html">
-                                    <div class="d-flex">
-                                        <div>
-                                            <h5 class="mb-2">Investment</h5>
-
-                                            <p class="mb-0">Lorem Ipsum dolor sit amet consectetur</p>
-                                        </div>
-
-                                        <span class="badge bg-finance rounded-pill ms-auto">30</span>
-                                    </div>
-
-                                    <img src="images/topics/undraw_Finance_re_gnv2.png" class="custom-block-image img-fluid" alt="">
-                                </a>
-                            </div>
-                        </div>
-
-                        <div class="col-lg-6 col-md-6 col-12 mt-lg-3">
-                            <div class="custom-block custom-block-overlay">
-                                <div class="d-flex flex-column h-100">
-                                    <img src="images/businesswoman-using-tablet-analysis.jpg" class="custom-block-image img-fluid" alt="">
-
-                                    <div class="custom-block-overlay-text d-flex">
-                                        <div>
-                                            <h5 class="text-white mb-2">Finance</h5>
-
-                                            <p class="text-white">Lorem ipsum dolor, sit amet consectetur adipisicing elit. Sint animi necessitatibus aperiam repudiandae nam omnis</p>
-
-                                            <a href="topics-detail.html" class="btn custom-btn mt-2 mt-lg-3">Learn More</a>
-                                        </div>
-
-                                        <span class="badge bg-finance rounded-pill ms-auto">25</span>
-                                    </div>
-
-                                    <div class="social-share d-flex">
-                                        <p class="text-white me-4">Share:</p>
-
-                                        <ul class="social-icon">
-                                            <li class="social-icon-item">
-                                                <a href="#" class="social-icon-link bi-twitter"></a>
-                                            </li>
-
-                                            <li class="social-icon-item">
-                                                <a href="#" class="social-icon-link bi-facebook"></a>
-                                            </li>
-
-                                            <li class="social-icon-item">
-                                                <a href="#" class="social-icon-link bi-pinterest"></a>
-                                            </li>
-                                        </ul>
-
-                                        <a href="#" class="custom-icon bi-bookmark ms-auto"></a>
-                                    </div>
-
-                                    <div class="section-overlay"></div>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-            </section>
-        </main>
-
-		<footer class="site-footer section-padding">
-            <div class="container">
-                <div class="row">
-
-                    <div class="col-lg-3 col-12 mb-4 pb-2">
-                        <a class="navbar-brand mb-2" href="index.html">
-                            <i class="bi-back"></i>
-                            <span>Topic</span>
-                        </a>
-                    </div>
-
-                    <div class="col-lg-3 col-md-4 col-6">
-                        <h6 class="site-footer-title mb-3">Resources</h6>
-
-                        <ul class="site-footer-links">
-                            <li class="site-footer-link-item">
-                                <a href="#" class="site-footer-link">Home</a>
-                            </li>
-
-                            <li class="site-footer-link-item">
-                                <a href="#" class="site-footer-link">How it works</a>
-                            </li>
-
-                            <li class="site-footer-link-item">
-                                <a href="#" class="site-footer-link">FAQs</a>
-                            </li>
-
-                            <li class="site-footer-link-item">
-                                <a href="#" class="site-footer-link">Contact</a>
-                            </li>
-                        </ul>
-                    </div>
-
-                    <div class="col-lg-3 col-md-4 col-6 mb-4 mb-lg-0">
-                        <h6 class="site-footer-title mb-3">Information</h6>
-
-                        <p class="text-white d-flex mb-1">
-                            <a href="tel: 305-240-9671" class="site-footer-link">
-                                305-240-9671
-                            </a>
-                        </p>
-
-                        <p class="text-white d-flex">
-                            <a href="mailto:info@company.com" class="site-footer-link">
-                                info@company.com
-                            </a>
-                        </p>
-                    </div>
-
-                    <div class="col-lg-3 col-md-4 col-12 mt-4 mt-lg-0 ms-auto">
-                        <div class="dropdown">
-                            <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            English</button>
-
-                            <ul class="dropdown-menu">
-                                <li><button class="dropdown-item" type="button">Thai</button></li>
-
-                                <li><button class="dropdown-item" type="button">Myanmar</button></li>
-
-                                <li><button class="dropdown-item" type="button">Arabic</button></li>
-                            </ul>
-                        </div>
-
-                        <p class="copyright-text mt-lg-5 mt-4">Copyright © 2048 Topic Listing Center. All rights reserved.
-                        <br><br>Design: <a rel="nofollow" href="https://templatemo.com" target="_blank">TemplateMo</a></p>
-                        
-                    </div>
-
+        /* PAGE HEADER */
+        .page-header {
+            background: linear-gradient(135deg, #13547a 0%, #80d0c7 100%);
+            color: white;
+            padding: 80px 0 60px;
+            text-align: center;
+            margin-bottom: 60px;
+        }
+        
+        .page-title {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            font-size: 2.8rem;
+            margin-bottom: 20px;
+        }
+        
+        .page-subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        /* MAIN CONTENT */
+        .main-content {
+            padding: 40px 0 80px;
+        }
+        
+        .section-title {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            color: #13547a;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #80d0c7;
+            position: relative;
+        }
+        
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -3px;
+            left: 0;
+            width: 100px;
+            height: 3px;
+            background: #ff7e5f;
+        }
+        
+        /* SEARCH AND FILTER */
+        .search-filter-section {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            padding: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .search-container {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .search-input {
+            flex: 1;
+            height: 50px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 0 20px;
+            font-size: 1rem;
+        }
+        
+        .search-btn {
+            background: linear-gradient(135deg, #13547a 0%, #80d0c7 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 0 30px;
+            font-weight: 600;
+        }
+        
+        .filter-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .filter-select {
+            flex: 1;
+            min-width: 200px;
+            height: 45px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 0 15px;
+            color: #13547a;
+            font-weight: 500;
+        }
+        
+        /* CASES GRID */
+        .cases-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+        
+        .case-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .case-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+        }
+        
+        .case-header {
+            background: linear-gradient(135deg, #13547a 0%, #80d0c7 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .case-number {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        .case-year {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 5px 15px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+        }
+        
+        .case-content {
+            padding: 25px;
+        }
+        
+        .case-title {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 600;
+            color: #13547a;
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+        
+        .case-details {
+            margin-bottom: 20px;
+        }
+        
+        .detail-item {
+            display: flex;
+            margin-bottom: 10px;
+        }
+        
+        .detail-label {
+            width: 120px;
+            color: #666;
+            font-weight: 500;
+        }
+        
+        .detail-value {
+            flex: 1;
+            color: #333;
+        }
+        
+        .case-summary {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: #555;
+        }
+        
+        .case-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn-view, .btn-download {
+            flex: 1;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        .btn-view {
+            background: #f8f9fa;
+            border: 2px solid #13547a;
+            color: #13547a;
+        }
+        
+        .btn-view:hover {
+            background: #13547a;
+            color: white;
+        }
+        
+        .btn-download {
+            background: linear-gradient(135deg, #13547a 0%, #80d0c7 100%);
+            border: 2px solid transparent;
+            color: white;
+        }
+        
+        .btn-download:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(19, 84, 122, 0.3);
+        }
+        
+        /* PAGINATION */
+        .pagination {
+            justify-content: center;
+        }
+        
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .page-header {
+                padding: 60px 0 40px;
+            }
+            
+            .page-title {
+                font-size: 2.2rem;
+            }
+            
+            .search-container {
+                flex-direction: column;
+            }
+            
+            .search-btn {
+                width: 100%;
+                height: 50px;
+            }
+            
+            .cases-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .filter-select {
+                min-width: 100%;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .page-title {
+                font-size: 1.8rem;
+            }
+            
+            .page-subtitle {
+                font-size: 1rem;
+            }
+            
+            .case-content {
+                padding: 20px;
+            }
+            
+            .detail-item {
+                flex-direction: column;
+            }
+            
+            .detail-label {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+        }
+    </style>
+</head>
+
+<body id="top">
+
+    <!-- NAVBAR SAMA DENGAN BERANDA -->
+    <!-- ... (salin navbar dari beranda.php) ... -->
+
+    <!-- PAGE HEADER -->
+    <section class="page-header">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <h1 class="page-title">Yurisprudensi</h1>
+                    <p class="page-subtitle">
+                        Kumpulan putusan pengadilan yang menjadi acuan dalam penegakan hukum
+                    </p>
                 </div>
             </div>
-        </footer>
+        </div>
+    </section>
 
-        <!-- JAVASCRIPT FILES -->
-        <script src="js/jquery.min.js"></script>
-        <script src="js/bootstrap.bundle.min.js"></script>
-        <script src="js/jquery.sticky.js"></script>
-        <script src="js/custom.js"></script>
+    <!-- MAIN CONTENT -->
+    <section class="main-content">
+        <div class="container">
+            <!-- SEARCH AND FILTER -->
+            <div class="search-filter-section">
+                <div class="search-container">
+                    <input type="text" class="search-input" placeholder="Cari putusan pengadilan, nomor perkara, atau kata kunci...">
+                    <button class="search-btn">
+                        <i class="bi bi-search me-2"></i>CARI
+                    </button>
+                </div>
+                
+                <div class="filter-options">
+                    <select class="filter-select">
+                        <option value="">Semua Jenis Perkara</option>
+                        <option value="pidana">Pidana</option>
+                        <option value="perdata">Perdata</option>
+                        <option value="tata_usaha">Tata Usaha Negara</option>
+                        <option value="mahkamah_konstitusi">Mahkamah Konstitusi</option>
+                    </select>
+                    
+                    <select class="filter-select">
+                        <option value="">Semua Tingkat Pengadilan</option>
+                        <option value="ptun">Pengadilan Tata Usaha Negara</option>
+                        <option value="pn">Pengadilan Negeri</option>
+                        <option value="pt">Pengadilan Tinggi</option>
+                        <option value="ma">Mahkamah Agung</option>
+                        <option value="mk">Mahkamah Konstitusi</option>
+                    </select>
+                    
+                    <select class="filter-select">
+                        <option value="">Semua Tahun</option>
+                        <option value="2024">2024</option>
+                        <option value="2023">2023</option>
+                        <option value="2022">2022</option>
+                        <option value="2021">2021</option>
+                        <option value="2020">2020</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- CASES LIST -->
+            <div class="row mb-5">
+                <div class="col-12">
+                    <h2 class="section-title">Putusan Terbaru</h2>
+                </div>
+            </div>
+            
+            <div class="cases-grid">
+                <!-- Case 1 -->
+                <div class="case-card">
+                    <div class="case-header">
+                        <span class="case-number">Putusan No. 123/PID/PTUN/SKA/2024</span>
+                        <span class="case-year">2024</span>
+                    </div>
+                    <div class="case-content">
+                        <h3 class="case-title">Sengketa Tata Usaha Negara tentang IMB</h3>
+                        
+                        <div class="case-details">
+                            <div class="detail-item">
+                                <span class="detail-label">Pengadilan:</span>
+                                <span class="detail-value">PTUN Surakarta</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Jenis:</span>
+                                <span class="detail-value">Tata Usaha Negara</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Tanggal:</span>
+                                <span class="detail-value">15 November 2024</span>
+                            </div>
+                        </div>
+                        
+                        <div class="case-summary">
+                            Putusan tentang sengketa Izin Mendirikan Bangunan (IMB) antara pemohon 
+                            dengan Dinas Penanaman Modal dan Pelayanan Terpadu Satu Pintu Kota Surakarta.
+                        </div>
+                        
+                        <div class="case-actions">
+                            <a href="?page=detail-putusan&id=1" class="btn-view">Baca Putusan</a>
+                            <a href="#" class="btn-download">
+                                <i class="bi bi-download me-2"></i>PDF
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Case 2 -->
+                <div class="case-card">
+                    <div class="case-header">
+                        <span class="case-number">Putusan No. 456/PDT/PN/SKA/2024</span>
+                        <span class="case-year">2024</span>
+                    </div>
+                    <div class="case-content">
+                        <h3 class="case-title">Sengketa Perdata tentang Tanah</h3>
+                        
+                        <div class="case-details">
+                            <div class="detail-item">
+                                <span class="detail-label">Pengadilan:</span>
+                                <span class="detail-value">PN Surakarta</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Jenis:</span>
+                                <span class="detail-value">Perdata</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Tanggal:</span>
+                                <span class="detail-value">5 November 2024</span>
+                            </div>
+                        </div>
+                        
+                        <div class="case-summary">
+                            Penyelesaian sengketa kepemilikan tanah antara pihak keluarga dengan 
+                            pengembang perumahan di wilayah Kota Surakarta.
+                        </div>
+                        
+                        <div class="case-actions">
+                            <a href="?page=detail-putusan&id=2" class="btn-view">Baca Putusan</a>
+                            <a href="#" class="btn-download">
+                                <i class="bi bi-download me-2"></i>PDF
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Case 3 -->
+                <div class="case-card">
+                    <div class="case-header">
+                        <span class="case-number">Putusan No. 789/PID/PT/SKA/2023</span>
+                        <span class="case-year">2023</span>
+                    </div>
+                    <div class="case-content">
+                        <h3 class="case-title">Perkara Pidana Korupsi APBD</h3>
+                        
+                        <div class="case-details">
+                            <div class="detail-item">
+                                <span class="detail-label">Pengadilan:</span>
+                                <span class="detail-value">PT Jawa Tengah</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Jenis:</span>
+                                <span class="detail-value">Pidana Khusus</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Tanggal:</span>
+                                <span class="detail-value">20 Agustus 2023</span>
+                            </div>
+                        </div>
+                        
+                        <div class="case-summary">
+                            Perkara tindak pidana korupsi dalam pengelolaan Anggaran Pendapatan 
+                            dan Belanja Daerah (APBD) Kota Surakarta.
+                        </div>
+                        
+                        <div class="case-actions">
+                            <a href="?page=detail-putusan&id=3" class="btn-view">Baca Putusan</a>
+                            <a href="#" class="btn-download">
+                                <i class="bi bi-download me-2"></i>PDF
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- PAGINATION -->
+            <nav aria-label="Page navigation">
+                <ul class="pagination">
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                    <li class="page-item"><a class="page-link" href="#">2</a></li>
+                    <li class="page-item"><a class="page-link" href="#">3</a></li>
+                    <li class="page-item">
+                        <a class="page-link" href="#" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </section>
 
-    </body>
+    <!-- FOOTER SAMA DENGAN BERANDA -->
+    <!-- ... (salin footer dari beranda.php) ... -->
+
+    <!-- JAVASCRIPT FILES -->
+    <script src="js/jquery.min.js"></script>
+    <script src="js/bootstrap.bundle.min.js"></script>
+    <script src="js/jquery.sticky.js"></script>
+    <script src="js/click-scroll.js"></script>
+    <script src="js/custom.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Search functionality
+            const searchBtn = document.querySelector('.search-btn');
+            const searchInput = document.querySelector('.search-input');
+            
+            searchBtn.addEventListener('click', function() {
+                performSearch();
+            });
+            
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    performSearch();
+                }
+            });
+            
+            function performSearch() {
+                const query = searchInput.value.trim();
+                if (query) {
+                    alert('Mencari yurisprudensi: ' + query);
+                    // Implement actual search logic here
+                } else {
+                    alert('Silakan masukkan kata kunci pencarian');
+                }
+            }
+            
+            // Filter functionality
+            const filterSelects = document.querySelectorAll('.filter-select');
+            filterSelects.forEach(select => {
+                select.addEventListener('change', function() {
+                    applyFilters();
+                });
+            });
+            
+            function applyFilters() {
+                // Implement filter logic here
+                console.log('Filters applied');
+            }
+            
+            // Navbar scroll effect
+            const navbar = document.querySelector('.navbar-custom');
+            window.addEventListener('scroll', function() {
+                if (window.scrollY > 50) {
+                    navbar.classList.add('scrolled');
+                } else {
+                    navbar.classList.remove('scrolled');
+                }
+            });
+        });
+    </script>
+
+</body>
 </html>
