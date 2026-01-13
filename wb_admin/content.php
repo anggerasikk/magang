@@ -238,6 +238,9 @@ if(!isset($_SESSION['login']) || !isset($_SESSION['level'])) {
                 case 'kepdprd':
                     include "kepdprd.php";
                     break;
+                case 'keppemimpin':
+                    include "keppemimpin.php";
+                    break;
                 case 'kepsekdprd':
                     include "kepsekdprd.php";
                     break;

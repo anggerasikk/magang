@@ -34,10 +34,10 @@
                         <ul class="multi-column-dropdown">
                             <li><a href="index.php?page=kepdprd"><i class="fa fa-file-text"></i> Keputusan DPRD</a></li>
                             <li><a href="index.php?page=kepsekdprd"><i class="fa fa-file-text"></i> Keputusan Sekretaris DPRD</a></li>
-                            <li><a href="index.php?page=keputusan-pimpinan-dprd"><i class="fa fa-file-text"></i> Keputusan Pimpinan DPRD</a></li>
-                            <li><a href="index.php?page=peraturan-dprd"><i class="fa fa-balance-scale"></i> Peraturan DPRD</a></li>
-                            <li><a href="index.php?page=peraturan-daerah"><i class="fa fa-university"></i> Peraturan Daerah</a></li>
-                            <li><a href="index.php?page=english-legal-products"><i class="fa fa-language"></i> English Legal Products</a></li>
+                            <li><a href="index.php?page=keppemimpin"><i class="fa fa-file-text"></i> Keputusan Pimpinan DPRD</a></li>
+                            <li><a href="index.php?page=perdprd"><i class="fa fa-balance-scale"></i> Peraturan DPRD</a></li>
+                            <li><a href="index.php?page=perda"><i class="fa fa-university"></i> Peraturan Daerah</a></li>
+                            <li><a href="index.php?page=englishj"><i class="fa fa-language"></i> English Legal Products</a></li>
                         </ul>
                     </div>
                 </div>

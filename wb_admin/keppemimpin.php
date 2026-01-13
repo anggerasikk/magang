@@ -62,23 +62,23 @@ if ($aksi == ''){
                             <td>{$i['jenis']}</td>
                             <td>{$i['noPeraturan']}</td>                            
                             <td>{$i['judul']}</td>
-                            <td style='width:170px' class='text-right'>";
+                            <td style='width:190px' class='text-right'>";
                     
                     // Tombol Lihat Detail untuk semua user
-                    echo "<a class='btn btn-info btn-sm' href='index.php?page=keputusan-pimpinan-dprd&aksi=detail&id={$i['idData']}' title='Lihat Detail'><i class='fa fa-folder-open'></i></a>";
+                    echo "<a class='btn btn-info btn-sm' href='index.php?page=keppemimpin&aksi=detail&id={$i['idData']}' title='Lihat Detail'><i class='fa fa-folder-open'></i></a>";
                     
                     // Tombol Edit untuk admin dan user_input
                     if ($_SESSION['level'] == 'user_admin' || $_SESSION['level'] == 'user_input'){ 
-                        echo " <a class='btn btn-warning btn-sm' href='index.php?page=keputusan-pimpinan-dprd&aksi=edit&id={$i['idData']}' title='Edit Data'><i class='fa fa-pencil-square-o'></i></a>";
+                        echo " <a class='btn btn-warning btn-sm' href='index.php?page=keppemimpin&aksi=edit&id={$i['idData']}' title='Edit Data'><i class='fa fa-pencil-square-o'></i></a>";
                     }
                     
                     // Tombol Hapus hanya untuk admin
                     if ($_SESSION['level'] == 'user_admin'){ 
-                        echo " <a class='btn btn-danger btn-sm' href='index.php?page=keputusan-pimpinan-dprd&aksi=hapus&id={$i['idData']}' title='Hapus' onclick='return confirm(\"Yakin menghapus data?\");'><i class='fa fa-trash-o'></i></a>";
+                        echo " <a class='btn btn-danger btn-sm' href='index.php?page=keppemimpin&aksi=hapus&id={$i['idData']}' title='Hapus' onclick='return confirm(\"Yakin menghapus data?\");'><i class='fa fa-trash-o'></i></a>";
                     }
                     
-                    // Tombol Export Word untuk semua
-                    echo " <a class='btn btn-success btn-sm' href='index.php?page=keputusan-pimpinan-dprd&aksi=eksport&id={$i['idData']}' title='Export Word'><i class='fa fa-file-word-o'></i></a>";
+                    // Tombol Export PDF - Mengarahkan ke export_pdf.php
+                    echo " <a class='btn btn-danger btn-sm' href='export_pdf.php?type=keppemimpin&id={$i['idData']}' title='Export PDF' target='_blank'><i class='fa fa-file-pdf-o'></i></a>";
                     
                     echo "</td></tr>";
                     $no++;
@@ -100,7 +100,7 @@ if ($aksi == ''){
     // VALIDASI: Cek apakah user adalah admin
     if ($_SESSION['level'] != 'user_admin') {
         echo "<script>alert('Anda tidak memiliki akses untuk menghapus!');
-              window.location='index.php?page=keputusan-pimpinan-dprd'</script>";
+              window.location='index.php?page=keppemimpin'</script>";
         exit();
     }
     
@@ -109,17 +109,17 @@ if ($aksi == ''){
     
     if(mysqli_query($koneksi, $delete_query)) {
         echo "<script>alert('Data Dokumen Berhasil Dihapus.');
-              window.location='index.php?page=keputusan-pimpinan-dprd'</script>";
+              window.location='index.php?page=keppemimpin'</script>";
     } else {
         echo "<script>alert('Error: " . mysqli_error($koneksi) . "');
-              window.location='index.php?page=keputusan-pimpinan-dprd'</script>";
+              window.location='index.php?page=keppemimpin'</script>";
     }
 
 } elseif ($aksi == 'edit') { 
     // VALIDASI: Cek akses edit
     if ($_SESSION['level'] != 'user_admin' && $_SESSION['level'] != 'user_input') {
         echo "<script>alert('Anda tidak memiliki akses untuk mengedit!');
-              window.location='index.php?page=keputusan-pimpinan-dprd'</script>";
+              window.location='index.php?page=keppemimpin'</script>";
         exit();
     }
     
@@ -129,7 +129,7 @@ if ($aksi == ''){
     
     if(!$result || mysqli_num_rows($result) == 0) {
         echo "<script>alert('Data tidak ditemukan!');
-              window.location='index.php?page=keputusan-pimpinan-dprd'</script>";
+              window.location='index.php?page=keppemimpin'</script>";
         exit();
     }
     
@@ -155,10 +155,10 @@ if ($aksi == ''){
         
         if(mysqli_query($koneksi, $update_query)) {
             echo "<script>alert('Sukses Update Data Keputusan Pimpinan DPRD.');
-                  window.location='index.php?page=keputusan-pimpinan-dprd'</script>";
+                  window.location='index.php?page=keppemimpin'</script>";
         } else {
             echo "<script>alert('Error: " . mysqli_error($koneksi) . "');
-                  window.location='index.php?page=keputusan-pimpinan-dprd'</script>";
+                  window.location='index.php?page=keppemimpin'</script>";
         }
     }
 ?>
@@ -215,7 +215,7 @@ if ($aksi == ''){
                 <div class="form-group">
                     <div class="col-lg-9 pull-right">    
                         <button type="submit" name='update' class="btn btn-info">Update Data</button>                  
-                        <a href="index.php?page=keputusan-pimpinan-dprd" class="btn btn-default">Kembali</a>
+                        <a href="index.php?page=keppemimpin" class="btn btn-default">Kembali</a>
                     </div>
                 </div>
             </form>
@@ -231,7 +231,7 @@ if ($aksi == ''){
     
     if(!$result || mysqli_num_rows($result) == 0) {
         echo "<script>alert('Data tidak ditemukan!');
-              window.location='index.php?page=keputusan-pimpinan-dprd'</script>";
+              window.location='index.php?page=keppemimpin'</script>";
         exit();
     }
     
@@ -330,7 +330,7 @@ if ($aksi == ''){
                 
                 <div class='form-group'>
                     <div class='col-lg-9 pull-right'>
-                        <a href="index.php?page=keputusan-pimpinan-dprd" class="btn btn-default">Kembali</a>
+                        <a href="index.php?page=keppemimpin" class="btn btn-default">Kembali</a>
                     </div>
                 </div>
             </div>
@@ -339,11 +339,7 @@ if ($aksi == ''){
 </div>
 
 <?php 
-} elseif ($aksi == 'eksport') {  
-    // LOGIC UNTUK EKSPORT WORD
-    echo "<script>alert('Fitur export Word sedang dikembangkan!');
-          window.location='index.php?page=keputusan-pimpinan-dprd'</script>";
-}
+} 
 ?>
 
 <footer id="footer"> 
