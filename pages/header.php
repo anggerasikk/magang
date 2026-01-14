@@ -221,6 +221,50 @@ function isDropdownActive($pages, $currentQuery) {
             }
         }
         
+        /* STYLE UNTUK TOMBOL LOGIN */
+        .btn-login {
+            background: linear-gradient(135deg, #13547a 0%, #80d0c7 100%);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 8px 20px;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 8px rgba(19, 84, 122, 0.2);
+            white-space: nowrap;
+        }
+        
+        .btn-login:hover {
+            background: linear-gradient(135deg, #0f4266 0%, #6bc0b7 100%);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(19, 84, 122, 0.3);
+        }
+        
+        .btn-login i {
+            font-size: 0.9rem;
+        }
+        
+        /* TOMBOL LOGIN DI NAVBAR */
+        .navbar-custom .btn-login {
+            margin-left: 15px;
+        }
+        
+        /* POSITIONING TOMBOL LOGIN DI MOBILE */
+        @media (max-width: 991.98px) {
+            .navbar-custom .btn-login {
+                margin: 15px 0 0 15px;
+                align-self: flex-start;
+            }
+        }
+        
         /* MOBILE MENU */
         @media (max-width: 991.98px) {
             .navbar-collapse {
@@ -262,7 +306,8 @@ function isDropdownActive($pages, $currentQuery) {
             padding: 3px 6px;
             border-width: 1px;
         }
-                /* STYLE UNTUK HALAMAN ALUR PENGELOLAAN */
+        
+        /* STYLE UNTUK HALAMAN ALUR PENGELOLAAN */
         /* HEADER SECTION */
         .page-header {
             background: linear-gradient(15deg, #13547a 0%, #80d0c7 100%);
@@ -727,7 +772,6 @@ function isDropdownActive($pages, $currentQuery) {
                 margin-left: 0;
                 align-self: flex-end;
             }
-            
         }
     </style>
 </head>
@@ -740,7 +784,7 @@ function isDropdownActive($pages, $currentQuery) {
             <!-- BRAND DENGAN LOGO 398x136px -->
             <a class="navbar-brand" href="index.php">
                 <!-- Ganti path sesuai lokasi file logo Anda -->
-                <img src="images/logo-jdih.png" 
+                <img src="images/logo-jdih.png"                 
                      alt="JDIH DPRD Kota Surakarta" 
                      title="JDIH DPRD Kota Surakarta"
                      width="398" 
@@ -907,6 +951,13 @@ function isDropdownActive($pages, $currentQuery) {
                         </a>
                     </li>
                 </ul>
+
+                <!-- TOMBOL LOGIN - DI LUAR UL NAVBAR -->
+                <a href="http://localhost/jdihcilacap_pasang/wb_admin/index.php" 
+                   class="btn-login" 
+                   target="_blank">
+                    <i class="bi bi-box-arrow-in-right"></i> Login Admin
+                </a>
             </div>
         </div>
     </nav>

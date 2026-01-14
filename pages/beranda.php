@@ -4,9 +4,15 @@ $pageTitle = 'Beranda - JDIH DPRD Kota Surakarta';
 include 'header.php';
 ?>
 
-    <!-- HERO SECTION -->
+    <!-- HERO SECTION WITH VIDEO BACKGROUND -->
     <section class="hero-section">
-        <div class="container">
+        <!-- Video Background -->
+        <div class="video-background">
+            <div id="youtube-player"></div>
+            <div class="video-overlay"></div>
+        </div>
+        
+        <div class="container hero-content">
             <div class="row justify-content-center">
                 <div class="col-lg-10">
                     <h1 class="hero-title">Selamat Datang di JDIH<br>Sekretariat DPRD Surakarta</h1>
@@ -168,5 +174,109 @@ include 'header.php';
             </div>
         </div>
     </section>
+
+    <!-- YouTube API Script -->
+    <script>
+        // Load YouTube IFrame API
+        var tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        var firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+        var player;
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('youtube-player', {
+                videoId: 'Yx_5XjMMy9k',
+                playerVars: {
+                    autoplay: 1,
+                    controls: 0,
+                    showinfo: 0,
+                    modestbranding: 1,
+                    loop: 1,
+                    playlist: 'Yx_5XjMMy9k',
+                    fs: 0,
+                    cc_load_policy: 0,
+                    iv_load_policy: 3,
+                    autohide: 1,
+                    mute: 1
+                },
+                events: {
+                    onReady: onPlayerReady
+                }
+            });
+        }
+
+        function onPlayerReady(event) {
+            event.target.mute();
+            event.target.playVideo();
+        }
+    </script>
+
+    <style>
+        /* Video Background Styles */
+        .hero-section {
+            position: relative;
+            min-height: 600px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .video-background {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            transform: translateX(-50%) translateY(-50%);
+            z-index: 0;
+        }
+
+        #youtube-player {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100vw;
+            height: 56.25vw;
+            min-height: 100vh;
+            min-width: 177.77vh;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+
+        .video-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero-title {
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+        }
+
+        .hero-subtitle {
+            color: white;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7);
+        }
+
+        @media (max-width: 768px) {
+            .hero-section {
+                min-height: 500px;
+            }
+        }
+    </style>
 
 <?php include 'footer.php'; ?>
