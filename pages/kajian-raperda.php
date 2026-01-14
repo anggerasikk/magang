@@ -1,25 +1,14 @@
-<!doctype html>
-<html lang="id">
-<head>
-    <meta charset="utf-8">
-    <title>Kajian Raperda - Monografi Hukum - JDIH DPRD Kota Surakarta</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    
-    <!-- CSS FILES -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Open+Sans&display=swap" rel="stylesheet">
-                        
-    <link href="css/bootstrap.min.css" rel="stylesheet">
-    <link href="css/bootstrap-icons.css" rel="stylesheet">
-    <link href="css/templatemo-topic-listing.css" rel="stylesheet">
-    
-    <style>
+<?php
+$pageTitle = 'Kajian-Raperda - JDIH DPRD Kota Surakarta';
+include 'header.php';
+?>
+
+<style>
         /* OVERRIDE UNTUK HALAMAN MONOGRAFI */
         body {
             padding-top: 80px;
         }
-        
+
         /* HEADER SECTION */
         .page-header {
             background: linear-gradient(15deg, #13547a 0%, #80d0c7 100%);
@@ -29,7 +18,7 @@
             position: relative;
             overflow: hidden;
         }
-        
+
         .page-header::before {
             content: '';
             position: absolute;
@@ -42,7 +31,7 @@
             background-position: bottom;
             opacity: 0.1;
         }
-        
+
         .page-header h1 {
             font-family: 'Montserrat', sans-serif;
             font-weight: 700;
@@ -51,7 +40,7 @@
             position: relative;
             z-index: 2;
         }
-        
+
         .page-header .subtitle {
             font-size: 1.1rem;
             opacity: 0.9;
@@ -59,7 +48,7 @@
             position: relative;
             z-index: 2;
         }
-        
+
         .page-header .breadcrumb {
             background: transparent;
             padding: 0;
@@ -67,16 +56,16 @@
             position: relative;
             z-index: 2;
         }
-        
+
         .page-header .breadcrumb-item a {
             color: rgba(255, 255, 255, 0.8);
             text-decoration: none;
         }
-        
+
         .page-header .breadcrumb-item.active {
             color: white;
         }
-        
+
         .page-header .breadcrumb-item+.breadcrumb-item::before {
             color: rgba(255, 255, 255, 0.8);
         }
@@ -86,7 +75,7 @@
             padding: 50px 0 60px 0;
             background: #f0f8ff;
         }
-        
+
         .section-title {
             font-family: 'Montserrat', sans-serif;
             font-weight: 600;
@@ -95,7 +84,7 @@
             position: relative;
             padding-bottom: 15px;
         }
-        
+
         .section-title::after {
             content: '';
             position: absolute;
@@ -114,14 +103,14 @@
             padding: 40px;
             margin-bottom: 40px;
         }
-        
+
         .monografi-header {
             text-align: center;
             margin-bottom: 40px;
             padding-bottom: 30px;
             border-bottom: 2px solid #f0f8ff;
         }
-        
+
         .monografi-icon {
             width: 80px;
             height: 80px;
@@ -134,7 +123,7 @@
             color: white;
             font-size: 2rem;
         }
-        
+
         .monografi-description {
             color: #666;
             font-size: 1.1rem;
@@ -152,22 +141,22 @@
             margin-bottom: 30px;
             border: 2px solid #e9ecef;
         }
-        
+
         .search-form .input-group {
             margin-bottom: 20px;
         }
-        
+
         .search-form input {
             border: 2px solid #13547a;
             border-right: none;
             height: 50px;
             font-size: 1rem;
         }
-        
+
         .search-form input:focus {
             box-shadow: 0 0 0 0.2rem rgba(19, 84, 122, 0.25);
         }
-        
+
         .search-form .btn-search {
             background: #13547a;
             color: white;
@@ -176,12 +165,12 @@
             padding: 0 25px;
             font-weight: 600;
         }
-        
+
         .search-form .btn-search:hover {
             background: #0d3a58;
             border-color: #0d3a58;
         }
-        
+
         .adv-search-link {
             color: #13547a;
             text-decoration: none;
@@ -191,7 +180,7 @@
             gap: 5px;
             transition: all 0.3s;
         }
-        
+
         .adv-search-link:hover {
             color: #80d0c7;
             gap: 8px;
@@ -203,7 +192,7 @@
             flex-direction: column;
             gap: 15px;
         }
-        
+
         .document-item {
             background: white;
             border-radius: var(--border-radius-small);
@@ -214,13 +203,13 @@
             align-items: flex-start;
             gap: 20px;
         }
-        
+
         .document-item:hover {
             transform: translateY(-3px);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
             border-color: #80d0c7;
         }
-        
+
         .document-icon {
             width: 60px;
             height: 60px;
@@ -233,11 +222,11 @@
             font-size: 1.5rem;
             flex-shrink: 0;
         }
-        
+
         .document-content {
             flex: 1;
         }
-        
+
         .document-title {
             color: #13547a;
             font-family: 'Montserrat', sans-serif;
@@ -246,17 +235,17 @@
             margin-bottom: 10px;
             line-height: 1.4;
         }
-        
+
         .document-title a {
             color: inherit;
             text-decoration: none;
             transition: all 0.3s;
         }
-        
+
         .document-title a:hover {
             color: #80d0c7;
         }
-        
+
         .document-meta {
             display: flex;
             flex-wrap: wrap;
@@ -265,30 +254,30 @@
             font-size: 0.9rem;
             color: #666;
         }
-        
+
         .meta-item {
             display: flex;
             align-items: center;
             gap: 5px;
         }
-        
+
         .meta-item i {
             color: #80d0c7;
         }
-        
+
         .document-excerpt {
             color: #666;
             line-height: 1.6;
             margin-bottom: 15px;
             font-size: 0.95rem;
         }
-        
+
         .document-actions {
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
         }
-        
+
         .btn-download {
             background: #13547a;
             color: white;
@@ -302,13 +291,13 @@
             gap: 5px;
             transition: all 0.3s;
         }
-        
+
         .btn-download:hover {
             background: #0d3a58;
             color: white;
             transform: translateY(-2px);
         }
-        
+
         .btn-preview {
             background: #f0f8ff;
             color: #13547a;
@@ -322,13 +311,13 @@
             gap: 5px;
             transition: all 0.3s;
         }
-        
+
         .btn-preview:hover {
             background: #13547a;
             color: white;
             transform: translateY(-2px);
         }
-        
+
         .status-badge {
             padding: 5px 10px;
             border-radius: 20px;
@@ -336,22 +325,22 @@
             font-weight: 600;
             display: inline-block;
         }
-        
+
         .status-draft {
             background: #fff3cd;
             color: #856404;
         }
-        
+
         .status-review {
             background: #d1ecf1;
             color: #0c5460;
         }
-        
+
         .status-approved {
             background: #d4edda;
             color: #155724;
         }
-        
+
         .status-published {
             background: #cce5ff;
             color: #004085;
@@ -363,12 +352,12 @@
             justify-content: center;
             margin-top: 30px;
         }
-        
+
         .pagination {
             display: flex;
             gap: 5px;
         }
-        
+
         .page-item .page-link {
             border: none;
             background: #f8f9fa;
@@ -377,12 +366,12 @@
             padding: 8px 15px;
             transition: all 0.3s;
         }
-        
+
         .page-item.active .page-link {
             background: #13547a;
             color: white;
         }
-        
+
         .page-item .page-link:hover {
             background: #e0e0e0;
             transform: translateY(-2px);
@@ -396,7 +385,7 @@
             padding: 25px;
             margin-bottom: 30px;
         }
-        
+
         .sidebar-menu h4 {
             color: #13547a;
             font-family: 'Montserrat', sans-serif;
@@ -408,26 +397,26 @@
             display: flex;
             align-items: center;
         }
-        
+
         .sidebar-menu h4 i {
             color: #80d0c7;
             margin-right: 10px;
         }
-        
+
         .sidebar-menu ul {
             list-style: none;
             padding: 0;
             margin: 0;
         }
-        
+
         .sidebar-menu ul li {
             margin-bottom: 12px;
         }
-        
+
         .sidebar-menu ul li:last-child {
             margin-bottom: 0;
         }
-        
+
         .sidebar-menu ul li a {
             color: var(--p-color);
             text-decoration: none;
@@ -438,19 +427,19 @@
             transition: all 0.3s;
             font-weight: 500;
         }
-        
+
         .sidebar-menu ul li.active a {
             background: #f0f8ff;
             color: #13547a;
             font-weight: 600;
         }
-        
+
         .sidebar-menu ul li a:hover {
             background: #f0f8ff;
             color: #13547a;
             transform: translateX(5px);
         }
-        
+
         .sidebar-menu ul li a i {
             color: #80d0c7;
             margin-right: 10px;
@@ -466,197 +455,28 @@
             margin-bottom: 30px;
             text-align: center;
         }
-        
+
         .stats-number {
             font-size: 2.5rem;
             font-weight: 700;
             margin-bottom: 5px;
         }
-        
+
         .stats-label {
             font-size: 1rem;
             opacity: 0.9;
         }
-        
+
         /* RESPONSIVE */
         @media (max-width: 768px) {
             body {
                 padding-top: 70px;
             }
-            
+
             .page-header {
                 padding: 30px 0 20px 0;
             }
-            
-            .page-header h1 {
-                font-size: 2rem;
-            }
-            
-            .main-content {
-                padding: 30px 0 40px 0;
-            }
-            
-            .monografi-container {
-                padding: 30px;
-            }
-            
-            .document-item {
-                flex-direction: column;
-                gap: 15px;
-            }
-            
-            .document-icon {
-                width: 50px;
-                height: 50px;
-                font-size: 1.2rem;
-            }
-            
-            .document-meta {
-                flex-direction: column;
-                gap: 10px;
-            }
-            
-            .document-actions {
-                justify-content: flex-start;
-            }
-        }
-        
-        @media (max-width: 576px) {
-            .page-header h1 {
-                font-size: 1.8rem;
-            }
-            
-            .section-title {
-                font-size: 1.3rem;
-            }
-            
-            .monografi-icon {
-                width: 60px;
-                height: 60px;
-                font-size: 1.5rem;
-            }
-            
-            .search-form input,
-            .search-form .btn-search {
-                height: 45px;
-            }
-        }
-    </style>
-</head>
 
-<body id="top">
-
-    <!-- NAVBAR -->
-    <nav class="navbar navbar-expand-lg fixed-top navbar-custom">
-        <div class="container">
-            <!-- BRAND -->
-            <a class="navbar-brand d-flex align-items-center" href="index.php">
-                <span class="fw-bold">JDIH DPRD</span>
-            </a>
-
-            <!-- TOGGLER -->
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                data-bs-target="#navbarNav" aria-controls="navbarNav"
-                aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <!-- MENU -->
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav mx-auto mb-2 mb-lg-0 gap-lg-2">
-                    <li class="nav-item">
-                        <a class="nav-link" href="index.php">Beranda</a>
-                    </li>
-
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="dropdownTentangKami"
-                            role="button" data-bs-toggle="dropdown">
-                            Tentang Kami
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="?page=profil-jdih">Profil JDIH</a></li>
-                            <li><a class="dropdown-item" href="?page=struktur-organisasi">Struktur Organisasi</a></li>
-                            <li><a class="dropdown-item" href="?page=alur-pengelolaan">Alur Pengelolaan Produk Hukum</a></li>
-                            <li><a class="dropdown-item" href="?page=sop-pengelola">SOP Pengelola JDIH DPRD Kota Surakarta</a></li>
-                            <li><a class="dropdown-item" href="?page=dasar-hukum">Dasar Hukum JDIH Sekretariat DPRD Kota Surakarta</a></li>
-                            <li><a class="dropdown-item" href="?page=surat-keputusan">Surat Keputusan Pengelola JDIH Sekretariat DPRD Kota Surakarta</a></li>
-                            <li><a class="dropdown-item" href="?page=visi-misi">Visi & Misi</a></li>
-                            <li><a class="dropdown-item" href="?page=video-profil">Video Profil JDIH</a></li>
-                        </ul>
-                    </li>
-
-                    <!-- PERUNDANGAN -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="dropdownPerundangan"
-                            role="button" data-bs-toggle="dropdown">
-                            Perundang-undangan
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="?page=keputusan-dprd">Keputusan DPRD</a></li>
-                            <li><a class="dropdown-item" href="?page=keputusan-pimpinan">Keputusan Pimpinan DPRD</a></li>
-                            <li><a class="dropdown-item" href="?page=keputusan-sekretaris">Keputusan Sekretaris DPRD</a></li>
-                            <li><a class="dropdown-item" href="?page=peraturan-dprd">Peraturan DPRD</a></li>
-                            <li><a class="dropdown-item" href="?page=perda">Peraturan Daerah</a></li>
-                            <li><a class="dropdown-item" href="?page=english-legal">English Legal Product</a></li>
-                        </ul>
-                    </li>
-
-                    <!-- MONOGRAFI -->
-                    <li class="nav-item dropdown active">
-                        <a class="nav-link dropdown-toggle" href="#" id="dropdownMonografi"
-                            role="button" data-bs-toggle="dropdown">
-                            Monografi Hukum
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="?page=pokok-pikiran-dprd">Pokok Pikiran DPRD</a></li>
-                            <li><a class="dropdown-item active" href="?page=kajian-raperda">Kajian Raperda</a></li>
-                            <li><a class="dropdown-item" href="?page=naskah-akademik">Naskah Akademik</a></li>
-                            <li><a class="dropdown-item" href="?page=hasil-fasilitasi">Hasil Fasilitasi Raperda</a></li>
-                            <li><a class="dropdown-item" href="?page=hasil-harmonisasi">Hasil Harmonisasi Raperda</a></li>
-                            <li><a class="dropdown-item" href="?page=karya-ilmiah">Penulisan Karya Ilmiah</a></li>
-                            <li><a class="dropdown-item" href="?page=risalah">Risalah</a></li>
-                            <li><a class="dropdown-item" href="?page=himpunan">Himpunan Peraturan</a></li>
-                        </ul>
-                    </li>
-
-                    <!-- ARTIKEL HUKUM -->
-                    <li class="nav-item">
-                        <a class="nav-link" href="?page=artikel">Artikel Hukum</a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="?page=yurisprudensi">Yurisprudensi</a></li>
-
-                    <!-- INFORMASI -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="dropdownInformasi"
-                            role="button" data-bs-toggle="dropdown">
-                            Informasi
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="?page=kegiatan">Kegiatan JDIH</a></li>
-                            <li><a class="dropdown-item" href="?page=infografis">Infografis & Videografis</a></li>
-                            <li><a class="dropdown-item" href="?page=galeri">Galeri Foto</a></li>
-                            <li><a class="dropdown-item" href="?page=penghargaan">Penghargaan</a></li>
-                            <li><a class="dropdown-item" href="?page=buku">Koleksi Buku</a></li>
-                        </ul>
-                    </li>
-
-                    <!-- KONTAK -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="dropdownKontak"
-                            role="button" data-bs-toggle="dropdown">
-                            Kontak & Saran
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="?page=kontak">Form Kontak</a></li>
-                            <li><a class="dropdown-item" href="?page=saran">Saran & Masukan</a></li>
-                        </ul>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
 
     <!-- HEADER SECTION -->
     <section class="page-header">

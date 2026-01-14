@@ -1,0 +1,23 @@
+<?php
+// File: test_download.php
+$file_path = urldecode($_GET['path'] ?? '');
+
+if (!$file_path || !file_exists($file_path)) {
+    die("File tidak ditemukan: " . htmlspecialchars($file_path));
+}
+
+if (!is_readable($file_path)) {
+    die("File tidak dapat dibaca.");
+}
+
+$filename = basename($file_path);
+$filesize = filesize($file_path);
+
+header('Content-Type: application/pdf');
+header('Content-Disposition: attachment; filename="' . $filename . '"');
+header('Content-Length: ' . $filesize);
+header('Cache-Control: no-cache, must-revalidate');
+
+readfile($file_path);
+exit;
+?>

@@ -1,6 +1,7 @@
 <?php
 // pages/detail-perundangan.php
 session_start();
+include "header.php";
 include_once "a_db.php";
 
 // Parameter
@@ -267,4 +268,5 @@ if ($id) {
 <?php 
 // Tutup koneksi
 mysqli_close($koneksi);
+include "footer.php";
 ?>
