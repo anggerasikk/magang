@@ -43,16 +43,6 @@ while ($year_row = mysqli_fetch_assoc($years_result)) {
     $years[] = $year_row['tahun_pengundangan'];
 }
 
-// Handle filter tahun jika ada parameter GET
-$selected_year = isset($_GET['tahun']) ? $_GET['tahun'] : 'semua';
-$where_clause = "WHERE jenis = 'Keputusan_DPRD'";
-if ($selected_year != 'semua' && is_numeric($selected_year)) {
-    $where_clause .= " AND tahun_pengundangan = '$selected_year'";
-}
-
-$filtered_query = "SELECT * FROM uploads $where_clause ORDER BY idData DESC";
-$filtered_result = mysqli_query($koneksi, $filtered_query);
-
 // Set variabel untuk header
 $page_title = "Keputusan DPRD - JDIH DPRD Kota Surakarta";
 $page_description = "Kumpulan Keputusan Dewan Perwakilan Rakyat Daerah Kota Surakarta";
@@ -525,13 +515,17 @@ include "header.php";
                 <div class="year-filter">
                     <h5><i class="bi bi-calendar"></i> Filter Berdasarkan Tahun</h5>
                     <div class="year-buttons">
-                        <a href="keputusan-dprd.php" class="year-btn <?php echo $selected_year == 'semua' ? 'active' : ''; ?>">Semua</a>
+                        <button type="button" class="year-btn active" data-year="semua">Semua</button>
+
                         <?php foreach($years as $year): ?>
-                            <a href="keputusan-dprd.php?tahun=<?php echo $year; ?>" 
-                               class="year-btn <?php echo $selected_year == $year ? 'active' : ''; ?>">
+                            <button 
+                                type="button" 
+                                class="year-btn" 
+                                data-year="<?php echo $year; ?>">
                                 <?php echo $year; ?>
-                            </a>
+                            </button>
                         <?php endforeach; ?>
+
                     </div>
                 </div>
                 
@@ -539,11 +533,12 @@ include "header.php";
                 <div class="document-container">
                     <h3 class="section-title">Daftar Keputusan DPRD Kota Surakarta</h3>
                     
-                    <?php if(mysqli_num_rows($filtered_result) > 0): ?>
+                    <?php if(mysqli_num_rows($result) > 0): ?>
+
                     <div class="card-container">
                         <?php 
                         $no = 1;
-                        while($row = mysqli_fetch_assoc($filtered_result)): 
+                        while($row = mysqli_fetch_assoc($result)):
                             // Format tanggal
                             $tanggal_penetapan = date('d F Y', strtotime($row['tanggal_penetapan']));
                             
@@ -554,9 +549,10 @@ include "header.php";
                             $image_path = !empty($row['image_path']) ? $row['image_path'] : '';
                             
                             // URL untuk detail
-                            $detail_url = "detail-keputusan.php?id=" . $row['idData'];
+                            $detail_url = "index.php?page=detail-keputusan&id=" . $row['idData'];
+
                         ?>
-                        <div class="document-card">
+                        <div class="document-card" data-tahun="<?php echo $row['tahun_pengundangan']; ?>">
                             <!-- CARD IMAGE -->
                             <div class="card-image">
                                 <?php if(!empty($image_path) && file_exists($image_path)): ?>
@@ -773,11 +769,12 @@ include "header.php";
                             $pop = $popular_items[$i];
                         ?>
                         <li>
-                            <a href="detail-keputusan.php?id=<?php echo $pop['idData']; ?>">
+                            <a href="index.php?page=detail-keputusan&id=<?php echo $pop['idData']; ?>">
                                 <i class="bi bi-file-text"></i>
                                 <?php echo htmlspecialchars($pop['noPeraturan']); ?>
                                 <span class="badge bg-primary ms-2"><?php echo ($i + 1); ?>#</span>
                             </a>
+
                         </li>
                         <?php 
                         endfor; 
@@ -792,27 +789,6 @@ include "header.php";
                     </ul>
                 </div>
 
-                <!-- DOWNLOAD -->
-                <div class="sidebar-menu">
-                    <h4><i class="bi bi-download"></i> Download Koleksi</h4>
-                    <p class="mb-3">Unduh kumpulan keputusan DPRD dalam format terkompresi:</p>
-                    <?php if($total_dokumen > 0): ?>
-                    <a href="downloads/keputusan-dprd-2024.zip" class="btn btn-primary w-100 mb-2">
-                        <i class="bi bi-file-earmark-zip"></i>
-                        Keputusan Terbaru (ZIP)
-                    </a>
-                    <a href="downloads/keputusan-dprd.zip" class="btn btn-outline-primary w-100">
-                        <i class="bi bi-file-earmark-zip"></i>
-                        Semua Keputusan (ZIP)
-                    </a>
-                    <?php else: ?>
-                    <div class="alert alert-warning">
-                        <i class="bi bi-exclamation-triangle"></i>
-                        Belum ada dokumen yang tersedia untuk diunduh.
-                    </div>
-                    <?php endif; ?>
-                </div>
-
             </div>
 
         </div>
@@ -822,47 +798,27 @@ include "header.php";
 <?php include "footer.php"; ?>
 
 <script>
-    // Script untuk halaman keputusan DPRD
-    $(document).ready(function() {
-        // Smooth scroll for anchor links
-        $('a[href^="#"]').on('click', function(e) {
-            if ($(this).attr('href') === '#') return;
-            e.preventDefault();
-            var target = this.hash;
-            var $target = $(target);
-            
-            $('html, body').stop().animate({
-                'scrollTop': $target.offset().top - 80
-            }, 900, 'swing', function() {
-                window.location.hash = target;
+document.addEventListener("DOMContentLoaded", function () {
+    const buttons = document.querySelectorAll(".year-btn");
+    const cards = document.querySelectorAll(".document-card");
+
+    buttons.forEach(btn => {
+        btn.addEventListener("click", function () {
+            buttons.forEach(b => b.classList.remove("active"));
+            this.classList.add("active");
+
+            const year = this.dataset.year;
+
+            cards.forEach(card => {
+                if (year === "semua" || card.dataset.tahun === year) {
+                    card.style.display = "flex";
+                } else {
+                    card.style.display = "none";
+                }
             });
         });
-        
-        // Card hover effect
-        $('.document-card').hover(
-            function() {
-                $(this).css('z-index', '100');
-            },
-            function() {
-                $(this).css('z-index', '1');
-            }
-        );
-        
-        // Year filter active state
-        $('.year-btn').on('click', function(e) {
-            $('.year-btn').removeClass('active');
-            $(this).addClass('active');
-        });
-        
-        // Download tracking
-        $('.btn-download').on('click', function(e) {
-            if (!$(this).prop('disabled')) {
-                const docNumber = $(this).closest('.document-card').find('.card-number').text();
-                console.log('Downloading document:', docNumber);
-                // Add download tracking logic here
-            }
-        });
     });
+});
 </script>
 
 <?php 
