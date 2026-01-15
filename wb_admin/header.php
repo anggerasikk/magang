@@ -37,7 +37,7 @@
                             <li><a href="index.php?page=keppemimpin"><i class="fa fa-file-text"></i> Keputusan Pimpinan DPRD</a></li>
                             <li><a href="index.php?page=perdprd"><i class="fa fa-balance-scale"></i> Peraturan DPRD</a></li>
                             <li><a href="index.php?page=perda"><i class="fa fa-university"></i> Peraturan Daerah</a></li>
-                            <li><a href="index.php?page=englishj"><i class="fa fa-language"></i> English Legal Products</a></li>
+                            <li><a href="index.php?page=english-legal"><i class="fa fa-language"></i> English Legal Products</a></li>
                         </ul>
                     </div>
                 </div>

@@ -238,7 +238,7 @@ if(!isset($_SESSION['login']) || !isset($_SESSION['level'])) {
                 case 'kepdprd':
                     include "kepdprd.php";
                     break;
-                case 'keppimdprd':
+                case 'keppemimpin':
                     include "keppemimpin.php";
                     break;
                 case 'kepsekdprd':
@@ -264,6 +264,12 @@ if(!isset($_SESSION['login']) || !isset($_SESSION['level'])) {
                     break;
                 case 'perdprd':
                     include "perdprd.php";
+                    break;
+                case 'perda':
+                    include "perda.php";
+                    break;
+                case 'english-legal':
+                    include "english-legal.php";
                     break;
                 default:
                     include "dashboard.php";

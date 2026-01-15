@@ -43,12 +43,12 @@ $jenis_produk = [
         'desc' => 'Peraturan yang ditetapkan oleh DPRD',
         'link' => 'index.php?page=perdprd'
     ],
-    'keppimdprd' => [
+    'keppemimpin' => [
         'nama' => 'Keputusan Pimpinan DPRD',
         'icon' => 'images/keputusan_pimpinan.png',
         'color' => '#9b59b6',
         'desc' => 'Keputusan dari Pimpinan DPRD',
-        'link' => 'index.php?page=keppimdprd'
+        'link' => 'index.php?page=keppemimpin'
     ],
     'perda' => [
         'nama' => 'Peraturan Daerah',
@@ -198,7 +198,7 @@ ol, ul {
 
 /* Warna untuk setiap jenis produk hukum */
 .badge-perdprd { background-color: #e74c3c; }
-.badge-keppimdprd { background-color: #9b59b6; }
+.badge-keppemimpin { background-color: #9b59b6; }
 .badge-perda { background-color: #f39c12; }
 .badge-english-legal { background-color: #1abc9c; }
 .badge-kepdprd { background-color: #3498db; }
@@ -220,7 +220,7 @@ ol, ul {
                         'kepdprd' => 'Keputusan_DPRD',
                         'kepsekdprd' => 'Keputusan_Sekretaris_DPRD',
                         'perdprd' => 'Peraturan_DPRD',
-                        'keppimdprd' => 'Keputusan_Pimpinan_DPRD',
+                        'keppemimpin' => 'Keputusan_Pimpinan_DPRD',
                         'perda' => 'Peraturan_Daerah',
                         'english-legal' => 'English_Legal_Product'
                     ];

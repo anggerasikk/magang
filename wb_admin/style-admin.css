@@ -1,0 +1,599 @@
+/* 
+ * style-admin.css
+ * CSS untuk Admin Panel JDIH DPRD
+ */
+
+/* ============================================
+   RESET DAN BASE STYLES
+   ============================================ */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f5f5f5;
+    color: #333;
+    line-height: 1.6;
+}
+
+.container-fluid {
+    padding-right: 15px;
+    padding-left: 15px;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+/* ============================================
+   HEADER DAN TITLE
+   ============================================ */
+h4 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-weight: 500;
+    line-height: 1.1;
+}
+
+/* ============================================
+   PANEL DAN CARD STYLES
+   ============================================ */
+.panel {
+    margin-bottom: 20px;
+    background-color: #fff;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    box-shadow: 0 1px 1px rgba(0,0,0,.05);
+}
+
+.panel-default {
+    border-color: #ddd;
+}
+
+.panel-heading {
+    padding: 10px 15px;
+    border-bottom: 1px solid transparent;
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+    background-color: #f5f5f5;
+    border-color: #ddd;
+    color: #333;
+}
+
+.panel-body {
+    padding: 15px;
+}
+
+/* ============================================
+   TABEL STYLES
+   ============================================ */
+.table {
+    width: 100%;
+    max-width: 100%;
+    margin-bottom: 20px;
+    background-color: transparent;
+}
+
+.table th,
+.table td {
+    padding: 8px;
+    line-height: 1.42857143;
+    vertical-align: top;
+    border-top: 1px solid #ddd;
+}
+
+.table thead th {
+    vertical-align: bottom;
+    border-bottom: 2px solid #ddd;
+    background-color: #f8f9fa;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: #f9f9f9;
+}
+
+.table-bordered {
+    border: 1px solid #ddd;
+}
+
+.table-bordered th,
+.table-bordered td {
+    border: 1px solid #ddd;
+}
+
+.table-hover tbody tr:hover {
+    background-color: #f5f5f5;
+}
+
+/* ============================================
+   FORM STYLES
+   ============================================ */
+.form-control {
+    display: block;
+    width: 100%;
+    height: 34px;
+    padding: 6px 12px;
+    font-size: 14px;
+    line-height: 1.42857143;
+    color: #555;
+    background-color: #fff;
+    background-image: none;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
+    transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;
+}
+
+.form-control:focus {
+    border-color: #66afe9;
+    outline: 0;
+    box-shadow: inset 0 1px 1px rgba(0,0,0,.075),0 0 8px rgba(102,175,233,.6);
+}
+
+textarea.form-control {
+    height: auto;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.control-label {
+    padding-top: 7px;
+    margin-bottom: 0;
+    text-align: right;
+    font-weight: 500;
+}
+
+/* ============================================
+   BUTTON STYLES
+   ============================================ */
+.btn {
+    display: inline-block;
+    padding: 6px 12px;
+    margin-bottom: 0;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.42857143;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    cursor: pointer;
+    user-select: none;
+    background-image: none;
+    border: 1px solid transparent;
+    border-radius: 4px;
+}
+
+.btn-primary {
+    color: #fff;
+    background-color: #337ab7;
+    border-color: #2e6da4;
+}
+
+.btn-primary:hover {
+    background-color: #286090;
+    border-color: #204d74;
+}
+
+.btn-info {
+    color: #fff;
+    background-color: #5bc0de;
+    border-color: #46b8da;
+}
+
+.btn-info:hover {
+    background-color: #31b0d5;
+    border-color: #269abc;
+}
+
+.btn-warning {
+    color: #fff;
+    background-color: #f0ad4e;
+    border-color: #eea236;
+}
+
+.btn-warning:hover {
+    background-color: #ec971f;
+    border-color: #d58512;
+}
+
+.btn-danger {
+    color: #fff;
+    background-color: #d9534f;
+    border-color: #d43f3a;
+}
+
+.btn-danger:hover {
+    background-color: #c9302c;
+    border-color: #ac2925;
+}
+
+.btn-success {
+    color: #fff;
+    background-color: #5cb85c;
+    border-color: #4cae4c;
+}
+
+.btn-success:hover {
+    background-color: #449d44;
+    border-color: #398439;
+}
+
+.btn-default {
+    color: #333;
+    background-color: #fff;
+    border-color: #ccc;
+}
+
+.btn-default:hover {
+    background-color: #e6e6e6;
+    border-color: #adadad;
+}
+
+.btn-xs {
+    padding: 1px 5px;
+    font-size: 12px;
+    line-height: 1.5;
+    border-radius: 3px;
+}
+
+.btn-action {
+    margin: 2px;
+}
+
+.btn-custom {
+    min-width: 100px;
+    margin-left: 5px;
+}
+
+.btn-detail {
+    min-width: 120px;
+    margin: 5px;
+}
+
+/* ============================================
+   BADGE DAN LABEL STYLES
+   ============================================ */
+.badge {
+    display: inline-block;
+    min-width: 10px;
+    padding: 3px 7px;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+    color: #fff;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    background-color: #777;
+    border-radius: 10px;
+}
+
+.bg-info {
+    background-color: #5bc0de;
+}
+
+.label {
+    display: inline;
+    padding: .2em .6em .3em;
+    font-size: 75%;
+    font-weight: 700;
+    line-height: 1;
+    color: #fff;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: .25em;
+}
+
+.label-success {
+    background-color: #5cb85c;
+}
+
+.label-danger {
+    background-color: #d9534f;
+}
+
+.label-warning {
+    background-color: #f0ad4e;
+}
+
+.badge-detail {
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.badge-success {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.badge-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.badge-warning {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+/* ============================================
+   IMAGE STYLES
+   ============================================ */
+.img-preview {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+}
+
+.img-preview-large {
+    max-width: 200px;
+    max-height: 200px;
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    padding: 5px;
+    background: white;
+}
+
+.img-detail {
+    max-width: 300px;
+    max-height: 300px;
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    padding: 5px;
+    background: white;
+}
+
+/* ============================================
+   TAB NAVIGATION STYLES
+   ============================================ */
+.nav-tabs {
+    border-bottom: 1px solid #ddd;
+}
+
+.nav-tabs > li {
+    float: left;
+    margin-bottom: -1px;
+}
+
+.nav-tabs > li > a {
+    margin-right: 2px;
+    line-height: 1.42857143;
+    border: 1px solid transparent;
+    border-radius: 4px 4px 0 0;
+}
+
+.nav-tabs > li > a:hover {
+    border-color: #eee #eee #ddd;
+}
+
+.nav-tabs > li.active > a,
+.nav-tabs > li.active > a:hover,
+.nav-tabs > li.active > a:focus {
+    color: #555;
+    cursor: default;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-bottom-color: transparent;
+}
+
+.tab-content {
+    padding: 15px;
+    background: white;
+    border: 1px solid #ddd;
+    border-top: none;
+}
+
+.tab-pane {
+    display: none;
+}
+
+.tab-pane.active {
+    display: block;
+}
+
+/* ============================================
+   DETAIL PAGE STYLES
+   ============================================ */
+.detail-panel {
+    margin-top: 20px;
+}
+
+.detail-header {
+    background: linear-gradient(to right, #2c3e50, #4a6491);
+    color: white;
+    padding: 15px 20px;
+    font-weight: bold;
+    border-radius: 5px 5px 0 0;
+}
+
+.detail-body {
+    padding: 20px;
+    background: white;
+    border: 1px solid #ddd;
+    border-top: none;
+    border-radius: 0 0 5px 5px;
+}
+
+.detail-section {
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.detail-section-title {
+    font-size: 18px;
+    font-weight: bold;
+    color: #2c3e50;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #4a6491;
+}
+
+.detail-item {
+    margin-bottom: 12px;
+    display: flex;
+}
+
+.detail-label {
+    font-weight: bold;
+    color: #555;
+    width: 250px;
+    min-width: 250px;
+}
+
+.detail-value {
+    color: #333;
+    flex-grow: 1;
+}
+
+/* ============================================
+   ALERT BOX STYLES
+   ============================================ */
+.alert {
+    padding: 15px;
+    margin-bottom: 20px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+}
+
+.alert-info {
+    background-color: #d9edf7;
+    border-color: #bce8f1;
+    color: #31708f;
+}
+
+.alert-warning {
+    background-color: #fcf8e3;
+    border-color: #faebcc;
+    color: #8a6d3b;
+}
+
+.alert-box {
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+}
+
+/* ============================================
+   FILE PREVIEW STYLES
+   ============================================ */
+.file-preview {
+    text-align: center;
+    padding: 20px;
+    background: #f8f9fa;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+.file-info {
+    font-size: 12px;
+    color: #666;
+    margin-top: 5px;
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+.text-center {
+    text-align: center;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.pull-right {
+    float: right !important;
+}
+
+.pull-left {
+    float: left !important;
+}
+
+.clearfix::after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+.required:after {
+    content: " *";
+    color: red;
+}
+
+.no-data {
+    color: #999;
+    font-style: italic;
+}
+
+.mt-2 {
+    margin-top: 10px;
+}
+
+.mt-3 {
+    margin-top: 15px;
+}
+
+.section-title {
+    font-size: 16px;
+    font-weight: bold;
+    color: #2c3e50;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #eee;
+}
+
+/* ============================================
+   FOOTER STYLES
+   ============================================ */
+#footer {
+    margin-top: 30px;
+    padding: 20px 0;
+    background-color: #2c3e50;
+    color: #ecf0f1;
+}
+
+#footer small {
+    font-size: 85%;
+}
+
+/* ============================================
+   RESPONSIVE STYLES
+   ============================================ */
+@media (max-width: 768px) {
+    .detail-item {
+        flex-direction: column;
+    }
+    
+    .detail-label {
+        width: 100%;
+        min-width: 100%;
+        margin-bottom: 5px;
+    }
+    
+    .control-label {
+        text-align: left;
+        padding-top: 0;
+    }
+    
+    .btn-detail {
+        display: block;
+        width: 100%;
+        margin-bottom: 10px;
+    }
+}
+
+@media (max-width: 992px) {
+    .col-md-6, .col-md-12 {
+        width: 100%;
+    }
+}
