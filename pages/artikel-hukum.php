@@ -1,882 +1,1101 @@
-?>
-<!doctype html>
-<html lang="id">
-<head>
-    <meta charset="utf-8">
-    <title>Artikel Hukum - JDIH DPRD Kota Surakarta</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    
-    <!-- CSS FILES -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Open+Sans&display=swap" rel="stylesheet">
-                        
-    <link href="css/bootstrap.min.css" rel="stylesheet">
-    <link href="css/bootstrap-icons.css" rel="stylesheet">
-    <link href="css/templatemo-topic-listing.css" rel="stylesheet">
-    
-    <style>
-        /* OVERRIDE UNTUK HALAMAN INI SAJA */
-        body {
-            padding-top: 80px;
+<?php include 'header.php'; ?>
+
+<style>
+    /* ===== VARIABLES & OVERRIDES ===== */
+    :root {
+        --primary-color: #13547a;
+        --secondary-color: #80d0c7;
+        --accent-color: #ff6b6b;
+        --dark-color: #1a365d;
+        --light-color: #f0f8ff;
+        --gray-color: #6c757d;
+        --transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+    }
+
+    body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+        font-family: 'Open Sans', sans-serif;
+    }
+
+    /* ===== HEADER SECTION ENHANCED ===== */
+    .page-header {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--dark-color) 100%);
+        padding: 80px 0 50px;
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 30px;
+    }
+
+    .page-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ffffff" fill-opacity="0.05" d="M0,224L48,213.3C96,203,192,181,288,181.3C384,181,480,203,576,208C672,213,768,203,864,181.3C960,160,1056,128,1152,128C1248,128,1344,160,1392,176L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>');
+        background-size: cover;
+        background-position: bottom;
+    }
+
+    .page-header h1 {
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 800;
+        font-size: 3.5rem;
+        margin-bottom: 15px;
+        position: relative;
+        background: linear-gradient(to right, #ffffff, #e0f7ff);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .page-header .subtitle {
+        font-size: 1.2rem;
+        color: rgba(255, 255, 255, 0.9);
+        margin-bottom: 25px;
+        position: relative;
+        max-width: 600px;
+        line-height: 1.6;
+    }
+
+    .breadcrumb {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 50px;
+        padding: 12px 25px !important;
+        display: inline-block;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .breadcrumb-item a {
+        color: rgba(255, 255, 255, 0.9) !important;
+        text-decoration: none;
+        transition: var(--transition);
+    }
+
+    .breadcrumb-item a:hover {
+        color: white !important;
+        transform: translateX(3px);
+    }
+
+    .breadcrumb-item.active {
+        color: white !important;
+        font-weight: 600;
+    }
+
+    /* ===== MAIN CONTENT ===== */
+    .main-content {
+        padding: 40px 0 80px;
+        position: relative;
+    }
+
+    .section-title {
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 700;
+        color: var(--dark-color);
+        margin-bottom: 30px;
+        position: relative;
+        padding-bottom: 15px;
+        font-size: 1.8rem;
+    }
+
+    .section-title::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 70px;
+        height: 4px;
+        background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+        border-radius: 2px;
+    }
+
+    .section-title::before {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 80px;
+        width: 20px;
+        height: 4px;
+        background: var(--accent-color);
+        border-radius: 2px;
+    }
+
+    /* ===== FEATURED ARTICLE ENHANCED ===== */
+    .featured-article {
+        background: linear-gradient(135deg, var(--dark-color) 0%, var(--primary-color) 100%);
+        border-radius: 20px;
+        overflow: hidden;
+        margin-bottom: 50px;
+        position: relative;
+        box-shadow: 0 20px 40px rgba(19, 84, 122, 0.25);
+        transition: var(--transition);
+    }
+
+    .featured-article:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 30px 60px rgba(19, 84, 122, 0.35);
+    }
+
+    .featured-content {
+        padding: 50px;
+        position: relative;
+        z-index: 2;
+    }
+
+    .featured-badge {
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        color: white;
+        padding: 8px 20px;
+        border-radius: 50px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        display: inline-block;
+        margin-bottom: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        transition: var(--transition);
+    }
+
+    .featured-badge:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: scale(1.05);
+    }
+
+    .featured-title {
+        color: white;
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 700;
+        font-size: 2.5rem;
+        margin-bottom: 20px;
+        line-height: 1.3;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .featured-excerpt {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 1.2rem;
+        line-height: 1.6;
+        margin-bottom: 30px;
+        max-width: 800px;
+    }
+
+    .featured-meta {
+        display: flex;
+        gap: 30px;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+    }
+
+    .featured-meta-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.95rem;
+    }
+
+    .featured-meta-item i {
+        color: var(--secondary-color);
+        font-size: 1.2rem;
+    }
+
+    .custom-btn.custom-btn-bg-white {
+        background: white;
+        color: var(--primary-color);
+        border: none;
+        padding: 14px 35px;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: var(--transition);
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        box-shadow: 0 5px 15px rgba(255, 255, 255, 0.2);
+    }
+
+    .custom-btn.custom-btn-bg-white:hover {
+        background: var(--secondary-color);
+        color: white;
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(255, 255, 255, 0.3);
+    }
+
+    /* ===== ARTICLE CONTAINER ===== */
+    .article-container {
+        background: white;
+        border-radius: 20px;
+        padding: 40px;
+        margin-bottom: 40px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        transition: var(--transition);
+        border: 1px solid rgba(255, 255, 255, 0.8);
+    }
+
+    .article-container:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+    }
+
+    /* ===== CATEGORY CLOUD ENHANCED ===== */
+    .category-cloud {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .category-item {
+        background: var(--light-color);
+        color: var(--primary-color);
+        padding: 10px 20px;
+        border-radius: 50px;
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: var(--transition);
+        border: 2px solid transparent;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .category-item::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+        transition: left 0.7s;
+    }
+
+    .category-item:hover::before {
+        left: 100%;
+    }
+
+    .category-item:hover {
+        background: var(--primary-color);
+        color: white;
+        border-color: var(--secondary-color);
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(19, 84, 122, 0.2);
+    }
+
+    .category-item.active {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        border-color: var(--secondary-color);
+        font-weight: 600;
+        box-shadow: 0 5px 15px rgba(19, 84, 122, 0.3);
+    }
+
+    /* ===== ARTICLE GRID ENHANCED ===== */
+    .article-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 30px;
+        margin-top: 30px;
+    }
+
+    .article-card {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        transition: var(--transition);
+        text-decoration: none;
+        display: block;
+        border: 1px solid #eaeaea;
+        height: 100%;
+        position: relative;
+    }
+
+    .article-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 5px;
+        background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+        z-index: 2;
+    }
+
+    .article-card:hover {
+        transform: translateY(-10px) scale(1.02);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        border-color: var(--secondary-color);
+    }
+
+    .article-category {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        background: rgba(19, 84, 122, 0.9);
+        backdrop-filter: blur(10px);
+        color: white;
+        padding: 6px 15px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        z-index: 2;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .article-image {
+        height: 220px;
+        width: 100%;
+        object-fit: cover;
+        transition: transform 0.6s ease;
+    }
+
+    .article-card:hover .article-image {
+        transform: scale(1.1);
+    }
+
+    .article-content {
+        padding: 25px;
+    }
+
+    .article-title {
+        color: var(--dark-color);
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 700;
+        font-size: 1.3rem;
+        margin-bottom: 15px;
+        line-height: 1.4;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .article-excerpt {
+        color: var(--gray-color);
+        font-size: 0.95rem;
+        line-height: 1.6;
+        margin-bottom: 20px;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .article-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 15px;
+        border-top: 1px solid #f0f0f0;
+        margin-top: 15px;
+    }
+
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--gray-color);
+        font-size: 0.85rem;
+    }
+
+    .meta-item i {
+        color: var(--secondary-color);
+    }
+
+    /* ===== PAGINATION ENHANCED ===== */
+    .pagination-container {
+        margin-top: 40px;
+    }
+
+    .pagination {
+        justify-content: center;
+        gap: 5px;
+    }
+
+    .page-item .page-link {
+        border: 2px solid transparent;
+        background: white;
+        color: var(--primary-color);
+        border-radius: 10px;
+        padding: 10px 18px;
+        font-weight: 500;
+        transition: var(--transition);
+        margin: 0 2px;
+    }
+
+    .page-item .page-link:hover {
+        background: var(--light-color);
+        border-color: var(--secondary-color);
+        transform: translateY(-3px);
+    }
+
+    .page-item.active .page-link {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        border-color: var(--secondary-color);
+        box-shadow: 0 5px 15px rgba(19, 84, 122, 0.3);
+    }
+
+    /* ===== ARTICLE DETAIL ENHANCED ===== */
+    .article-detail {
+        background: white;
+        border-radius: 20px;
+        padding: 50px;
+        margin-top: 40px;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .article-detail::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 5px;
+        background: linear-gradient(to right, var(--primary-color), var(--secondary-color), var(--accent-color));
+    }
+
+    .article-header {
+        margin-bottom: 40px;
+        padding-bottom: 30px;
+        border-bottom: 2px solid #f0f0f0;
+    }
+
+    .article-detail-title {
+        color: var(--dark-color);
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 800;
+        font-size: 2.8rem;
+        margin-bottom: 20px;
+        line-height: 1.2;
+    }
+
+    .article-detail-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 25px;
+        align-items: center;
+    }
+
+    .article-author {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 15px;
+        background: var(--light-color);
+        border-radius: 15px;
+        flex: 1;
+        min-width: 250px;
+    }
+
+    .author-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 700;
+        font-size: 1.3rem;
+        box-shadow: 0 5px 15px rgba(19, 84, 122, 0.3);
+    }
+
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--gray-color);
+        font-size: 0.95rem;
+        background: var(--light-color);
+        padding: 10px 20px;
+        border-radius: 10px;
+    }
+
+    .meta-item i {
+        color: var(--secondary-color);
+        font-size: 1.1rem;
+    }
+
+    .article-body {
+        font-size: 1.15rem;
+        line-height: 1.8;
+        color: #444;
+    }
+
+    .article-body p {
+        margin-bottom: 25px;
+    }
+
+    .article-body h2 {
+        color: var(--primary-color);
+        margin: 40px 0 25px;
+        font-size: 2rem;
+        padding-bottom: 10px;
+        border-bottom: 3px solid var(--light-color);
+    }
+
+    .article-body h3 {
+        color: var(--dark-color);
+        margin: 35px 0 20px;
+        font-size: 1.6rem;
+    }
+
+    .article-body blockquote {
+        border-left: 5px solid var(--secondary-color);
+        padding: 25px 35px;
+        margin: 35px 0;
+        background: linear-gradient(135deg, #f8fdff, #e8f7ff);
+        border-radius: 0 15px 15px 0;
+        font-style: italic;
+        color: var(--primary-color);
+        font-size: 1.2rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .article-body blockquote::before {
+        content: '"';
+        position: absolute;
+        top: -30px;
+        left: 10px;
+        font-size: 120px;
+        color: rgba(19, 84, 122, 0.1);
+        font-family: Georgia, serif;
+    }
+
+    .article-body img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 15px;
+        margin: 35px 0;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        transition: var(--transition);
+    }
+
+    .article-body img:hover {
+        transform: scale(1.01);
+    }
+
+    .article-footer {
+        margin-top: 50px;
+        padding-top: 30px;
+        border-top: 2px solid #f0f0f0;
+    }
+
+    .article-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 35px;
+    }
+
+    .tag {
+        background: var(--light-color);
+        color: var(--primary-color);
+        padding: 8px 20px;
+        border-radius: 50px;
+        font-size: 0.9rem;
+        text-decoration: none;
+        transition: var(--transition);
+        border: 2px solid transparent;
+        font-weight: 500;
+    }
+
+    .tag:hover {
+        background: var(--primary-color);
+        color: white;
+        border-color: var(--secondary-color);
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(19, 84, 122, 0.2);
+    }
+
+    .share-article {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+
+    .share-label {
+        color: var(--primary-color);
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+
+    .share-buttons {
+        display: flex;
+        gap: 15px;
+    }
+
+    .share-btn {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        text-decoration: none;
+        transition: var(--transition);
+        font-size: 1.2rem;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .share-btn:hover {
+        transform: translateY(-5px) scale(1.1);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    /* ===== SIDEBAR ENHANCED ===== */
+    .sidebar-menu {
+        background: white;
+        border-radius: 20px;
+        padding: 30px;
+        margin-bottom: 30px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.8);
+        transition: var(--transition);
+    }
+
+    .sidebar-menu:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+    }
+
+    .sidebar-menu h4 {
+        color: var(--dark-color);
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 700;
+        font-size: 1.3rem;
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 3px solid var(--light-color);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .sidebar-menu h4 i {
+        color: var(--secondary-color);
+        font-size: 1.4rem;
+    }
+
+    .sidebar-menu ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .sidebar-menu ul li {
+        margin-bottom: 10px;
+        position: relative;
+    }
+
+    .sidebar-menu ul li a {
+        color: var(--gray-color);
+        text-decoration: none;
+        padding: 12px 15px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        transition: var(--transition);
+        font-weight: 500;
+    }
+
+    .sidebar-menu ul li a:hover {
+        background: var(--light-color);
+        color: var(--primary-color);
+        transform: translateX(10px);
+    }
+
+    .sidebar-menu ul li.active a {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        font-weight: 600;
+        box-shadow: 0 5px 15px rgba(19, 84, 122, 0.3);
+    }
+
+    /* ===== SEARCH BOX ENHANCED ===== */
+    .search-box {
+        background: linear-gradient(135deg, var(--light-color), white);
+        border-radius: 20px;
+        padding: 30px;
+        margin-bottom: 30px;
+        border: 2px solid #e8f7ff;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .search-box::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+    }
+
+    .search-form .input-group {
+        margin-bottom: 20px;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    }
+
+    .search-form input {
+        border: 2px solid #e0e0e0;
+        border-right: none;
+        padding: 15px 20px;
+        font-size: 1rem;
+    }
+
+    .search-form input:focus {
+        border-color: var(--secondary-color);
+        box-shadow: none;
+    }
+
+    .search-form .btn-search {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        border: none;
+        padding: 15px 25px;
+        font-weight: 600;
+        transition: var(--transition);
+    }
+
+    .search-form .btn-search:hover {
+        background: var(--dark-color);
+        transform: scale(1.05);
+    }
+
+    .form-check {
+        margin-bottom: 10px;
+    }
+
+    .form-check-input:checked {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+
+    /* ===== NEWSLETTER BOX ENHANCED ===== */
+    .newsletter-box {
+        background: linear-gradient(135deg, var(--dark-color), var(--primary-color));
+        color: white;
+        border-radius: 20px;
+        padding: 35px 30px;
+        margin-bottom: 30px;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 15px 35px rgba(19, 84, 122, 0.25);
+    }
+
+    .newsletter-box::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ffffff" fill-opacity="0.05" d="M0,192L48,197.3C96,203,192,213,288,229.3C384,245,480,267,576,250.7C672,235,768,181,864,181.3C960,181,1056,235,1152,234.7C1248,235,1344,181,1392,154.7L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>');
+        background-size: cover;
+        background-position: bottom;
+    }
+
+    .newsletter-box h4 {
+        color: white;
+        font-size: 1.4rem;
+        margin-bottom: 15px;
+        position: relative;
+        z-index: 2;
+    }
+
+    .newsletter-box p {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.95rem;
+        margin-bottom: 25px;
+        line-height: 1.6;
+        position: relative;
+        z-index: 2;
+    }
+
+    .newsletter-box .form-control {
+        background: rgba(255, 255, 255, 0.95);
+        border: none;
+        padding: 15px 20px;
+        border-radius: 12px;
+        margin-bottom: 15px;
+        position: relative;
+        z-index: 2;
+        transition: var(--transition);
+    }
+
+    .newsletter-box .form-control:focus {
+        background: white;
+        box-shadow: 0 5px 20px rgba(255, 255, 255, 0.2);
+        transform: translateY(-2px);
+    }
+
+    .newsletter-box .form-select {
+        background: rgba(255, 255, 255, 0.95);
+        border: none;
+        padding: 15px 20px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        position: relative;
+        z-index: 2;
+    }
+
+    .newsletter-box .btn-subscribe {
+        background: white;
+        color: var(--primary-color);
+        font-weight: 600;
+        padding: 15px;
+        border-radius: 12px;
+        border: none;
+        width: 100%;
+        transition: var(--transition);
+        position: relative;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .newsletter-box .btn-subscribe:hover {
+        background: var(--secondary-color);
+        color: white;
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(255, 255, 255, 0.2);
+    }
+
+    /* ===== POPULAR ARTICLES ENHANCED ===== */
+    .popular-article-item {
+        display: flex;
+        gap: 15px;
+        padding: 20px 0;
+        border-bottom: 1px solid #f0f0f0;
+        transition: var(--transition);
+    }
+
+    .popular-article-item:hover {
+        transform: translateX(10px);
+        border-bottom-color: var(--secondary-color);
+    }
+
+    .popular-article-item:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+
+    .popular-article-item:first-child {
+        padding-top: 0;
+    }
+
+    .popular-article-number {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 1rem;
+        flex-shrink: 0;
+        box-shadow: 0 5px 15px rgba(19, 84, 122, 0.3);
+    }
+
+    .popular-article-content h5 {
+        color: var(--dark-color);
+        font-size: 1rem;
+        margin-bottom: 8px;
+        line-height: 1.4;
+        font-weight: 600;
+        transition: var(--transition);
+    }
+
+    .popular-article-item:hover .popular-article-content h5 {
+        color: var(--primary-color);
+    }
+
+    .popular-article-meta {
+        font-size: 0.85rem;
+        color: var(--gray-color);
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .popular-article-meta i {
+        color: var(--secondary-color);
+    }
+
+    /* ===== ANIMATIONS ===== */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
         }
-        
-        /* HEADER SECTION */
-        .page-header {
-            background: linear-gradient(15deg, #13547a 0%, #80d0c7 100%);
-            padding: 40px 0 30px 0;
-            margin-top: 0;
-            color: white;
-            position: relative;
-            overflow: hidden;
+        to {
+            opacity: 1;
+            transform: translateY(0);
         }
-        
-        .page-header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ffffff" fill-opacity="0.1" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,112C672,96,768,96,864,112C960,128,1056,160,1152,160C1248,160,1344,128,1392,112L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>');
-            background-size: cover;
-            background-position: bottom;
-            opacity: 0.1;
-        }
-        
+    }
+
+    .article-card, .sidebar-menu, .search-box, .newsletter-box {
+        animation: fadeInUp 0.6s ease-out forwards;
+    }
+
+    .article-card:nth-child(1) { animation-delay: 0.1s; }
+    .article-card:nth-child(2) { animation-delay: 0.2s; }
+    .article-card:nth-child(3) { animation-delay: 0.3s; }
+    .article-card:nth-child(4) { animation-delay: 0.4s; }
+    .article-card:nth-child(5) { animation-delay: 0.5s; }
+    .article-card:nth-child(6) { animation-delay: 0.6s; }
+
+    /* ===== RESPONSIVE DESIGN ===== */
+    @media (max-width: 1200px) {
         .page-header h1 {
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 700;
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            position: relative;
-            z-index: 2;
-        }
-        
-        .page-header .subtitle {
-            font-size: 1.1rem;
-            opacity: 0.9;
-            margin-bottom: 20px;
-            position: relative;
-            z-index: 2;
-        }
-        
-        .page-header .breadcrumb {
-            background: transparent;
-            padding: 0;
-            margin: 0;
-            position: relative;
-            z-index: 2;
-        }
-        
-        .page-header .breadcrumb-item a {
-            color: rgba(255, 255, 255, 0.8);
-            text-decoration: none;
-        }
-        
-        .page-header .breadcrumb-item.active {
-            color: white;
-        }
-        
-        .page-header .breadcrumb-item+.breadcrumb-item::before {
-            color: rgba(255, 255, 255, 0.8);
-        }
-
-        /* MAIN CONTENT */
-        .main-content {
-            padding: 50px 0 60px 0;
-            background: #f0f8ff;
-        }
-        
-        .section-title {
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 600;
-            color: #13547a;
-            margin-bottom: 30px;
-            position: relative;
-            padding-bottom: 15px;
-        }
-        
-        .section-title::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100px;
-            height: 3px;
-            background: linear-gradient(to right, #13547a, #80d0c7);
-        }
-
-        /* ARTICLE CARD */
-        .article-container {
-            background: white;
-            border-radius: var(--border-radius-medium);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-            padding: 30px;
-            margin-bottom: 40px;
-            transition: all 0.3s ease;
-        }
-        
-        .article-container:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+            font-size: 3rem;
         }
         
         .article-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 30px;
-            margin-top: 25px;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
         }
-        
-        @media (max-width: 768px) {
-            .article-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-        
-        .article-card {
-            background: #f8f9fa;
-            border-radius: var(--border-radius-medium);
-            overflow: hidden;
-            transition: all 0.3s ease;
-            height: 100%;
-            text-decoration: none;
-            display: block;
-            border: 2px solid transparent;
-            position: relative;
-        }
-        
-        .article-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
-            border-color: #80d0c7;
-        }
-        
-        .article-category {
-            position: absolute;
-            top: 15px;
-            left: 15px;
-            background: linear-gradient(135deg, #13547a 0%, #80d0c7 100%);
-            color: white;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            z-index: 2;
-        }
-        
-        .article-image {
-            height: 200px;
-            width: 100%;
-            object-fit: cover;
-            transition: transform 0.5s ease;
-        }
-        
-        .article-card:hover .article-image {
-            transform: scale(1.05);
-        }
-        
-        .article-content {
-            padding: 25px;
-        }
-        
-        .article-title {
-            color: #13547a;
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 700;
-            font-size: 1.3rem;
-            margin-bottom: 15px;
-            line-height: 1.4;
-        }
-        
-        .article-excerpt {
-            color: var(--p-color);
-            font-size: 0.95rem;
-            line-height: 1.5;
-            margin-bottom: 20px;
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-        
-        .article-meta {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.9rem;
-            color: #666;
-            border-top: 1px solid #e0e0e0;
-            padding-top: 15px;
-        }
-        
-        .meta-item {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        
-        .meta-item i {
-            color: #80d0c7;
-        }
-        
-        .read-more {
-            color: #13547a;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            transition: all 0.3s;
-        }
-        
-        .read-more:hover {
-            color: #80d0c7;
-            gap: 10px;
-        }
+    }
 
-        /* FEATURED ARTICLE */
-        .featured-article {
-            background: linear-gradient(135deg, #13547a 0%, #80d0c7 100%);
-            border-radius: var(--border-radius-medium);
-            overflow: hidden;
-            margin-bottom: 40px;
-            position: relative;
-            box-shadow: 0 10px 30px rgba(19, 84, 122, 0.2);
+    @media (max-width: 992px) {
+        .page-header {
+            padding: 60px 0 40px;
         }
         
-        .featured-content {
-            padding: 40px;
-            color: white;
-            position: relative;
-            z-index: 2;
-        }
-        
-        .featured-badge {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            display: inline-block;
-            margin-bottom: 20px;
-            backdrop-filter: blur(5px);
+        .page-header h1 {
+            font-size: 2.5rem;
         }
         
         .featured-title {
-            color: white;
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 700;
             font-size: 2rem;
-            margin-bottom: 20px;
-            line-height: 1.3;
-        }
-        
-        .featured-excerpt {
-            color: rgba(255, 255, 255, 0.9);
-            font-size: 1.1rem;
-            line-height: 1.6;
-            margin-bottom: 25px;
-        }
-        
-        .featured-meta {
-            display: flex;
-            gap: 20px;
-            margin-bottom: 25px;
-        }
-        
-        .featured-meta-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: rgba(255, 255, 255, 0.8);
-        }
-        
-        .featured-meta-item i {
-            color: white;
-        }
-
-        /* ARTICLE DETAIL */
-        .article-detail {
-            background: white;
-            border-radius: var(--border-radius-medium);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-            padding: 40px;
-            margin-bottom: 40px;
-        }
-        
-        .article-header {
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #f0f0f0;
         }
         
         .article-detail-title {
-            color: #13547a;
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 700;
+            font-size: 2.2rem;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .page-header {
+            padding: 50px 0 30px;
+        }
+        
+        .page-header h1 {
             font-size: 2rem;
-            margin-bottom: 15px;
-            line-height: 1.3;
         }
         
-        .article-detail-meta {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            margin-bottom: 20px;
+        .featured-content {
+            padding: 30px;
         }
         
-        .article-author {
-            display: flex;
-            align-items: center;
-            gap: 10px;
+        .featured-title {
+            font-size: 1.6rem;
         }
         
-        .author-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #13547a 0%, #80d0c7 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 600;
+        .article-grid {
+            grid-template-columns: 1fr;
         }
         
-        .article-body {
-            font-size: 1.1rem;
-            line-height: 1.8;
-            color: #333;
+        .article-detail {
+            padding: 30px;
         }
         
-        .article-body p {
-            margin-bottom: 20px;
-        }
-        
-        .article-body h2 {
-            color: #13547a;
-            margin: 30px 0 20px 0;
+        .article-detail-title {
             font-size: 1.8rem;
         }
         
-        .article-body h3 {
-            color: #13547a;
-            margin: 25px 0 15px 0;
+        .article-detail-meta {
+            flex-direction: column;
+            gap: 15px;
+            align-items: flex-start;
+        }
+        
+        .article-author {
+            min-width: 100%;
+        }
+        
+        .featured-meta {
+            flex-direction: column;
+            gap: 15px;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .article-container,
+        .sidebar-menu,
+        .search-box,
+        .newsletter-box {
+            padding: 25px;
+        }
+        
+        .section-title {
             font-size: 1.5rem;
         }
         
-        .article-body blockquote {
-            border-left: 4px solid #80d0c7;
-            padding: 20px 30px;
-            margin: 30px 0;
-            background: #f0f8ff;
-            border-radius: 0 var(--border-radius-small) var(--border-radius-small) 0;
-            font-style: italic;
-            color: #555;
-        }
-        
-        .article-body img {
-            max-width: 100%;
-            height: auto;
-            border-radius: var(--border-radius-small);
-            margin: 30px 0;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-        
-        .article-footer {
-            margin-top: 40px;
-            padding-top: 30px;
-            border-top: 2px solid #f0f0f0;
-        }
-        
-        .article-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 30px;
-        }
-        
-        .tag {
-            background: #f0f8ff;
-            color: #13547a;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            text-decoration: none;
-            transition: all 0.3s;
-        }
-        
-        .tag:hover {
-            background: #13547a;
-            color: white;
-        }
-        
-        .share-article {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        
-        .share-label {
-            color: #13547a;
-            font-weight: 600;
+        .category-item {
+            padding: 8px 15px;
+            font-size: 0.85rem;
         }
         
         .share-buttons {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .share-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
             justify-content: center;
-            color: white;
-            text-decoration: none;
-            transition: all 0.3s;
         }
-        
-        .share-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        }
-        
-        .share-btn.facebook {
-            background: #3b5998;
-        }
-        
-        .share-btn.twitter {
-            background: #1da1f2;
-        }
-        
-        .share-btn.whatsapp {
-            background: #25d366;
-        }
-        
-        .share-btn.link {
-            background: #13547a;
-        }
+    }
 
-        /* SIDEBAR */
-        .sidebar-menu {
-            background: white;
-            border-radius: var(--border-radius-medium);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-            padding: 25px;
-            margin-bottom: 30px;
-        }
-        
-        .sidebar-menu h4 {
-            color: #13547a;
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 600;
-            font-size: 1.2rem;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #f0f0f0;
-            display: flex;
-            align-items: center;
-        }
-        
-        .sidebar-menu h4 i {
-            color: #80d0c7;
-            margin-right: 10px;
-        }
-        
-        .sidebar-menu ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        
-        .sidebar-menu ul li {
-            margin-bottom: 12px;
-        }
-        
-        .sidebar-menu ul li:last-child {
-            margin-bottom: 0;
-        }
-        
-        .sidebar-menu ul li a {
-            color: var(--p-color);
-            text-decoration: none;
-            padding: 12px 15px;
-            border-radius: var(--border-radius-small);
-            display: flex;
-            align-items: center;
-            transition: all 0.3s;
-            font-weight: 500;
-        }
-        
-        .sidebar-menu ul li.active a {
-            background: #f0f8ff;
-            color: #13547a;
-            font-weight: 600;
-        }
-        
-        .sidebar-menu ul li a:hover {
-            background: #f0f8ff;
-            color: #13547a;
-            transform: translateX(5px);
-        }
-        
-        .sidebar-menu ul li a i {
-            color: #80d0c7;
-            margin-right: 10px;
-            font-size: 0.9rem;
-        }
+    /* ===== SCROLL TO TOP ===== */
+    .scroll-to-top {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        font-size: 1.2rem;
+        box-shadow: 0 5px 20px rgba(19, 84, 122, 0.4);
+        z-index: 1000;
+        transition: var(--transition);
+        opacity: 0;
+        visibility: hidden;
+    }
 
-        /* CATEGORY CLOUD */
-        .category-cloud {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        
-        .category-item {
-            background: #f0f8ff;
-            padding: 8px 15px;
-            border-radius: 20px;
-            text-decoration: none;
-            color: #13547a;
-            font-size: 0.9rem;
-            transition: all 0.3s;
-            border: 1px solid transparent;
-        }
-        
-        .category-item:hover {
-            background: #13547a;
-            color: white;
-            border-color: #13547a;
-            transform: translateY(-2px);
-        }
+    .scroll-to-top.active {
+        opacity: 1;
+        visibility: visible;
+    }
 
-        /* POPULAR ARTICLES */
-        .popular-article-item {
-            display: flex;
-            gap: 15px;
-            padding: 15px 0;
-            border-bottom: 1px solid #f0f0f0;
-        }
-        
-        .popular-article-item:last-child {
-            border-bottom: none;
-            padding-bottom: 0;
-        }
-        
-        .popular-article-item:first-child {
-            padding-top: 0;
-        }
-        
-        .popular-article-number {
-            background: #f0f8ff;
-            color: #13547a;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            font-size: 0.9rem;
-            flex-shrink: 0;
-        }
-        
-        .popular-article-content h5 {
-            color: #13547a;
-            font-size: 0.95rem;
-            margin-bottom: 5px;
-            line-height: 1.4;
-        }
-        
-        .popular-article-meta {
-            font-size: 0.8rem;
-            color: #666;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+    .scroll-to-top:hover {
+        transform: translateY(-5px) scale(1.1);
+        box-shadow: 0 10px 30px rgba(19, 84, 122, 0.6);
+    }
+</style>
 
-        /* SEARCH BOX */
-        .search-box {
-            background: white;
-            border-radius: var(--border-radius-medium);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-            padding: 25px;
-            margin-bottom: 30px;
-        }
-        
-        .search-form .input-group {
-            margin-bottom: 15px;
-        }
-        
-        .search-form input {
-            border: 2px solid #e0e0e0;
-            border-right: none;
-        }
-        
-        .search-form input:focus {
-            border-color: #80d0c7;
-            box-shadow: none;
-        }
-        
-        .search-form .btn-search {
-            background: #13547a;
-            color: white;
-            border: 2px solid #13547a;
-        }
-        
-        .search-form .btn-search:hover {
-            background: #0d3a58;
-            border-color: #0d3a58;
-        }
-
-        /* NEWSLETTER */
-        .newsletter-box {
-            background: linear-gradient(135deg, #13547a 0%, #80d0c7 100%);
-            color: white;
-            border-radius: var(--border-radius-medium);
-            padding: 25px;
-            margin-bottom: 30px;
-        }
-        
-        .newsletter-box h4 {
-            color: white;
-            font-size: 1.2rem;
-            margin-bottom: 15px;
-        }
-        
-        .newsletter-box p {
-            color: rgba(255, 255, 255, 0.9);
-            font-size: 0.9rem;
-            margin-bottom: 20px;
-        }
-        
-        .newsletter-box .form-control {
-            background: rgba(255, 255, 255, 0.9);
-            border: none;
-            margin-bottom: 15px;
-        }
-        
-        .newsletter-box .btn-subscribe {
-            background: white;
-            color: #13547a;
-            font-weight: 600;
-            width: 100%;
-        }
-        
-        .newsletter-box .btn-subscribe:hover {
-            background: #f0f8ff;
-            transform: translateY(-2px);
-        }
-
-        /* PAGINATION */
-        .pagination-container {
-            display: flex;
-            justify-content: center;
-            margin-top: 30px;
-        }
-        
-        .pagination {
-            display: flex;
-            gap: 5px;
-        }
-        
-        .page-item .page-link {
-            border: none;
-            background: #f8f9fa;
-            color: #13547a;
-            border-radius: var(--border-radius-small);
-            padding: 8px 15px;
-            transition: all 0.3s;
-        }
-        
-        .page-item.active .page-link {
-            background: #13547a;
-            color: white;
-        }
-        
-        .page-item .page-link:hover {
-            background: #e0e0e0;
-            transform: translateY(-2px);
-        }
-
-        /* RESPONSIVE */
-        @media (max-width: 768px) {
-            body {
-                padding-top: 70px;
-            }
-            
-            .page-header {
-                padding: 30px 0 20px 0;
-            }
-            
-            .page-header h1 {
-                font-size: 2rem;
-            }
-            
-            .main-content {
-                padding: 30px 0 40px 0;
-            }
-            
-            .article-container,
-            .article-detail,
-            .sidebar-menu,
-            .search-box,
-            .newsletter-box {
-                padding: 20px;
-            }
-            
-            .article-grid {
-                gap: 20px;
-            }
-            
-            .featured-content {
-                padding: 30px;
-            }
-            
-            .featured-title {
-                font-size: 1.5rem;
-            }
-            
-            .article-detail-title {
-                font-size: 1.5rem;
-            }
-            
-            .article-detail-meta {
-                flex-direction: column;
-                gap: 10px;
-            }
-        }
-        
-        @media (max-width: 576px) {
-            .page-header h1 {
-                font-size: 1.8rem;
-            }
-            
-            .section-title {
-                font-size: 1.3rem;
-            }
-            
-            .featured-title {
-                font-size: 1.3rem;
-            }
-        }
-    </style>
-</head>
-
-<body id="top">
-
-    <!-- NAVBAR -->
-    <nav class="navbar navbar-expand-lg fixed-top navbar-custom">
-        <div class="container">
-            <!-- BRAND -->
-            <a class="navbar-brand d-flex align-items-center" href="index.php">
-                <span class="fw-bold">JDIH DPRD</span>
-            </a>
-
-            <!-- TOGGLER -->
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                data-bs-target="#navbarNav" aria-controls="navbarNav"
-                aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <!-- MENU -->
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav mx-auto mb-2 mb-lg-0 gap-lg-2">
-                    <li class="nav-item">
-                        <a class="nav-link" href="index.php">Beranda</a>
-                    </li>
-
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="dropdownTentangKami"
-                            role="button" data-bs-toggle="dropdown">
-                            Tentang Kami
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="?page=profil-jdih">Profil JDIH</a></li>
-                            <li><a class="dropdown-item" href="?page=struktur-organisasi">Struktur Organisasi</a></li>
-                            <li><a class="dropdown-item" href="?page=alur-pengelolaan">Alur Pengelolaan Produk Hukum</a></li>
-                            <li><a class="dropdown-item" href="?page=sop-pengelola">SOP Pengelola JDIH DPRD Kota Surakarta</a></li>
-                            <li><a class="dropdown-item" href="?page=dasar-hukum">Dasar Hukum JDIH Sekretariat DPRD Kota Surakarta</a></li>
-                            <li><a class="dropdown-item" href="?page=surat-keputusan">Surat Keputusan Pengelola JDIH Sekretariat DPRD Kota Surakarta</a></li>
-                            <li><a class="dropdown-item" href="?page=visi-misi">Visi & Misi</a></li>
-                            <li><a class="dropdown-item" href="?page=video-profil">Video Profil JDIH</a></li>
-                        </ul>
-                    </li>
-
-                    <!-- PERUNDANGAN -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="dropdownPerundangan"
-                            role="button" data-bs-toggle="dropdown">
-                            Perundang-undangan
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="?page=keputusan-dprd">Keputusan DPRD</a></li>
-                            <li><a class="dropdown-item" href="?page=keputusan-pimpinan">Keputusan Pimpinan DPRD</a></li>
-                            <li><a class="dropdown-item" href="?page=keputusan-sekretaris">Keputusan Sekretaris DPRD</a></li>
-                            <li><a class="dropdown-item" href="?page=peraturan-dprd">Peraturan DPRD</a></li>
-                            <li><a class="dropdown-item" href="?page=perda">Peraturan Daerah</a></li>
-                            <li><a class="dropdown-item" href="?page=english-legal">English Legal Product</a></li>
-                        </ul>
-                    </li>
-
-                    <!-- MONOGRAFI -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="dropdownMonografi"
-                            role="button" data-bs-toggle="dropdown">
-                            Monografi Hukum
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="?page=kajian-raperda">Kajian Raperda</a></li>
-                            <li><a class="dropdown-item" href="?page=naskah-akademik">Naskah Akademik</a></li>
-                            <li><a class="dropdown-item" href="?page=dokumen-langka">Dokumen Langka</a></li>
-                            <li><a class="dropdown-item" href="?page=risalah">Risalah</a></li>
-                            <li><a class="dropdown-item" href="?page=fasilitasi">Hasil Fasilitasi Raperda</a></li>
-                            <li><a class="dropdown-item" href="?page=karya-ilmiah">Penulisan Karya Ilmiah</a></li>
-                            <li><a class="dropdown-item" href="?page=himpunan">Himpunan Peraturan</a></li>
-                        </ul>
-                    </li>
-
-                    <!-- ARTIKEL HUKUM - ACTIVE -->
-                    <li class="nav-item active">
-                        <a class="nav-link" href="?page=artikel">Artikel Hukum</a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="?page=yurisprudensi">Yurisprudensi</a>
-                    </li>
-
-                    <!-- INFORMASI -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="dropdownInformasi"
-                            role="button" data-bs-toggle="dropdown">
-                            Informasi
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="?page=kegiatan">Kegiatan JDIH</a></li>
-                            <li><a class="dropdown-item" href="?page=infografis">Infografis & Videografis</a></li>
-                            <li><a class="dropdown-item" href="?page=galeri">Galeri Foto</a></li>
-                            <li><a class="dropdown-item" href="?page=penghargaan">Penghargaan</a></li>
-                            <li><a class="dropdown-item" href="?page=buku">Koleksi Buku</a></li>
-                        </ul>
-                    </li>
-
-                    <!-- KONTAK -->
-                    <li class="nav-item">
-                        <a class="nav-link" href="?page=kontak-kami">Kontak Kami</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+<!-- SCROLL TO TOP BUTTON -->
+<a href="#top" class="scroll-to-top" id="scrollToTop">
+    <i class="bi bi-chevron-up"></i>
+</a>
 
     <!-- HEADER SECTION -->
     <section class="page-header">
@@ -1006,77 +1225,98 @@
                             <!-- Artikel 3 -->
                             <a href="#artikel-detail" class="article-card">
                                 <span class="article-category">Pengawasan</span>
-                                <img src="https://images.unsplash.com/<!-- Artikel 4 -->
-<a href="#artikel-detail" class="article-card">
-    <span class="article-category">Anggaran</span>
-    <img src="https://images.unsplash.com/photo-1554224155-6726b3ff858f?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" 
-         alt="Pengelolaan Anggaran" 
-         class="article-image">
-    <div class="article-content">
-        <h3 class="article-title">Transparansi dan Akuntabilitas dalam Pengelolaan Keuangan Daerah</h3>
-        <p class="article-excerpt">
-            Studi tentang implementasi prinsip transparansi dan akuntabilitas dalam pengelolaan keuangan daerah di Kota Surakarta serta peran DPRD.
-        </p>
-        <div class="article-meta">
-            <div class="meta-item">
-                <i class="bi bi-person"></i>
-                <span>Ir. Budi Santoso, M.Acc.</span>
-            </div>
-            <div class="meta-item">
-                <i class="bi bi-calendar"></i>
-                <span>28 Des 2023</span>
-            </div>
-        </div>
-    </div>
-</a>
-
-<!-- Artikel 5 -->
-<a href="#artikel-detail" class="article-card">
-    <span class="article-category">Pemerintahan</span>
-    <img src="https://images.unsplash.com/photo-1542744095-fcf48d80b0fd?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" 
-         alt="Tata Kelola Pemerintahan" 
-         class="article-image">
-    <div class="article-content">
-        <h3 class="article-title">Inovasi Tata Kelola Pemerintahan Berbasis Digital di Era Society 5.0</h3>
-        <p class="article-excerpt">
-            Kajian tentang transformasi digital dalam tata kelola pemerintahan daerah dan implikasinya terhadap fungsi legislasi DPRD.
-        </p>
-        <div class="article-meta">
-            <div class="meta-item">
-                <i class="bi bi-person"></i>
-                <span>Dr. Maya Indriati, S.Si., M.T.</span>
-            </div>
-            <div class="meta-item">
-                <i class="bi bi-calendar"></i>
-                <span>20 Des 2023</span>
-            </div>
-        </div>
-    </div>
-</a>
-
-<!-- Artikel 6 -->
-<a href="#artikel-detail" class="article-card">
-    <span class="article-category">Hukum Administrasi</span>
-    <img src="https://images.unsplash.com/photo-1553877522-43269d4ea984?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" 
-         alt="Hukum Administrasi" 
-         class="article-image">
-    <div class="article-content">
-        <h3 class="article-title">Perlindungan Hukum terhadap Pelayanan Publik di Kota Surakarta</h3>
-        <p class="article-excerpt">
-            Analisis hukum administrasi tentang mekanisme perlindungan hukum bagi masyarakat dalam penerimaan pelayanan publik.
-        </p>
-        <div class="article-meta">
-            <div class="meta-item">
-                <i class="bi bi-person"></i>
-                <span>Hendra Wijaya, SH., LL.M.</span>
-            </div>
-            <div class="meta-item">
-                <i class="bi bi-calendar"></i>
-                <span>15 Des 2023</span>
-            </div>
-        </div>
-    </div>
-</a>
+                                <img src="https://images.unsplash.com/photo-1554224155-6726b3ff858f?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" 
+                                     alt="Pengelolaan Anggaran" 
+                                     class="article-image">
+                                <div class="article-content">
+                                    <h3 class="article-title">Transparansi dan Akuntabilitas dalam Pengelolaan Keuangan Daerah</h3>
+                                    <p class="article-excerpt">
+                                        Studi tentang implementasi prinsip transparansi dan akuntabilitas dalam pengelolaan keuangan daerah di Kota Surakarta serta peran DPRD.
+                                    </p>
+                                    <div class="article-meta">
+                                        <div class="meta-item">
+                                            <i class="bi bi-person"></i>
+                                            <span>Ir. Budi Santoso, M.Acc.</span>
+                                        </div>
+                                        <div class="meta-item">
+                                            <i class="bi bi-calendar"></i>
+                                            <span>28 Des 2023</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+                            
+                            <!-- Artikel 4 -->
+                            <a href="#artikel-detail" class="article-card">
+                                <span class="article-category">Pemerintahan</span>
+                                <img src="https://images.unsplash.com/photo-1542744095-fcf48d80b0fd?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" 
+                                     alt="Tata Kelola Pemerintahan" 
+                                     class="article-image">
+                                <div class="article-content">
+                                    <h3 class="article-title">Inovasi Tata Kelola Pemerintahan Berbasis Digital di Era Society 5.0</h3>
+                                    <p class="article-excerpt">
+                                        Kajian tentang transformasi digital dalam tata kelola pemerintahan daerah dan implikasinya terhadap fungsi legislasi DPRD.
+                                    </p>
+                                    <div class="article-meta">
+                                        <div class="meta-item">
+                                            <i class="bi bi-person"></i>
+                                            <span>Dr. Maya Indriati, S.Si., M.T.</span>
+                                        </div>
+                                        <div class="meta-item">
+                                            <i class="bi bi-calendar"></i>
+                                            <span>20 Des 2023</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+                            
+                            <!-- Artikel 5 -->
+                            <a href="#artikel-detail" class="article-card">
+                                <span class="article-category">Hukum Administrasi</span>
+                                <img src="https://images.unsplash.com/photo-1553877522-43269d4ea984?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" 
+                                     alt="Hukum Administrasi" 
+                                     class="article-image">
+                                <div class="article-content">
+                                    <h3 class="article-title">Perlindungan Hukum terhadap Pelayanan Publik di Kota Surakarta</h3>
+                                    <p class="article-excerpt">
+                                        Analisis hukum administrasi tentang mekanisme perlindungan hukum bagi masyarakat dalam penerimaan pelayanan publik.
+                                    </p>
+                                    <div class="article-meta">
+                                        <div class="meta-item">
+                                            <i class="bi bi-person"></i>
+                                            <span>Hendra Wijaya, SH., LL.M.</span>
+                                        </div>
+                                        <div class="meta-item">
+                                            <i class="bi bi-calendar"></i>
+                                            <span>15 Des 2023</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+                            
+                            <!-- Artikel 6 -->
+                            <a href="#artikel-detail" class="article-card">
+                                <span class="article-category">Kajian Hukum</span>
+                                <img src="https://images.unsplash.com/photo-1518717202715-9fa9d099f58a?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" 
+                                     alt="Kajian Hukum" 
+                                     class="article-image">
+                                <div class="article-content">
+                                    <h3 class="article-title">Analisis Yuridis tentang Pemekaran Wilayah di Jawa Tengah</h3>
+                                    <p class="article-excerpt">
+                                        Studi komparatif tentang implikasi hukum pemekaran wilayah terhadap struktur pemerintahan daerah dan distribusi kewenangan.
+                                    </p>
+                                    <div class="article-meta">
+                                        <div class="meta-item">
+                                            <i class="bi bi-person"></i>
+                                            <span>Prof. Dr. Ahmad Fauzi, SH., MH.</span>
+                                        </div>
+                                        <div class="meta-item">
+                                            <i class="bi bi-calendar"></i>
+                                            <span>10 Des 2023</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
                         </div>
                         
                         <!-- PAGINATION -->
@@ -1339,150 +1579,227 @@
         </div>
     </section>
 
-    <!-- FOOTER -->
-    <footer class="site-footer">
-        <div class="container">
-            <div class="row">
-                
-                <!-- LOGO DAN DESKRIPSI -->
-                <div class="col-lg-4 col-md-6 col-12 mb-4">
-                    <div class="site-footer-logo">
-                        <a href="index.html">
-                            <img src="images/logo-footer.png" alt="logo" class="img-fluid">
-                        </a>
-                    </div>
-                    <p class="text-white">
-                        Jaringan Dokumentasi dan Informasi Hukum (JDIH) DPRD Kota Surakarta 
-                        merupakan sistem informasi hukum yang menyediakan akses terhadap 
-                        produk hukum dan dokumentasi legislasi daerah.
-                    </p>
-                </div>
+<?php include 'footer.php'; ?>
 
-                <!-- LINK CEPAT -->
-                <div class="col-lg-2 col-md-6 col-12 mx-auto mb-4">
-                    <h6 class="site-footer-title">Menu Cepat</h6>
-                    <ul class="footer-menu">
-                        <li><a href="index.php" class="site-footer-link">Beranda</a></li>
-                        <li><a href="?page=profil-jdih" class="site-footer-link">Profil JDIH</a></li>
-                        <li><a href="?page=perda" class="site-footer-link">Peraturan Daerah</a></li>
-                        <li><a href="?page=artikel" class="site-footer-link">Artikel Hukum</a></li>
-                        <li><a href="?page=kontak" class="site-footer-link">Kontak Kami</a></li>
-                    </ul>
-                </div>
-
-                <!-- KONTAK -->
-                <div class="col-lg-3 col-md-6 col-12 mb-4">
-                    <h6 class="site-footer-title">Kontak Kami</h6>
-                    <p class="text-white d-flex mb-2">
-                        <i class="bi-geo-alt me-2"></i>
-                        Jl. Jend. Sudirman No. 2, Kec. Banjarsari, Kota Surakarta, Jawa Tengah 57113
-                    </p>
-                    <p class="text-white d-flex mb-2">
-                        <i class="bi-telephone me-2"></i>
-                        <a href="tel:+62271234567" class="site-footer-link">(0271) 234567</a>
-                    </p>
-                    <p class="text-white d-flex">
-                        <i class="bi-envelope me-2"></i>
-                        <a href="mailto:jdih@dprd-surakarta.go.id" class="site-footer-link">jdih@dprd-surakarta.go.id</a>
-                    </p>
-                </div>
-
-                <!-- MEDIA SOSIAL -->
-                <div class="col-lg-3 col-md-6 col-12">
-                    <h6 class="site-footer-title">Media Sosial</h6>
-                    <ul class="social-icon">
-                        <li><a href="#" class="social-icon-link bi-facebook"></a></li>
-                        <li><a href="#" class="social-icon-link bi-twitter"></a></li>
-                        <li><a href="#" class="social-icon-link bi-instagram"></a></li>
-                        <li><a href="#" class="social-icon-link bi-youtube"></a></li>
-                        <li><a href="#" class="social-icon-link bi-whatsapp"></a></li>
-                    </ul>
-                    <p class="copyright-text mt-3">Copyright © 2024 JDIH DPRD Kota Surakarta</p>
-                </div>
-
-            </div>
-        </div>
-    </footer>
-
-    <!-- JAVASCRIPT FILES -->
-    <script src="js/jquery.min.js"></script>
-    <script src="js/bootstrap.bundle.min.js"></script>
-    <script src="js/jquery.sticky.js"></script>
-    <script src="js/click-scroll.js"></script>
-    <script src="js/custom.js"></script>
+<script>
+    // Fungsi untuk copy link artikel
+    function copyToClipboard() {
+        const currentUrl = window.location.href;
+        navigator.clipboard.writeText(currentUrl).then(() => {
+            // Sweet notification instead of alert
+            showNotification('Link artikel telah disalin!', 'success');
+        });
+    }
     
-    <script>
-        // Fungsi untuk copy link artikel
-        function copyToClipboard() {
-            const currentUrl = window.location.href;
-            navigator.clipboard.writeText(currentUrl).then(() => {
-                alert('Link artikel telah disalin!');
+    // Fungsi untuk filter kategori
+    document.querySelectorAll('.category-item').forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Hapus active class dari semua item
+            document.querySelectorAll('.category-item').forEach(el => {
+                el.classList.remove('active');
             });
+            
+            // Tambah active class ke item yang diklik
+            this.classList.add('active');
+            
+            // Simulasi filter artikel
+            const category = this.textContent.trim();
+            showNotification(`Memfilter artikel berdasarkan kategori: ${category}`, 'info');
+        });
+    });
+    
+    // Fungsi pencarian
+    document.querySelector('.search-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const keyword = this.querySelector('input[type="text"]').value;
+        const searchTitle = this.querySelector('#searchTitle').checked;
+        const searchContent = this.querySelector('#searchContent').checked;
+        
+        if (!keyword.trim()) {
+            showNotification('Masukkan kata kunci pencarian!', 'warning');
+            return;
         }
         
-        // Fungsi untuk filter kategori
-        document.querySelectorAll('.category-item').forEach(item => {
-            item.addEventListener('click', function(e) {
-                e.preventDefault();
-                
-                // Hapus active class dari semua item
-                document.querySelectorAll('.category-item').forEach(el => {
-                    el.classList.remove('active');
+        showNotification(`Mencari artikel dengan kata kunci: "${keyword}"`, 'info');
+    });
+    
+    // Fungsi berlangganan newsletter
+    document.querySelector('.newsletter-box form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const email = this.querySelector('input[type="email"]').value;
+        const category = this.querySelector('select').value;
+        
+        if (!email) {
+            showNotification('Masukkan alamat email!', 'warning');
+            return;
+        }
+        
+        showNotification(`Terima kasih telah berlangganan newsletter! Konfirmasi akan dikirim ke ${email}`, 'success');
+        this.reset();
+    });
+    
+    // Smooth scroll untuk link artikel
+    document.querySelectorAll('a[href^="#artikel-detail"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
                 });
-                
-                // Tambah active class ke item yang diklik
-                this.classList.add('active');
-                
-                // Simulasi filter artikel (dalam implementasi real, ini akan request ke server)
-                const category = this.textContent.trim();
-                alert(`Memfilter artikel berdasarkan kategori: ${category}\n\nFungsi filter akan bekerja dengan request AJAX ke server.`);
+            }
+        });
+    });
+    
+    // Scroll to top functionality
+    const scrollToTopBtn = document.getElementById('scrollToTop');
+    
+    window.addEventListener('scroll', () => {
+        if (window.pageYOffset > 300) {
+            scrollToTopBtn.classList.add('active');
+        } else {
+            scrollToTopBtn.classList.remove('active');
+        }
+    });
+    
+    scrollToTopBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    });
+    
+    // Notification function
+    function showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.innerHTML = `
+            <div class="notification-content">
+                <i class="bi ${type === 'success' ? 'bi-check-circle' : type === 'warning' ? 'bi-exclamation-triangle' : 'bi-info-circle'}"></i>
+                <span>${message}</span>
+            </div>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.classList.add('show');
+        }, 10);
+        
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                document.body.removeChild(notification);
+            }, 300);
+        }, 3000);
+    }
+    
+    // Add notification styles
+    const style = document.createElement('style');
+    style.textContent = `
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            z-index: 9999;
+            transform: translateX(100%);
+            opacity: 0;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            min-width: 300px;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        
+        .notification.success {
+            border-left-color: #28a745;
+        }
+        
+        .notification.warning {
+            border-left-color: #ffc107;
+        }
+        
+        .notification.info {
+            border-left-color: var(--primary-color);
+        }
+        
+        .notification-content {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .notification-content i {
+            font-size: 1.2rem;
+        }
+        
+        .notification.success .notification-content i {
+            color: #28a745;
+        }
+        
+        .notification.warning .notification-content i {
+            color: #ffc107;
+        }
+        
+        .notification.info .notification-content i {
+            color: var(--primary-color);
+        }
+        
+        .notification-content span {
+            color: #333;
+            font-weight: 500;
+        }
+    `;
+    document.head.appendChild(style);
+    
+    // Add hover effects to all interactive elements
+    document.addEventListener('DOMContentLoaded', () => {
+        // Add hover effect to article cards
+        const articleCards = document.querySelectorAll('.article-card');
+        articleCards.forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                const category = card.querySelector('.article-category');
+                if (category) {
+                    category.style.transform = 'translateY(-3px)';
+                    category.style.boxShadow = '0 8px 20px rgba(19, 84, 122, 0.3)';
+                }
             });
-        });
-        
-        // Fungsi pencarian
-        document.querySelector('.search-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const keyword = this.querySelector('input[type="text"]').value;
-            const searchTitle = this.querySelector('#searchTitle').checked;
-            const searchContent = this.querySelector('#searchContent').checked;
             
-            if (!keyword.trim()) {
-                alert('Masukkan kata kunci pencarian!');
-                return;
-            }
-            
-            alert(`Mencari artikel dengan kata kunci: "${keyword}"\n\nPencarian dalam: ${searchTitle ? 'Judul' : ''} ${searchContent ? 'Konten' : ''}\n\nFungsi pencarian akan bekerja dengan request AJAX ke server.`);
-        });
-        
-        // Fungsi berlangganan newsletter
-        document.querySelector('.newsletter-box form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const email = this.querySelector('input[type="email"]').value;
-            const category = this.querySelector('select').value;
-            
-            if (!email) {
-                alert('Masukkan alamat email!');
-                return;
-            }
-            
-            alert(`Terima kasih telah berlangganan newsletter!\n\nEmail: ${email}\nKategori minat: ${this.querySelector('select option:checked').textContent}\n\nKonfirmasi akan dikirim ke email Anda.`);
-            this.reset();
-        });
-        
-        // Smooth scroll untuk link artikel
-        document.querySelectorAll('a[href^="#artikel-detail"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
+            card.addEventListener('mouseleave', () => {
+                const category = card.querySelector('.article-category');
+                if (category) {
+                    category.style.transform = 'translateY(0)';
+                    category.style.boxShadow = 'none';
                 }
             });
         });
-    </script>
-
-</body>
-</html>
+        
+        // Add loading animation to buttons
+        const buttons = document.querySelectorAll('button, .btn, .custom-btn, .category-item, .tag');
+        buttons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                if (this.tagName === 'BUTTON' || this.classList.contains('btn')) {
+                    const originalHTML = this.innerHTML;
+                    this.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Loading...';
+                    this.disabled = true;
+                    
+                    setTimeout(() => {
+                        this.innerHTML = originalHTML;
+                        this.disabled = false;
+                    }, 1500);
+                }
+            });
+        });
+    });
+</script>

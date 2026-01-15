@@ -1,742 +1,970 @@
-<?php
+<?php 
 // video-profil.php
+include 'header.php'; 
 ?>
-<!doctype html>
-<html lang="id">
-<head>
-    <meta charset="utf-8">
-    <title>Video Profil - JDIH DPRD Kota Surakarta</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    
-    <!-- CSS FILES SAMA DENGAN HOME -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Open+Sans&display=swap" rel="stylesheet">
-                        
-    <link href="css/bootstrap.min.css" rel="stylesheet">
-    <link href="css/bootstrap-icons.css" rel="stylesheet">
-    <link href="css/templatemo-topic-listing.css" rel="stylesheet">
 
-    <style>
-        /* OVERRIDE UNTUK HALAMAN INI SAJA */
-        body {
-            padding-top: 80px; /* Untuk fixed navbar */
+<style>
+    /* ===== VARIABLES & OVERRIDES ===== */
+    :root {
+        --primary-color: #13547a;
+        --secondary-color: #80d0c7;
+        --accent-color: #ff6b6b;
+        --dark-color: #1a365d;
+        --light-color: #f0f8ff;
+        --gray-color: #6c757d;
+        --transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+    }
+
+    body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+        font-family: 'Open Sans', sans-serif;
+    }
+
+    /* ===== HEADER SECTION ENHANCED ===== */
+    .page-header {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--dark-color) 100%);
+        padding: 80px 0 50px;
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 30px;
+    }
+
+    .page-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ffffff" fill-opacity="0.05" d="M0,224L48,213.3C96,203,192,181,288,181.3C384,181,480,203,576,208C672,213,768,203,864,181.3C960,160,1056,128,1152,128C1248,128,1344,160,1392,176L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>');
+        background-size: cover;
+        background-position: bottom;
+    }
+
+    .page-header h1 {
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 800;
+        font-size: 3.5rem;
+        margin-bottom: 15px;
+        position: relative;
+        background: linear-gradient(to right, #ffffff, #e0f7ff);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .page-header .subtitle {
+        font-size: 1.2rem;
+        color: rgba(255, 255, 255, 0.9);
+        margin-bottom: 25px;
+        position: relative;
+        max-width: 600px;
+        line-height: 1.6;
+    }
+
+    .breadcrumb {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 50px;
+        padding: 12px 25px !important;
+        display: inline-block;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .breadcrumb-item a {
+        color: rgba(255, 255, 255, 0.9) !important;
+        text-decoration: none;
+        transition: var(--transition);
+    }
+
+    .breadcrumb-item a:hover {
+        color: white !important;
+        transform: translateX(3px);
+    }
+
+    .breadcrumb-item.active {
+        color: white !important;
+        font-weight: 600;
+    }
+
+    /* ===== MAIN CONTENT ===== */
+    .main-content {
+        padding: 40px 0 80px;
+        position: relative;
+    }
+
+    .section-title {
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 700;
+        color: var(--dark-color);
+        margin-bottom: 30px;
+        position: relative;
+        padding-bottom: 15px;
+        font-size: 1.8rem;
+    }
+
+    .section-title::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 70px;
+        height: 4px;
+        background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+        border-radius: 2px;
+    }
+
+    .section-title::before {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 80px;
+        width: 20px;
+        height: 4px;
+        background: var(--accent-color);
+        border-radius: 2px;
+    }
+
+    /* ===== VIDEO CONTAINER ENHANCED ===== */
+    .video-container {
+        background: white;
+        border-radius: 20px;
+        padding: 40px;
+        margin-bottom: 40px;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+        transition: var(--transition);
+        border: 1px solid rgba(255, 255, 255, 0.8);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .video-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+    }
+
+    .video-container:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+    }
+
+    .video-wrapper {
+        position: relative;
+        width: 100%;
+        padding-bottom: 56.25%;
+        height: 0;
+        overflow: hidden;
+        border-radius: 15px;
+        margin-bottom: 30px;
+        background: #000;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .video-wrapper iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border: none;
+        border-radius: 15px;
+    }
+
+    .video-title {
+        color: var(--dark-color);
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 700;
+        font-size: 2.2rem;
+        margin-bottom: 20px;
+        line-height: 1.3;
+    }
+
+    .video-description {
+        color: var(--gray-color);
+        font-size: 1.1rem;
+        line-height: 1.7;
+        margin-bottom: 25px;
+    }
+
+    .video-description ul {
+        padding-left: 20px;
+        margin: 15px 0;
+    }
+
+    .video-description li {
+        margin-bottom: 10px;
+        position: relative;
+        padding-left: 10px;
+    }
+
+    .video-description li::before {
+        content: '•';
+        color: var(--secondary-color);
+        font-weight: bold;
+        position: absolute;
+        left: -10px;
+    }
+
+    .video-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 25px;
+        margin: 25px 0;
+        padding: 20px;
+        background: var(--light-color);
+        border-radius: 12px;
+    }
+
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--gray-color);
+        font-size: 0.95rem;
+    }
+
+    .meta-item i {
+        color: var(--secondary-color);
+        font-size: 1.2rem;
+    }
+
+    /* ===== SOCIAL SHARE ENHANCED ===== */
+    .social-share {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        margin-top: 30px;
+        padding-top: 25px;
+        border-top: 2px solid #f0f0f0;
+        flex-wrap: wrap;
+    }
+
+    .share-label {
+        color: var(--primary-color);
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+
+    .share-buttons {
+        display: flex;
+        gap: 15px;
+    }
+
+    .share-btn {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        text-decoration: none;
+        transition: var(--transition);
+        font-size: 1.2rem;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .share-btn:hover {
+        transform: translateY(-5px) scale(1.1);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    .share-btn.facebook {
+        background: linear-gradient(135deg, #3b5998, #2d4373);
+    }
+
+    .share-btn.twitter {
+        background: linear-gradient(135deg, #1da1f2, #0c85d0);
+    }
+
+    .share-btn.whatsapp {
+        background: linear-gradient(135deg, #25d366, #128c7e);
+    }
+
+    .share-btn.link {
+        background: linear-gradient(135deg, var(--primary-color), var(--dark-color));
+    }
+
+    /* ===== VIDEO LIST ENHANCED ===== */
+    .video-list-container {
+        background: white;
+        border-radius: 20px;
+        padding: 40px;
+        margin-bottom: 40px;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.8);
+    }
+
+    .video-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 30px;
+        margin-top: 30px;
+    }
+
+    @media (max-width: 768px) {
+        .video-list {
+            grid-template-columns: 1fr;
         }
-        
-        /* HEADER SECTION */
-        .page-header {
-            background: linear-gradient(15deg, #13547a 0%, #80d0c7 100%);
-            padding: 40px 0 30px 0;
-            margin-top: 0;
-            color: white;
-            position: relative;
-            overflow: hidden;
+    }
+
+    .video-card {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        transition: var(--transition);
+        cursor: pointer;
+        border: 1px solid #eaeaea;
+        height: 100%;
+        position: relative;
+    }
+
+    .video-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+        z-index: 2;
+    }
+
+    .video-card:hover {
+        transform: translateY(-10px) scale(1.02);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        border-color: var(--secondary-color);
+    }
+
+    .video-thumbnail {
+        position: relative;
+        width: 100%;
+        padding-bottom: 56.25%;
+        overflow: hidden;
+        background: #000;
+    }
+
+    .video-thumbnail img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.6s ease;
+    }
+
+    .video-card:hover .video-thumbnail img {
+        transform: scale(1.1);
+    }
+
+    .play-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, rgba(19, 84, 122, 0.9), rgba(128, 208, 199, 0.9));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: var(--transition);
+    }
+
+    .video-card:hover .play-overlay {
+        opacity: 1;
+    }
+
+    .play-icon {
+        width: 70px;
+        height: 70px;
+        background: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary-color);
+        font-size: 2rem;
+        transition: var(--transition);
+    }
+
+    .video-card:hover .play-icon {
+        transform: scale(1.1);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    }
+
+    .video-card-content {
+        padding: 25px;
+    }
+
+    .video-card-title {
+        color: var(--dark-color);
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 700;
+        font-size: 1.2rem;
+        margin-bottom: 15px;
+        line-height: 1.4;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .video-card-desc {
+        color: var(--gray-color);
+        font-size: 0.95rem;
+        line-height: 1.6;
+        margin-bottom: 20px;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .video-card-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.9rem;
+        color: var(--gray-color);
+        padding-top: 15px;
+        border-top: 1px solid #f0f0f0;
+    }
+
+    .video-card-duration {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
+    /* ===== SIDEBAR ENHANCED ===== */
+    .sidebar-menu {
+        background: white;
+        border-radius: 20px;
+        padding: 30px;
+        margin-bottom: 30px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.8);
+        transition: var(--transition);
+    }
+
+    .sidebar-menu:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+    }
+
+    .sidebar-menu h4 {
+        color: var(--dark-color);
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 700;
+        font-size: 1.3rem;
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 3px solid var(--light-color);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .sidebar-menu h4 i {
+        color: var(--secondary-color);
+        font-size: 1.4rem;
+    }
+
+    .sidebar-menu ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .sidebar-menu ul li {
+        margin-bottom: 10px;
+        position: relative;
+    }
+
+    .sidebar-menu ul li a {
+        color: var(--gray-color);
+        text-decoration: none;
+        padding: 12px 15px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        transition: var(--transition);
+        font-weight: 500;
+    }
+
+    .sidebar-menu ul li a:hover {
+        background: var(--light-color);
+        color: var(--primary-color);
+        transform: translateX(10px);
+    }
+
+    .sidebar-menu ul li.active a {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        font-weight: 600;
+        box-shadow: 0 5px 15px rgba(19, 84, 122, 0.3);
+    }
+
+    /* ===== CONTACT INFO ENHANCED ===== */
+    .contact-info {
+        background: linear-gradient(135deg, var(--dark-color), var(--primary-color));
+        color: white;
+        border-radius: 20px;
+        padding: 35px 30px;
+        margin-bottom: 30px;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 15px 35px rgba(19, 84, 122, 0.25);
+    }
+
+    .contact-info::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ffffff" fill-opacity="0.05" d="M0,192L48,197.3C96,203,192,213,288,229.3C384,245,480,267,576,250.7C672,235,768,181,864,181.3C960,181,1056,235,1152,234.7C1248,235,1344,181,1392,154.7L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>');
+        background-size: cover;
+        background-position: bottom;
+    }
+
+    .contact-info h4 {
+        color: white;
+        font-size: 1.4rem;
+        margin-bottom: 25px;
+        position: relative;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .contact-info h4 i {
+        color: var(--secondary-color);
+    }
+
+    .contact-detail {
+        margin-bottom: 20px;
+        position: relative;
+        z-index: 2;
+    }
+
+    .contact-detail:last-child {
+        margin-bottom: 0;
+    }
+
+    .contact-detail h5 {
+        color: white;
+        font-size: 1rem;
+        margin-bottom: 8px;
+        font-weight: 600;
+    }
+
+    .contact-detail p {
+        color: rgba(255, 255, 255, 0.9);
+        margin: 0;
+        line-height: 1.6;
+        font-size: 0.95rem;
+    }
+
+    .contact-detail a {
+        color: rgba(255, 255, 255, 0.9);
+        text-decoration: none;
+        transition: var(--transition);
+    }
+
+    .contact-detail a:hover {
+        color: white;
+        text-decoration: underline;
+    }
+
+    /* ===== PORTAL LINKS ENHANCED ===== */
+    .portal-links {
+        background: white;
+        border-radius: 20px;
+        padding: 30px;
+        margin-bottom: 30px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.8);
+    }
+
+    .portal-link-item {
+        display: flex;
+        align-items: center;
+        padding: 15px;
+        border-radius: 12px;
+        margin-bottom: 12px;
+        background: var(--light-color);
+        transition: var(--transition);
+        cursor: pointer;
+    }
+
+    .portal-link-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .portal-link-item:hover {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        transform: translateX(10px);
+    }
+
+    .portal-link-item:hover i,
+    .portal-link-item:hover span {
+        color: white !important;
+    }
+
+    .portal-link-item i {
+        color: var(--secondary-color);
+        margin-right: 15px;
+        font-size: 1.3rem;
+        transition: var(--transition);
+    }
+
+    .portal-link-item span {
+        color: var(--primary-color);
+        font-weight: 600;
+        flex: 1;
+        transition: var(--transition);
+    }
+
+    .portal-link-item a {
+        color: var(--p-color);
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        width: 100%;
+    }
+
+    /* ===== DOWNLOAD BUTTONS ===== */
+    .sidebar-menu .btn {
+        padding: 15px;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: var(--transition);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+
+    .sidebar-menu .custom-btn {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        border: none;
+    }
+
+    .sidebar-menu .custom-btn:hover {
+        background: linear-gradient(135deg, var(--dark-color), var(--primary-color));
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(19, 84, 122, 0.3);
+    }
+
+    .sidebar-menu .custom-border-btn {
+        background: white;
+        color: var(--primary-color);
+        border: 2px solid var(--primary-color);
+    }
+
+    .sidebar-menu .custom-border-btn:hover {
+        background: var(--light-color);
+        border-color: var(--secondary-color);
+        transform: translateY(-3px);
+    }
+
+    /* ===== VIDEO MODAL ENHANCED ===== */
+    .video-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.95);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .video-modal.active {
+        display: flex;
+        opacity: 1;
+    }
+
+    .modal-content {
+        width: 90%;
+        max-width: 1000px;
+        position: relative;
+        transform: translateY(20px);
+        transition: transform 0.4s ease;
+    }
+
+    .video-modal.active .modal-content {
+        transform: translateY(0);
+    }
+
+    .modal-video-wrapper {
+        position: relative;
+        width: 100%;
+        padding-bottom: 56.25%;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-video-wrapper iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
+
+    .close-modal {
+        position: absolute;
+        top: -50px;
+        right: 0;
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        color: white;
+        font-size: 2.5rem;
+        cursor: pointer;
+        transition: var(--transition);
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(10px);
+    }
+
+    .close-modal:hover {
+        color: var(--secondary-color);
+        background: rgba(255, 255, 255, 0.2);
+        transform: rotate(90deg);
+    }
+
+    /* ===== ANIMATIONS ===== */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
         }
-        
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .video-card, .sidebar-menu, .video-container, .video-list-container {
+        animation: fadeInUp 0.6s ease-out forwards;
+    }
+
+    .video-card:nth-child(1) { animation-delay: 0.1s; }
+    .video-card:nth-child(2) { animation-delay: 0.2s; }
+    .video-card:nth-child(3) { animation-delay: 0.3s; }
+
+    /* ===== NOTIFICATION STYLES ===== */
+    .notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: white;
+        padding: 15px 25px;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        z-index: 9999;
+        transform: translateX(100%);
+        opacity: 0;
+        transition: transform 0.3s ease, opacity 0.3s ease;
+        min-width: 300px;
+        border-left: 4px solid var(--primary-color);
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .notification.show {
+        transform: translateX(0);
+        opacity: 1;
+    }
+
+    .notification.success {
+        border-left-color: #28a745;
+    }
+
+    .notification.info {
+        border-left-color: var(--primary-color);
+    }
+
+    .notification i {
+        font-size: 1.5rem;
+    }
+
+    .notification.success i {
+        color: #28a745;
+    }
+
+    .notification.info i {
+        color: var(--primary-color);
+    }
+
+    .notification span {
+        color: #333;
+        font-weight: 500;
+        flex: 1;
+    }
+
+    /* ===== SCROLL TO TOP ===== */
+    .scroll-to-top {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        font-size: 1.2rem;
+        box-shadow: 0 5px 20px rgba(19, 84, 122, 0.4);
+        z-index: 1000;
+        transition: var(--transition);
+        opacity: 0;
+        visibility: hidden;
+    }
+
+    .scroll-to-top.active {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .scroll-to-top:hover {
+        transform: translateY(-5px) scale(1.1);
+        box-shadow: 0 10px 30px rgba(19, 84, 122, 0.6);
+    }
+
+    /* ===== RESPONSIVE DESIGN ===== */
+    @media (max-width: 1200px) {
         .page-header h1 {
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 700;
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            position: relative;
-            z-index: 2;
-        }
-        
-        .page-header .subtitle {
-            font-size: 1.1rem;
-            opacity: 0.9;
-            margin-bottom: 20px;
-            position: relative;
-            z-index: 2;
-        }
-        
-        .page-header .breadcrumb {
-            background: transparent;
-            padding: 0;
-            margin: 0;
-            position: relative;
-            z-index: 2;
-        }
-        
-        .page-header .breadcrumb-item a {
-            color: rgba(255, 255, 255, 0.8);
-            text-decoration: none;
-        }
-        
-        .page-header .breadcrumb-item.active {
-            color: white;
-        }
-        
-        .page-header .breadcrumb-item+.breadcrumb-item::before {
-            color: rgba(255, 255, 255, 0.8);
-        }
-
-        /* MAIN CONTENT */
-        .main-content {
-            padding: 50px 0 60px 0;
-            background: #f0f8ff;
-        }
-        
-        .section-title {
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 600;
-            color: #13547a;
-            margin-bottom: 30px;
-            position: relative;
-            padding-bottom: 15px;
-        }
-        
-        .section-title::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100px;
-            height: 3px;
-            background: linear-gradient(to right, #13547a, #80d0c7);
-        }
-
-        /* VIDEO CONTAINER */
-        .video-container {
-            background: white;
-            border-radius: var(--border-radius-medium);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-            padding: 30px;
-            margin-bottom: 40px;
-            transition: all 0.3s ease;
-        }
-        
-        .video-container:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
-        }
-        
-        .video-wrapper {
-            position: relative;
-            width: 100%;
-            padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
-            height: 0;
-            overflow: hidden;
-            border-radius: var(--border-radius-medium);
-            margin-bottom: 25px;
-            background: #000;
-        }
-        
-        .video-wrapper iframe {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-        
-        .video-info {
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: var(--border-radius-small);
-            margin-top: 20px;
-        }
-        
-        .video-title {
-            color: #13547a;
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 700;
-            font-size: 1.5rem;
-            margin-bottom: 15px;
-        }
-        
-        .video-description {
-            color: var(--p-color);
-            font-size: var(--p-font-size);
-            line-height: 1.6;
-            margin-bottom: 20px;
-        }
-        
-        .video-meta {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            margin-top: 20px;
-        }
-        
-        .meta-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: #666;
-            font-size: 0.95rem;
-        }
-        
-        .meta-item i {
-            color: #80d0c7;
-        }
-
-        /* VIDEO LIST */
-        .video-list-container {
-            background: white;
-            border-radius: var(--border-radius-medium);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-            padding: 30px;
-            margin-bottom: 40px;
+            font-size: 3rem;
         }
         
         .video-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 25px;
-            margin-top: 25px;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
         }
-        
-        @media (max-width: 768px) {
-            .video-list {
-                grid-template-columns: 1fr;
-            }
-        }
-        
-        .video-card {
-            background: #f8f9fa;
-            border-radius: var(--border-radius-small);
-            overflow: hidden;
-            transition: all 0.3s ease;
-            height: 100%;
-            cursor: pointer;
-        }
-        
-        .video-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-        
-        .video-thumbnail {
-            position: relative;
-            width: 100%;
-            padding-bottom: 56.25%;
-            overflow: hidden;
-        }
-        
-        .video-thumbnail img {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.3s ease;
-        }
-        
-        .video-card:hover .video-thumbnail img {
-            transform: scale(1.05);
-        }
-        
-        .play-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(19, 84, 122, 0.7);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-        
-        .video-card:hover .play-overlay {
-            opacity: 1;
-        }
-        
-        .play-icon {
-            width: 60px;
-            height: 60px;
-            background: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #13547a;
-            font-size: 1.5rem;
-        }
-        
-        .video-card-content {
-            padding: 20px;
-        }
-        
-        .video-card-title {
-            color: #13547a;
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 600;
-            font-size: 1.1rem;
-            margin-bottom: 10px;
-            line-height: 1.4;
-        }
-        
-        .video-card-desc {
-            color: var(--p-color);
-            font-size: 0.95rem;
-            line-height: 1.5;
-            margin-bottom: 15px;
-        }
-        
-        .video-card-meta {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.85rem;
-            color: #666;
-        }
-        
-        .video-card-duration {
-            background: #13547a;
-            color: white;
-            padding: 3px 8px;
-            border-radius: 3px;
-            font-weight: 500;
-        }
+    }
 
-        /* SIDEBAR MENU */
-        .sidebar-menu {
-            background: white;
-            border-radius: var(--border-radius-medium);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-            padding: 25px;
-            margin-bottom: 30px;
+    @media (max-width: 992px) {
+        .page-header {
+            padding: 60px 0 40px;
         }
         
-        .sidebar-menu h4 {
-            color: #13547a;
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 600;
-            font-size: 1.2rem;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #f0f0f0;
-            display: flex;
-            align-items: center;
+        .page-header h1 {
+            font-size: 2.5rem;
         }
         
-        .sidebar-menu h4 i {
-            color: #80d0c7;
-            margin-right: 10px;
+        .video-title {
+            font-size: 1.8rem;
         }
         
-        .sidebar-menu ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
+        .video-list {
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
         }
-        
-        .sidebar-menu ul li {
-            margin-bottom: 12px;
-        }
-        
-        .sidebar-menu ul li:last-child {
-            margin-bottom: 0;
-        }
-        
-        .sidebar-menu ul li a {
-            color: var(--p-color);
-            text-decoration: none;
-            padding: 12px 15px;
-            border-radius: var(--border-radius-small);
-            display: flex;
-            align-items: center;
-            transition: all 0.3s;
-            font-weight: 500;
-        }
-        
-        .sidebar-menu ul li a:hover {
-            background: #f0f8ff;
-            color: #13547a;
-            transform: translateX(5px);
-        }
-        
-        .sidebar-menu ul li a i {
-            color: #80d0c7;
-            margin-right: 10px;
-            font-size: 0.9rem;
-        }
+    }
 
-        /* CONTACT INFO */
-        .contact-info {
-            background: linear-gradient(135deg, #13547a 0%, #80d0c7 100%);
-            color: white;
-            border-radius: var(--border-radius-medium);
-            padding: 25px;
-            margin-bottom: 30px;
+    @media (max-width: 768px) {
+        .page-header {
+            padding: 50px 0 30px;
         }
         
-        .contact-info h4 {
-            color: white;
-            font-size: 1.2rem;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
+        .page-header h1 {
+            font-size: 2rem;
         }
         
-        .contact-info h4 i {
-            margin-right: 10px;
-        }
-        
-        .contact-detail {
-            margin-bottom: 20px;
-        }
-        
-        .contact-detail:last-child {
-            margin-bottom: 0;
-        }
-        
-        .contact-detail h5 {
-            color: white;
-            font-size: 1rem;
-            margin-bottom: 8px;
-            font-weight: 600;
-        }
-        
-        .contact-detail p {
-            color: rgba(255, 255, 255, 0.9);
-            margin: 0;
-            line-height: 1.6;
-            font-size: 0.95rem;
-        }
-        
-        .contact-detail a {
-            color: rgba(255, 255, 255, 0.9);
-            text-decoration: none;
-            transition: all 0.3s;
-        }
-        
-        .contact-detail a:hover {
-            color: white;
-            text-decoration: underline;
-        }
-
-        /* PORTAL LINKS */
+        .video-container,
+        .video-list-container,
+        .sidebar-menu,
+        .contact-info,
         .portal-links {
-            background: white;
-            border-radius: var(--border-radius-medium);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
             padding: 25px;
         }
         
-        .portal-link-item {
-            display: flex;
-            align-items: center;
-            padding: 12px 15px;
-            border-radius: var(--border-radius-small);
-            margin-bottom: 10px;
-            background: #f8f9fa;
-            transition: all 0.3s;
+        .video-title {
+            font-size: 1.6rem;
         }
         
-        .portal-link-item:last-child {
-            margin-bottom: 0;
+        .video-list {
+            grid-template-columns: 1fr;
         }
         
-        .portal-link-item:hover {
-            background: #e9ecef;
-            transform: translateX(5px);
-        }
-        
-        .portal-link-item i {
-            color: #80d0c7;
-            margin-right: 10px;
-            font-size: 1.2rem;
-        }
-        
-        .portal-link-item span {
-            color: #13547a;
-            font-weight: 500;
-            flex: 1;
-        }
-        
-        .portal-link-item a {
-            color: var(--p-color);
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            width: 100%;
-        }
-
-        /* SOCIAL SHARE */
-        .social-share {
-            display: flex;
-            align-items: center;
+        .video-meta {
+            flex-direction: column;
             gap: 15px;
-            margin-top: 25px;
-            padding-top: 25px;
-            border-top: 1px solid #f0f0f0;
         }
         
-        .share-label {
-            color: #13547a;
-            font-weight: 600;
-            font-size: 0.95rem;
+        .social-share {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 15px;
         }
         
         .share-buttons {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .share-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            text-decoration: none;
-            transition: all 0.3s;
-        }
-        
-        .share-btn:hover {
-            transform: translateY(-3px);
-        }
-        
-        .share-btn.facebook {
-            background: #3b5998;
-        }
-        
-        .share-btn.twitter {
-            background: #1da1f2;
-        }
-        
-        .share-btn.whatsapp {
-            background: #25d366;
-        }
-        
-        .share-btn.link {
-            background: #13547a;
-        }
-
-        /* MODAL STYLES */
-        .video-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            z-index: 9999;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .video-modal.active {
-            display: flex;
+            justify-content: flex-start;
         }
         
         .modal-content {
-            width: 90%;
-            max-width: 900px;
-            position: relative;
+            width: 95%;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .page-header h1 {
+            font-size: 1.8rem;
         }
         
-        .modal-video-wrapper {
-            position: relative;
-            width: 100%;
-            padding-bottom: 56.25%;
+        .section-title {
+            font-size: 1.5rem;
         }
         
-        .modal-video-wrapper iframe {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border: none;
+        .video-container,
+        .video-list-container,
+        .sidebar-menu,
+        .contact-info,
+        .portal-links {
+            padding: 20px;
         }
         
-        .close-modal {
-            position: absolute;
-            top: -40px;
-            right: 0;
-            background: none;
-            border: none;
-            color: white;
-            font-size: 2rem;
-            cursor: pointer;
-            transition: color 0.3s;
+        .video-title {
+            font-size: 1.4rem;
         }
-        
-        .close-modal:hover {
-            color: #80d0c7;
-        }
+    }
+</style>
 
-        /* RESPONSIVE */
-        @media (max-width: 768px) {
-            body {
-                padding-top: 70px;
-            }
-            
-            .page-header {
-                padding: 30px 0 20px 0;
-            }
-            
-            .page-header h1 {
-                font-size: 2rem;
-            }
-            
-            .main-content {
-                padding: 30px 0 40px 0;
-            }
-            
-            .video-container,
-            .video-list-container,
-            .sidebar-menu,
-            .contact-info,
-            .portal-links {
-                padding: 20px;
-            }
-            
-            .video-meta {
-                flex-direction: column;
-                gap: 10px;
-            }
-            
-            .social-share {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 15px;
-            }
-            
-            .modal-content {
-                width: 95%;
-            }
-        }
-        
-        @media (max-width: 576px) {
-            .page-header h1 {
-                font-size: 1.8rem;
-            }
-            
-            .section-title {
-                font-size: 1.3rem;
-            }
-            
-            .video-title {
-                font-size: 1.3rem;
-            }
-        }
-    </style>
-</head>
-
-<body id="top">
-
-    <!-- NAVBAR SAMA DENGAN HOME -->
-    <nav class="navbar navbar-expand-lg fixed-top navbar-custom">
-        <div class="container">
-            <!-- BRAND -->
-            <a class="navbar-brand d-flex align-items-center" href="index.php">
-                <span class="fw-bold">JDIH DPRD</span>
-            </a>
-
-            <!-- TOGGLER -->
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                data-bs-target="#navbarNav" aria-controls="navbarNav"
-                aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <!-- MENU SAMA DENGAN HOME -->
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav mx-auto mb-2 mb-lg-0 gap-lg-2">
-                    <li class="nav-item">
-                        <a class="nav-link" href="../index.php">Beranda</a>
-                    </li>
-
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle active" href="#" id="dropdownTentangKami"
-                            role="button" data-bs-toggle="dropdown">
-                            Tentang Kami
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="?page=profil-jdih">Profil JDIH</a></li>
-                            <li><a class="dropdown-item" href="?page=struktur-organisasi">Struktur Organisasi</a></li>
-                            <li><a class="dropdown-item" href="?page=alur-pengelolaan">Alur Pengelolaan Produk Hukum</a></li>
-                            <li><a class="dropdown-item" href="?page=sop-pengelola">SOP Pengelola JDIH DPRD Kota Surakarta</a></li>
-                            <li><a class="dropdown-item" href="?page=dasar-hukum">Dasar Hukum JDIH Sekretariat DPRD Kota Surakarta</a></li>
-                            <li><a class="dropdown-item" href="?page=surat-keputusan">Surat Keputusan Pengelola JDIH Sekretariat DPRD Kota Surakarta</a></li>
-                            <li><a class="dropdown-item" href="?page=visi-misi">Visi & Misi</a></li>
-                            <li><a class="dropdown-item" href="?page=video-profil">Video Profil JDIH</a></li>
-                        </ul>
-                    </li>
-
-                    <!-- PERUNDANGAN -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="dropdownPerundangan"
-                            role="button" data-bs-toggle="dropdown">
-                            Perundang-undangan
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="?page=keputusan-dprd">Keputusan DPRD</a></li>
-                            <li><a class="dropdown-item" href="?page=keputusan-pimpinan">Keputusan Pimpinan DPRD</a></li>
-                            <li><a class="dropdown-item" href="?page=keputusan-sekretariat">Keputusan Sekretariat DPRD</a></li>
-                            <li><a class="dropdown-item" href="?page=peraturan-dprd">Peraturan DPRD</a></li>
-                            <li><a class="dropdown-item" href="?page=perda">Peraturan Daerah</a></li>
-                            <li><a class="dropdown-item" href="?page=english-legal">English Legal Product</a></li>
-                        </ul>
-                    </li>
-
-                    <!-- MONOGRAFI -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="dropdownMonografi"
-                            role="button" data-bs-toggle="dropdown">
-                            Monografi Hukum
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="?page=kajian-raperda">Kajian Raperda</a></li>
-                            <li><a class="dropdown-item" href="?page=naskah-akademik">Naskah Akademik</a></li>
-                            <li><a class="dropdown-item" href="?page=dokumen-langka">Dokumen Langka</a></li>
-                            <li><a class="dropdown-item" href="?page=risalah">Risalah</a></li>
-                            <li><a class="dropdown-item" href="?page=fasilitasi">Hasil Fasilitasi Raperda</a></li>
-                            <li><a class="dropdown-item" href="?page=karya-ilmiah">Penulisan Karya Ilmiah</a></li>
-                            <li><a class="dropdown-item" href="?page=himpunan">Himpunan Peraturan</a></li>
-                        </ul>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="?page=artikel">Artikel Hukum</a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="?page=yurisprudensi">Yurisprudensi</a>
-                    </li>
-
-                    <!-- INFORMASI -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="dropdownInformasi"
-                            role="button" data-bs-toggle="dropdown">
-                            Informasi
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="?page=kegiatan">Kegiatan JDIH</a></li>
-                            <li><a class="dropdown-item" href="?page=infografis">Infografis & Videografis</a></li>
-                            <li><a class="dropdown-item" href="?page=galeri">Galeri Foto</a></li>
-                            <li><a class="dropdown-item" href="?page=penghargaan">Penghargaan</a></li>
-                            <li><a class="dropdown-item" href="?page=buku">Koleksi Buku</a></li>
-                        </ul>
-                    </li>
-
-                    <!-- KONTAK -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="dropdownKontak"
-                            role="button" data-bs-toggle="dropdown">
-                            Kontak & Saran
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="?page=kontak">Form Kontak</a></li>
-                            <li><a class="dropdown-item" href="?page=saran">Saran & Masukan</a></li>
-                        </ul>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+<!-- SCROLL TO TOP BUTTON -->
+<a href="#top" class="scroll-to-top" id="scrollToTop">
+    <i class="bi bi-chevron-up"></i>
+</a>
 
     <!-- HEADER SECTION -->
     <section class="page-header">
@@ -745,13 +973,6 @@
                 <div class="col-12">
                     <h1 class="text-white">VIDEO PROFIL JDIH</h1>
                     <p class="subtitle">Sekretariat Dewan Perwakilan Rakyat Daerah Kota Surakarta</p>
-                    <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb">
-                            <li class="breadcrumb-item"><a href="index.php">Beranda</a></li>
-                            <li class="breadcrumb-item"><a href="#">Tentang Kami</a></li>
-                            <li class="breadcrumb-item active" aria-current="page">Video Profil</li>
-                        </ol>
-                    </nav>
                 </div>
             </div>
         </div>
@@ -836,8 +1057,8 @@
                                     <i class="bi bi-whatsapp"></i>
                                 </a>
                                 <a href="#" 
-                                   onclick="navigator.clipboard.writeText('https://youtu.be/rko4gjE72Gc'); alert('Link video disalin!');" 
-                                   class="share-btn link">
+                                   onclick="copyVideoLink()" 
+                                   class="share-btn link" id="copyLinkBtn">
                                     <i class="bi bi-link-45deg"></i>
                                 </a>
                             </div>
@@ -852,7 +1073,7 @@
                             <!-- Video 2 - Tutorial -->
                             <div class="video-card" data-video-id="-aAbLqOKyd8" data-video-title="Tutorial Penggunaan Website JDIH">
                                 <div class="video-thumbnail">
-                                    <img src="https://img.youtube.com/vi/-aAbLqOKyd8/maxresdefault.jpg" alt="Tutorial Penggunaan Website JDIH">
+                                    <img src="https://img.youtube.com/vi/-aAbLqOKyd8/maxresdefault.jpg" alt="Tutorial Penggunaan Website JDIH" onerror="this.src='https://images.unsplash.com/photo-1589829545856-d10d557cf95f?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80'">
                                     <div class="play-overlay">
                                         <div class="play-icon">
                                             <i class="bi bi-play-fill"></i>
@@ -872,7 +1093,7 @@
                             <!-- Video 3 - Proses Legislasi -->
                             <div class="video-card" data-video-id="B5XrqNA9FJ8" data-video-title="Proses Legislasi di DPRD Surakarta">
                                 <div class="video-thumbnail">
-                                    <img src="https://img.youtube.com/vi/B5XrqNA9FJ8/maxresdefault.jpg" alt="Proses Legislasi di DPRD Surakarta">
+                                    <img src="https://img.youtube.com/vi/B5XrqNA9FJ8/maxresdefault.jpg" alt="Proses Legislasi di DPRD Surakarta" onerror="this.src='https://images.unsplash.com/photo-1589391886085-8b6b0ac72a1a?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80'">
                                     <div class="play-overlay">
                                         <div class="play-icon">
                                             <i class="bi bi-play-fill"></i>
@@ -892,7 +1113,7 @@
                             <!-- Video 4 - Wawancara -->
                             <div class="video-card" data-video-id="IQ9IijAz8Ow" data-video-title="Wawancara dengan Kepala JDIH">
                                 <div class="video-thumbnail">
-                                    <img src="https://img.youtube.com/vi/IQ9IijAz8Ow/maxresdefault.jpg" alt="Wawancara dengan Kepala JDIH">
+                                    <img src="https://img.youtube.com/vi/IQ9IijAz8Ow/maxresdefault.jpg" alt="Wawancara dengan Kepala JDIH" onerror="this.src='https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80'">
                                     <div class="play-overlay">
                                         <div class="play-icon">
                                             <i class="bi bi-play-fill"></i>
@@ -1068,168 +1289,173 @@
         </div>
     </div>
 
-    <!-- FOOTER SAMA DENGAN TEMPLATE -->
-    <footer class="site-footer section-padding">
-        <div class="container">
-            <div class="row">
+<?php include 'footer.php'; ?>
 
-                <div class="col-lg-3 col-12 mb-4 pb-2">
-                    <a class="navbar-brand mb-2" href="index.php">
-                        <i class="bi-back"></i>
-                        <span>JDIH DPRD</span>
-                    </a>
-                </div>
-
-                <div class="col-lg-3 col-md-4 col-6">
-                    <h6 class="site-footer-title mb-3">Tautan Cepat</h6>
-
-                    <ul class="site-footer-links">
-                        <li class="site-footer-link-item">
-                            <a href="index.php" class="site-footer-link">Beranda</a>
-                        </li>
-
-                        <li class="site-footer-link-item">
-                            <a href="?page=video-profil" class="site-footer-link">Video Profil</a>
-                        </li>
-
-                        <li class="site-footer-link-item">
-                            <a href="?page=perda" class="site-footer-link">Peraturan Daerah</a>
-                        </li>
-
-                        <li class="site-footer-link-item">
-                            <a href="?page=kontak" class="site-footer-link">Kontak</a>
-                        </li>
-                    </ul>
-                </div>
-
-                <div class="col-lg-3 col-md-4 col-6 mb-4 mb-lg-0">
-                    <h6 class="site-footer-title mb-3">Kontak</h6>
-
-                    <p class="text-white d-flex mb-1">
-                        <a href="tel:+62271723456" class="site-footer-link">
-                            (0271) 723456
-                        </a>
-                    </p>
-
-                    <p class="text-white d-flex">
-                        <a href="mailto:jdih@dprd-surakarta.go.id" class="site-footer-link">
-                            jdih@dprd-surakarta.go.id
-                        </a>
-                    </p>
-                </div>
-
-                <div class="col-lg-3 col-md-4 col-12 mt-4 mt-lg-0 ms-auto">
-                    <p class="copyright-text mt-lg-5 mt-4">
-                        Copyright © 2025 JDIH DPRD Kota Surakarta. All rights reserved.
-                        <br><br>
-                        <a rel="nofollow" href="https://dprd-surakarta.go.id" target="_blank">DPRD Kota Surakarta</a>
-                    </p>
-                </div>
-
-            </div>
-        </div>
-    </footer>
-
-    <!-- JAVASCRIPT FILES SAMA DENGAN HOME -->
-    <script src="js/jquery.min.js"></script>
-    <script src="js/bootstrap.bundle.min.js"></script>
-    <script src="js/jquery.sticky.js"></script>
-    <script src="js/click-scroll.js"></script>
-    <script src="js/custom.js"></script>
-
-    <script>
-        // Script untuk video player dan interaksi
-        $(document).ready(function() {
-            // Update view count (simulasi)
-            function updateViewCount() {
-                const viewCount = document.querySelector('.meta-item:nth-child(3) span');
-                if (viewCount) {
-                    const currentViews = parseInt(viewCount.textContent.replace('Ditonton: ', '').replace(' kali', ''));
-                    viewCount.textContent = `Ditonton: ${currentViews + 1} kali`;
+<script>
+    // Fungsi untuk copy link video
+    function copyVideoLink() {
+        const videoUrl = 'https://youtu.be/rko4gjE72Gc';
+        navigator.clipboard.writeText(videoUrl).then(() => {
+            showNotification('Link video telah disalin!', 'success');
+            
+            // Update button visual feedback
+            const button = document.getElementById('copyLinkBtn');
+            const originalHTML = button.innerHTML;
+            const originalBackground = button.style.background;
+            
+            button.innerHTML = '<i class="bi bi-check"></i>';
+            button.style.background = 'linear-gradient(135deg, #25d366, #128c7e)';
+            
+            setTimeout(() => {
+                button.innerHTML = originalHTML;
+                button.style.background = originalBackground;
+            }, 2000);
+        }).catch(err => {
+            showNotification('Gagal menyalin link!', 'error');
+        });
+    }
+    
+    // Fungsi untuk membuka modal video
+    function openVideoModal(videoId, videoTitle) {
+        const modal = document.getElementById('videoModal');
+        const player = document.getElementById('modalVideoPlayer');
+        
+        player.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`;
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        document.title = `${videoTitle} - JDIH DPRD Kota Surakarta`;
+    }
+    
+    // Fungsi untuk menutup modal video
+    function closeVideoModal() {
+        const modal = document.getElementById('videoModal');
+        const player = document.getElementById('modalVideoPlayer');
+        
+        modal.classList.remove('active');
+        player.src = '';
+        document.body.style.overflow = 'auto';
+        document.title = 'Video Profil - JDIH DPRD Kota Surakarta';
+    }
+    
+    // Fungsi untuk menampilkan notifikasi
+    function showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.innerHTML = `
+            <i class="bi ${type === 'success' ? 'bi-check-circle' : 'bi-info-circle'}"></i>
+            <span>${message}</span>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.classList.add('show');
+        }, 10);
+        
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
                 }
-            }
-            
-            // Simulate view count update after 3 seconds
-            setTimeout(updateViewCount, 3000);
-            
-            // Video card click handler
-            $('.video-card').on('click', function(e) {
-                const videoId = $(this).data('video-id');
-                const videoTitle = $(this).data('video-title');
+            }, 300);
+        }, 3000);
+    }
+    
+    // Scroll to top functionality
+    const scrollToTopBtn = document.getElementById('scrollToTop');
+    
+    window.addEventListener('scroll', () => {
+        if (window.pageYOffset > 300) {
+            scrollToTopBtn.classList.add('active');
+        } else {
+            scrollToTopBtn.classList.remove('active');
+        }
+    });
+    
+    scrollToTopBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    });
+    
+    // Initialize when DOM is ready
+    document.addEventListener('DOMContentLoaded', () => {
+        // Add click event to video cards
+        const videoCards = document.querySelectorAll('.video-card');
+        videoCards.forEach(card => {
+            card.addEventListener('click', (e) => {
+                const videoId = card.dataset.videoId;
+                const videoTitle = card.dataset.videoTitle;
                 
                 if (videoId) {
                     openVideoModal(videoId, videoTitle);
                 }
             });
-            
-            // Modal functionality
-            const modal = $('#videoModal');
-            const modalPlayer = $('#modalVideoPlayer');
-            const closeBtn = $('#closeModal');
-            
-            function openVideoModal(videoId, videoTitle) {
-                modalPlayer.attr('src', `https://www.youtube.com/embed/${videoId}?autoplay=1`);
-                modal.addClass('active');
-                $('body').css('overflow', 'hidden');
-                
-                // Update page title in modal if needed
-                document.title = `${videoTitle} - JDIH DPRD`;
+        });
+        
+        // Add click event to close modal button
+        const closeModalBtn = document.getElementById('closeModal');
+        closeModalBtn.addEventListener('click', closeVideoModal);
+        
+        // Close modal when clicking outside
+        const videoModal = document.getElementById('videoModal');
+        videoModal.addEventListener('click', (e) => {
+            if (e.target === videoModal) {
+                closeVideoModal();
             }
-            
-            function closeVideoModal() {
-                modal.removeClass('active');
-                modalPlayer.attr('src', '');
-                $('body').css('overflow', 'auto');
-                document.title = 'Video Profil - JDIH DPRD Kota Surakarta';
+        });
+        
+        // Close modal with ESC key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && videoModal.classList.contains('active')) {
+                closeVideoModal();
             }
-            
-            // Close modal events
-            closeBtn.on('click', closeVideoModal);
-            
-            modal.on('click', function(e) {
-                if (e.target === this) {
-                    closeVideoModal();
-                }
-            });
-            
-            // Close with ESC key
-            $(document).on('keydown', function(e) {
-                if (e.key === 'Escape' && modal.hasClass('active')) {
-                    closeVideoModal();
-                }
-            });
-            
-            // Copy link confirmation
-            $('.share-btn.link').on('click', function(e) {
-                e.preventDefault();
-                const button = $(this);
-                const originalHTML = button.html();
-                
-                navigator.clipboard.writeText('https://youtu.be/rko4gjE72Gc').then(() => {
-                    button.html('<i class="bi bi-check"></i>');
-                    button.css('background', '#25d366');
+        });
+        
+        // Simulate view count update
+        setTimeout(() => {
+            const viewCountElement = document.querySelector('.meta-item:nth-child(3) span');
+            if (viewCountElement) {
+                const currentText = viewCountElement.textContent;
+                const currentViews = parseInt(currentText.match(/\d+/)[0]);
+                viewCountElement.textContent = `Ditonton: ${currentViews + 1} kali`;
+            }
+        }, 5000);
+        
+        // Add loading animation to download buttons
+        const downloadButtons = document.querySelectorAll('.sidebar-menu .btn');
+        downloadButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                if (!this.href || this.href.includes('#')) {
+                    e.preventDefault();
+                    const originalHTML = this.innerHTML;
+                    this.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Loading...';
+                    this.disabled = true;
                     
-                    setTimeout(function() {
-                        button.html(originalHTML);
-                        button.css('background', '#13547a');
-                    }, 2000);
-                });
-            });
-            
-            // Smooth scroll for anchor links
-            $('a[href^="#"]').on('click', function(e) {
-                e.preventDefault();
-                var target = this.hash;
-                var $target = $(target);
-                
-                $('html, body').stop().animate({
-                    'scrollTop': $target.offset().top - 80
-                }, 900, 'swing', function() {
-                    window.location.hash = target;
-                });
+                    setTimeout(() => {
+                        this.innerHTML = originalHTML;
+                        this.disabled = false;
+                        showNotification('Download dimulai...', 'info');
+                    }, 1500);
+                }
             });
         });
-    </script>
-
-</body>
-</html>
+        
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    });
+</script>
