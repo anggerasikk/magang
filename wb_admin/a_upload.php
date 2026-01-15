@@ -20,7 +20,7 @@ $subjek = $_POST['subjek'];
 $isbn = $_POST['isbn'];
 $bidangHukum = $_POST['bidangHukum'];
 $nomorIndukBuku = $_POST['nomorIndukBuku'];
-$urlDetailPeraturan = $_POST['urlDetailPeraturan'];
+
 $teuBadan = $_POST['teuBadan'];
 $deskripsiFisik = $_POST['deskripsiFisik'];
 

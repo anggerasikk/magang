@@ -1,0 +1,366 @@
+/* =====================================
+   GLOBAL OVERRIDE
+===================================== */
+body {
+    padding-top: 80px;
+    background: #f8f9fa;
+}
+
+/* =====================================
+   PAGE HEADER
+===================================== */
+.page-header {
+    background: linear-gradient(135deg, #13547a, #80d0c7);
+    padding: 60px 0 40px;
+    color: #fff;
+}
+
+.page-header h1 {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.page-header .subtitle {
+    opacity: 0.9;
+}
+
+.breadcrumb {
+    background: transparent;
+    padding: 0;
+    margin-top: 15px;
+}
+
+.breadcrumb a {
+    color: #e0f7f5;
+    text-decoration: none;
+}
+
+/* =====================================
+   MAIN CONTENT
+===================================== */
+.main-content {
+    padding: 50px 0 60px;
+}
+
+/* =====================================
+   SECTION TITLE
+===================================== */
+.section-title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    color: #13547a;
+    margin-bottom: 30px;
+    position: relative;
+    padding-bottom: 12px;
+}
+
+.section-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 90px;
+    height: 3px;
+    background: linear-gradient(to right, #13547a, #80d0c7);
+}
+
+/* =====================================
+   YEAR FILTER
+===================================== */
+.year-filter {
+    background: #fff;
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 30px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+}
+
+.year-filter h5 {
+    color: #13547a;
+    font-weight: 600;
+    margin-bottom: 15px;
+}
+
+.year-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.year-btn {
+    padding: 8px 18px;
+    border-radius: 8px;
+    background: #fff;
+    border: 2px solid #e0e0e0;
+    color: #13547a;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all .3s;
+}
+
+.year-btn:hover,
+.year-btn.active {
+    background: #13547a;
+    color: #fff;
+    border-color: #13547a;
+    transform: translateY(-2px);
+}
+
+/* =====================================
+   CARD GRID
+===================================== */
+.card-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px,1fr));
+    gap: 25px;
+}
+
+/* =====================================
+   DOCUMENT CARD
+===================================== */
+.document-card {
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    transition: all .3s;
+    display: flex;
+    flex-direction: column;
+}
+
+.document-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+}
+
+/* =====================================
+   CARD IMAGE
+===================================== */
+.card-image {
+    height: 200px;
+    position: relative;
+    background: linear-gradient(135deg, #13547a, #80d0c7);
+    overflow: hidden;
+}
+
+.card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform .5s;
+}
+
+.document-card:hover img {
+    transform: scale(1.05);
+}
+
+.placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    opacity: .85;
+}
+
+.placeholder i {
+    font-size: 3rem;
+}
+
+.placeholder p {
+    margin-top: 10px;
+    font-weight: 500;
+}
+
+/* =====================================
+   IMAGE OVERLAY
+===================================== */
+.image-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, rgba(0,0,0,0) 40%, rgba(0,0,0,.7));
+    display: flex;
+    align-items: flex-end;
+    padding: 15px;
+}
+
+.image-badge {
+    background: rgba(255,255,255,.9);
+    color: #13547a;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: .8rem;
+    font-weight: 600;
+}
+
+/* =====================================
+   CARD CONTENT
+===================================== */
+.card-content {
+    padding: 25px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.card-number {
+    color: #13547a;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.card-title {
+    font-weight: 600;
+    font-size: 1.05rem;
+    line-height: 1.5;
+    margin-bottom: 15px;
+    color: #2d3748;
+    display: -webkit-box;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* =====================================
+   META
+===================================== */
+.card-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: auto;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
+
+.card-date {
+    font-size: .9rem;
+    color: #718096;
+}
+
+.card-status {
+    background: #e6fffa;
+    color: #234e52;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: .8rem;
+}
+
+/* =====================================
+   ACTION BUTTONS
+===================================== */
+.card-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.card-btn {
+    flex: 1;
+    padding: 10px;
+    border-radius: 8px;
+    text-align: center;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all .3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-view {
+    background: #13547a;
+    color: #fff;
+}
+
+.btn-view:hover {
+    background: #0d3c5e;
+}
+
+.btn-download {
+    background: #f0f0f0;
+    color: #13547a;
+    border: 1px solid #ddd;
+}
+
+.btn-download:hover {
+    background: #13547a;
+    color: #fff;
+}
+
+/* =====================================
+   SIDEBAR
+===================================== */
+.sidebar-menu {
+    background: #fff;
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 30px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+}
+
+.sidebar-menu h4 {
+    color: #13547a;
+    font-weight: 600;
+    margin-bottom: 15px;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 10px;
+}
+
+.sidebar-menu ul {
+    list-style: none;
+    padding: 0;
+}
+
+.sidebar-menu li {
+    margin-bottom: 12px;
+}
+
+.sidebar-menu li a {
+    color: #4a5568;
+    text-decoration: none;
+    padding: 10px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    transition: .3s;
+}
+
+.sidebar-menu li.active a,
+.sidebar-menu li a:hover {
+    background: #f0f8ff;
+    color: #13547a;
+}
+
+/* =====================================
+   NO DATA
+===================================== */
+.no-data {
+    background: #fff;
+    padding: 60px 30px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+}
+
+.no-data i {
+    font-size: 4rem;
+    color: #cbd5e0;
+    margin-bottom: 15px;
+}
+
+/* =====================================
+   RESPONSIVE
+===================================== */
+@media (max-width: 768px) {
+    body {
+        padding-top: 70px;
+    }
+    .card-actions {
+        flex-direction: column;
+    }
+}

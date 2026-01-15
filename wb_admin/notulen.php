@@ -20,7 +20,7 @@ function hitungJenis($koneksi, $jenis) {
     return $data['total'];
 }
 
-// Data jenis produk hukum - HANYA DUA JENIS
+// Data jenis produk hukum - SEMBILAN JENIS SEKARANG
 $jenis_produk = [
     'kepdprd' => [
         'nama' => 'Keputusan DPRD',
@@ -35,6 +35,34 @@ $jenis_produk = [
         'color' => '#2ecc71',
         'desc' => 'Data keputusan dari Sekretaris DPRD',
         'link' => 'index.php?page=kepsekdprd'
+    ],
+    'perdprd' => [
+        'nama' => 'Peraturan DPRD',
+        'icon' => 'images/peraturan_dprd.png',
+        'color' => '#e74c3c',
+        'desc' => 'Peraturan yang ditetapkan oleh DPRD',
+        'link' => 'index.php?page=perdprd'
+    ],
+    'keppimdprd' => [
+        'nama' => 'Keputusan Pimpinan DPRD',
+        'icon' => 'images/keputusan_pimpinan.png',
+        'color' => '#9b59b6',
+        'desc' => 'Keputusan dari Pimpinan DPRD',
+        'link' => 'index.php?page=keppimdprd'
+    ],
+    'perda' => [
+        'nama' => 'Peraturan Daerah',
+        'icon' => 'images/peraturan_daerah.png',
+        'color' => '#f39c12',
+        'desc' => 'Peraturan Daerah Kota Surakarta',
+        'link' => 'index.php?page=perda'
+    ],
+    'english-legal' => [
+        'nama' => 'English Legal Product',
+        'icon' => 'images/english_legal.png',
+        'color' => '#1abc9c',
+        'desc' => 'Produk hukum dalam Bahasa Inggris',
+        'link' => 'index.php?page=english-legal'
     ]
 ];
 
@@ -60,9 +88,9 @@ ol, ul {
 }
 .bs-glyphicons li {
   float: left;
-  width: 45%; /* Diperbesar karena hanya 2 item */
-  height: 280px;
-  margin: 2.5%;
+  width: 30%; /* 3 kolom untuk 6 item */
+  height: 300px; /* Sedikit lebih tinggi */
+  margin: 1.5%;
   padding: 20px;
   font-size: 10px;
   line-height: 1.4;
@@ -125,17 +153,39 @@ ol, ul {
 }
 
 .container-title {
-  background-color: #2c3e50;
+  background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
   color: white;
-  padding: 15px;
-  border-radius: 5px;
-  margin-bottom: 20px;
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 30px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+}
+
+.container-title h3 {
+  font-size: 24px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.container-title p {
+  font-size: 16px;
+  opacity: 0.9;
+  margin-bottom: 0;
+}
+
+@media (max-width: 992px) {
+  .bs-glyphicons li {
+    width: 45%; /* 2 kolom untuk tablet */
+    margin: 2.5%;
+  }
 }
 
 @media (max-width: 768px) {
   .bs-glyphicons li {
-    width: 48%;
-    margin: 1%;
+    width: 45%;
+    margin: 2.5%;
   }
 }
 
@@ -145,6 +195,14 @@ ol, ul {
     margin: 1%;
   }
 }
+
+/* Warna untuk setiap jenis produk hukum */
+.badge-perdprd { background-color: #e74c3c; }
+.badge-keppimdprd { background-color: #9b59b6; }
+.badge-perda { background-color: #f39c12; }
+.badge-english-legal { background-color: #1abc9c; }
+.badge-kepdprd { background-color: #3498db; }
+.badge-kepsekdprd { background-color: #2ecc71; }
 </style>
 
 <div class="col-md-12">
@@ -157,20 +215,36 @@ ol, ul {
         <div class="bs-glyphicons">
             <ul class="bs-glyphicons-list">
                 <?php foreach($jenis_produk as $kode => $jenis): 
-                    // Sesuaikan parameter untuk hitungJenis berdasarkan halaman tujuan
-                    $jenis_param = ($kode == 'kepdprd') ? 'Keputusan_DPRD' : 'Keputusan_Sekretaris_DPRD';
+                    // Mapping kode ke jenis database
+                    $jenis_mapping = [
+                        'kepdprd' => 'Keputusan_DPRD',
+                        'kepsekdprd' => 'Keputusan_Sekretaris_DPRD',
+                        'perdprd' => 'Peraturan_DPRD',
+                        'keppimdprd' => 'Keputusan_Pimpinan_DPRD',
+                        'perda' => 'Peraturan_Daerah',
+                        'english-legal' => 'English_Legal_Product'
+                    ];
+                    
+                    $jenis_param = isset($jenis_mapping[$kode]) ? $jenis_mapping[$kode] : 'Keputusan_DPRD';
                     $jumlah = hitungJenis($koneksi, $jenis_param);
                 ?>
                 <a href='<?php echo $jenis['link']; ?>'>
                     <li>
                         <div class="jumlah-badge"><?php echo $jumlah; ?></div>
-                        <img src="<?php echo $jenis['icon']; ?>" width="100" height="100" alt="<?php echo $jenis['nama']; ?>" style="border-radius: 10px;">
+                        <?php if(file_exists($jenis['icon'])): ?>
+                            <img src="<?php echo $jenis['icon']; ?>" width="100" height="100" alt="<?php echo $jenis['nama']; ?>" style="border-radius: 10px; object-fit: cover;">
+                        <?php else: ?>
+                            <!-- Fallback icon jika gambar tidak ditemukan -->
+                            <div style="width: 100px; height: 100px; background-color: <?php echo $jenis['color']; ?>; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+                                <i class="fa fa-file-text" style="font-size: 40px; color: white;"></i>
+                            </div>
+                        <?php endif; ?>
                         <span class="glyphicon-class"><?php echo $jenis['nama']; ?></span>
                         <div class="deskripsi-jenis">
                             <?php echo $jenis['desc']; ?>
                         </div>
                         <div style="margin-top: 10px;">
-                            <span class="badge" style="background-color: <?php echo $jenis['color']; ?>; padding: 5px 10px;">
+                            <span class="badge badge-<?php echo $kode; ?>" style="background-color: <?php echo $jenis['color']; ?>; padding: 8px 15px; border-radius: 20px;">
                                 <i class="fa fa-folder-open"></i> Lihat Data
                             </span>
                         </div>
@@ -193,9 +267,9 @@ ol, ul {
 ?>
 
 <footer id="footer"> 
-                <div class="text-center clearfix">
-                    <p><small><p align="center"><font face="Courier New" color="#F0F8FF" size="4">&copy Aplikasi JDIH DPRD</font></p></small></p> 
-                </div> 
+    <div class="text-center clearfix">
+        <p><small><p align="center"><font face="Courier New" color="#F0F8FF" size="4">&copy Aplikasi JDIH DPRD</font></p></small></p> 
+    </div> 
 </footer> 
 <?php 
 // Tutup koneksi
