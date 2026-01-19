@@ -61,7 +61,7 @@
                             <li><a href="index.php?page=dokumen-langka"><i class="fa fa-archive"></i> Dokumen Langka</a></li>
                             <li><a href="index.php?page=risalah"><i class="fa fa-comments"></i> Risalah</a></li>
                             <li><a href="index.php?page=hasil-fasilitasi-raperda"><i class="fa fa-handshake-o"></i> Hasil Fasilitasi Raperda</a></li>
-                            <li><a href="index.php?page=hasil-harmonisasi-raperda"><i class="fa fa-refresh"></i> Hasil Harmonisasi Raperda</a></li>
+                            <li><a href="index.php?page=hasil-harmonisasi"><i class="fa fa-refresh"></i> Hasil Harmonisasi Raperda</a></li>
                             <li><a href="index.php?page=penulisan-karya-ilmiah"><i class="fa fa-pencil"></i> Penulisan Karya Ilmiah</a></li>
                             <li><a href="index.php?page=himpunan-peraturan"><i class="fa fa-folder-open"></i> Himpunan Peraturan</a></li>
                         </ul>
@@ -72,7 +72,7 @@
         
         <!-- Artikel Hukum -->
         <li>
-            <a href="index.php?page=artikel-hukum">
+            <a href="index.php?page=artikel_hukum">
                 <i class="fa fa-newspaper-o"></i>
                 <span>Artikel Hukum</span>
             </a>

@@ -228,6 +228,20 @@ if(!isset($_SESSION['login']) || !isset($_SESSION['level'])) {
                 'ruang' => 'Manajemen Ruangan',
                 'notulen' => 'Notulen Rapat',
                 'monografi' => 'Monografi',
+                'kajian-raperda' => 'Kajian Raperda',
+                'naskah-akademik' => 'Naskah Akademik',
+                'dokumen-langka' => 'Dokumen Langka',
+                'risalah' => 'Risalah Rapat',
+                'hasil-fasilitasi-raperda' => 'Hasil Fasilitasi Raperda',
+                'perdprd' => 'Peraturan DPRD',
+                'perda' => 'Peraturan Daerah',
+                'english-legal' => 'English Legal Drafting',
+                'pokok-pikiran-dprd' => 'Pokok Pikiran DPRD',
+                'keppemimpin' => 'Keputusan Pimpinan DPRD',
+                'himpunan-peraturan' => 'Himpunan Peraturan',
+                'penulisan-karya-ilmiah' => 'Penulisan Karya Ilmiah',
+                'hasil-harmonisasi' => 'Hasil Harmonisasi Raperda',
+                'hasil-fasilitasi' => 'Hasil Fasilitasi Raperda',                
             ];
             
             $currentTitle = isset($pageTitles[$page]) ? $pageTitles[$page] : 'Dashboard';
@@ -274,6 +288,36 @@ if(!isset($_SESSION['login']) || !isset($_SESSION['level'])) {
                     break;
                 case 'monografi':
                     include "tambah-monografi.php";
+                    break;
+                case 'pokok-pikiran-dprd':
+                    include "pokok-pikiran-dprd.php";
+                    break;
+                case 'kajian-raperda';
+                    include "kajian-raperda.php";
+                    break;
+                case 'naskah-akademik';
+                    include "naskah-akademik.php";
+                    break;
+                case 'dokumen-langka';
+                    include "dokumen-langka.php";
+                    break;
+                case 'risalah';
+                    include "risalah.php";
+                    break;
+                case 'hasil-fasilitasi-raperda';
+                    include "hasil-fasilitasi-raperda.php";
+                    break;
+                case 'hasil-harmonisasi';
+                    include "hasil-harmonisasi.php";
+                    break;
+                case 'penulisan-karya-ilmiah';
+                    include "penulisan-karya-ilmiah.php";
+                    break;
+                case 'himpunan-peraturan';
+                    include "himpunan-peraturan.php";
+                    break;
+                case 'artikel_hukum';
+                    include "artikel-hukum.php";
                     break;
                 default:
                     include "dashboard.php";
