@@ -20,6 +20,34 @@ if ($aksi == ''){
 <head>
     <title>Data English Legal - Admin JDIH</title>
     <link rel="stylesheet" href="style-admin.css">
+    <!-- Tambahkan DataTables CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+    <style>
+        /* Styling khusus untuk tabel */
+        .dataTables_wrapper {
+            padding: 10px;
+        }
+        .img-preview {
+            max-width: 50px;
+            max-height: 50px;
+            border-radius: 3px;
+            object-fit: cover;
+        }
+        .btn-action {
+            margin: 2px;
+            padding: 3px 8px;
+        }
+        .badge {
+            font-size: 85%;
+        }
+        .table > tbody > tr > td {
+            vertical-align: middle;
+        }
+        .dataTables_length,
+        .dataTables_filter {
+            margin-bottom: 10px;
+        }
+    </style>
 </head>
 <body>
     <div class="container-fluid">
@@ -51,17 +79,17 @@ if ($aksi == ''){
                 </div>
 
                 <div class="panel-body">
-                    <table class="table table-striped table-bordered table-hover dataTables-example">
+                    <table id="dataTable" class="table table-striped table-bordered table-hover">
                         <thead class='alert-info'>
                             <tr>
                                 <th width="50">No</th>
                                 <th width="100">Tahun</th>
                                 <th>No Peraturan</th>
                                 <th>Judul</th>
-                                <th width="100">Status</th>
+                                <th width="120">Status</th>
                                 <th width="80">Gambar</th>
                                 <th width="80">PDF</th>
-                                <th width="200" class="text-center">Action</th>
+                                <th width="180" class="text-center">Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -155,6 +183,36 @@ if ($aksi == ''){
             </div>
         </div>
     </div>
+
+    <!-- Tambahkan jQuery dan DataTables JS -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script>
+    $(document).ready(function() {
+        $('#dataTable').DataTable({
+            "pageLength": 25,
+            "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Semua"]],
+            "language": {
+                "search": "Cari:",
+                "lengthMenu": "Tampilkan _MENU_ data",
+                "zeroRecords": "Data tidak ditemukan",
+                "info": "Menampilkan halaman _PAGE_ dari _PAGES_",
+                "infoEmpty": "Tidak ada data",
+                "infoFiltered": "(disaring dari total _MAX_ data)",
+                "paginate": {
+                    "first": "Pertama",
+                    "last": "Terakhir",
+                    "next": "Berikut",
+                    "previous": "Sebelum"
+                }
+            },
+            "columnDefs": [
+                { "orderable": false, "targets": [5, 6, 7] }, // Nonaktifkan sorting untuk kolom Gambar, PDF, Action
+                { "searchable": false, "targets": [5, 6, 7] } // Nonaktifkan search untuk kolom Gambar, PDF, Action
+            ]
+        });
+    });
+    </script>
 </body>
 </html>
 
@@ -263,6 +321,7 @@ if ($aksi == ''){
         $image_path = $data['image_path'];
         
         if (!empty($_FILES['image']['name']) && $_FILES['image']['error'] == 0) {
+            // Generate unique filename
             $image_name = "img_" . uniqid() . ".png";
             $image_path = "uploads/images/" . $image_name;
             
@@ -280,8 +339,8 @@ if ($aksi == ''){
         $pdf_path = $data['pdf_path'];
         
         if (!empty($_FILES['pdf_file']['name']) && $_FILES['pdf_file']['error'] == 0) {
-            $fileDownload = $_FILES['pdf_file']['name'];
-            $pdf_path = "uploads/pdf/" . basename($fileDownload);
+            $fileDownload = basename($_FILES['pdf_file']['name']);
+            $pdf_path = "uploads/pdf/" . $fileDownload;
             
             // Hapus PDF lama jika ada
             if (!empty($data['pdf_path']) && file_exists($data['pdf_path'])) {
@@ -341,6 +400,60 @@ if ($aksi == ''){
 <head>
     <title>Edit Data - Admin JDIH</title>
     <link rel="stylesheet" href="style-admin.css">
+    <style>
+        .form-horizontal .control-label {
+            text-align: left !important;
+            padding-top: 7px;
+        }
+        .form-horizontal .form-group {
+            margin-left: 0;
+            margin-right: 0;
+        }
+        .required:after {
+            content: " *";
+            color: red;
+        }
+        .img-preview-large {
+            max-width: 200px;
+            max-height: 200px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 5px;
+        }
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #337ab7;
+            color: #337ab7;
+        }
+        .alert-box {
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        .alert-info {
+            background-color: #d9edf7;
+            border: 1px solid #bce8f1;
+            color: #31708f;
+        }
+        .alert-warning {
+            background-color: #fcf8e3;
+            border: 1px solid #faebcc;
+            color: #8a6d3b;
+        }
+        .file-info {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        .btn-custom {
+            margin: 5px;
+            min-width: 120px;
+        }
+    </style>
 </head>
 <body>
 <div class="container-fluid">
@@ -356,372 +469,267 @@ if ($aksi == ''){
             </div>
             
             <div class="panel-body">
-                <form action='' method="POST" enctype='multipart/form-data'>
-                    <!-- TABS NAVIGASI -->
-                    <ul class="nav nav-tabs" role="tablist">
-                        <li role="presentation" class="active">
-                            <a href="#tab1" aria-controls="tab1" role="tab" data-toggle="tab">
-                                <i class="fa fa-info-circle"></i> Informasi Dasar
-                            </a>
-                        </li>
-                        <li role="presentation">
-                            <a href="#tab2" aria-controls="tab2" role="tab" data-toggle="tab">
-                                <i class="fa fa-tags"></i> Metadata
-                            </a>
-                        </li>
-                        <li role="presentation">
-                            <a href="#tab3" aria-controls="tab3" role="tab" data-toggle="tab">
-                                <i class="fa fa-file"></i> File Dokumen
-                            </a>
-                        </li>
-                        <li role="presentation">
-                            <a href="#tab4" aria-controls="tab4" role="tab" data-toggle="tab">
-                                <i class="fa fa-link"></i> URL & Lainnya
-                            </a>
-                        </li>
-                    </ul>
+                <form action='' method="POST" enctype='multipart/form-data' onsubmit="return validateForm()">
+                    <div class="row">
+                        <!-- Kolom Kiri -->
+                        <div class="col-md-6">
+                            <h4>Informasi Dasar</h4>
+                            <div class="form-group">
+                                <label class="control-label required">Tahun Pengundangan</label>
+                                <input type="text" name="tahun_pengundangan" class="form-control" 
+                                       value="<?php echo htmlspecialchars($data['tahun_pengundangan']); ?>" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="control-label required">Tanggal Pengundangan</label>
+                                <input type="date" name="tanggal_pengundangan" class="form-control" 
+                                       value="<?php echo htmlspecialchars($data['tanggal_pengundangan']); ?>" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="control-label required">Tanggal Penetapan</label>
+                                <input type="date" name="tanggal_penetapan" class="form-control" 
+                                       value="<?php echo htmlspecialchars($data['tanggal_penetapan']); ?>" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="control-label">Jenis Dokumen</label>
+                                <input type="text" class="form-control" value="English Legal" readonly>
+                                <input type="hidden" name="jenis" value="English_Legal">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="control-label required">No. Peraturan</label>
+                                <input type="text" name="noPeraturan" class="form-control" 
+                                       value="<?php echo htmlspecialchars($data['noPeraturan']); ?>" required>
+                            </div>
+                        </div>
+                        
+                        <!-- Kolom Kanan -->
+                        <div class="col-md-6">
+                            <h4>&nbsp;</h4>
+                            <div class="form-group">
+                                <label class="control-label">Status</label>
+                                <select name="status" class="form-control">
+                                    <option value="Berlaku" <?php echo ($data['status'] == 'Berlaku') ? 'selected' : ''; ?>>Berlaku</option>
+                                    <option value="Tidak Berlaku" <?php echo ($data['status'] == 'Tidak Berlaku') ? 'selected' : ''; ?>>Tidak Berlaku</option>
+                                    <option value="Dicabut" <?php echo ($data['status'] == 'Dicabut') ? 'selected' : ''; ?>>Dicabut</option>
+                                    <option value="Diganti" <?php echo ($data['status'] == 'Diganti') ? 'selected' : ''; ?>>Diganti</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="control-label">Bahasa</label>
+                                <select name="bahasa" class="form-control">
+                                    <option value="Indonesia" <?php echo ($data['bahasa'] == 'Indonesia') ? 'selected' : ''; ?>>Indonesia</option>
+                                    <option value="Inggris" <?php echo ($data['bahasa'] == 'Inggris') ? 'selected' : ''; ?>>Inggris</option>
+                                    <option value="Daerah" <?php echo ($data['bahasa'] == 'Daerah') ? 'selected' : ''; ?>>Daerah</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="control-label">Tempat Terbit</label>
+                                <input type="text" name="tempatTerbit" class="form-control" 
+                                       value="<?php echo htmlspecialchars($data['tempatTerbit']); ?>">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="control-label">Sumber</label>
+                                <input type="text" name="sumber" class="form-control" 
+                                       value="<?php echo htmlspecialchars($data['sumber']); ?>">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="control-label">Penerbit</label>
+                                <input type="text" name="penerbit" class="form-control" 
+                                       value="<?php echo htmlspecialchars($data['penerbit']); ?>">
+                            </div>
+                        </div>
+                    </div>
                     
-                    <br>
+                    <!-- Judul -->
+                    <div class="form-group">
+                        <label class="control-label required">Judul Dokumen</label>
+                        <textarea name="judul" class="form-control" rows="3" required><?php echo htmlspecialchars($data['judul']); ?></textarea>
+                    </div>
                     
-                    <!-- TAB CONTENT -->
-                    <div class="tab-content">
-                        
-                        <!-- TAB 1: INFORMASI DASAR -->
-                        <div role="tabpanel" class="tab-pane active" id="tab1">
-                            <div class="section-title">Informasi Dasar Dokumen</div>
-                            
-                            <div class="row">
-                                <!-- Kolom Kiri -->
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="col-sm-4 control-label required">Tahun Pengundangan</label>
-                                        <div class="col-sm-8">
-                                            <input type="text" name="tahun_pengundangan" class="form-control" 
-                                                   value="<?php echo htmlspecialchars($data['tahun_pengundangan']); ?>" required>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="form-group">
-                                        <label class="col-sm-4 control-label required">Tanggal Pengundangan</label>
-                                        <div class="col-sm-8">
-                                            <input type="date" name="tanggal_pengundangan" class="form-control" 
-                                                   value="<?php echo htmlspecialchars($data['tanggal_pengundangan']); ?>" required>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="form-group">
-                                        <label class="col-sm-4 control-label required">Tanggal Penetapan</label>
-                                        <div class="col-sm-8">
-                                            <input type="date" name="tanggal_penetapan" class="form-control" 
-                                                   value="<?php echo htmlspecialchars($data['tanggal_penetapan']); ?>" required>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="form-group">
-                                        <label class="col-sm-4 control-label">Jenis Dokumen</label>
-                                        <div class="col-sm-8">
-                                            <input type="text" class="form-control" value="English Legal" readonly style="background-color: #f5f5f5;">
-                                            <input type="hidden" name="jenis" value="English_Legal">
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="form-group">
-                                        <label class="col-sm-4 control-label required">No. Peraturan</label>
-                                        <div class="col-sm-8">
-                                            <input type="text" name="noPeraturan" class="form-control" 
-                                                   value="<?php echo htmlspecialchars($data['noPeraturan']); ?>" required>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Kolom Kanan -->
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="col-sm-4 control-label">Status</label>
-                                        <div class="col-sm-8">
-                                            <select name="status" class="form-control">
-                                                <option value="Berlaku" <?php echo ($data['status'] == 'Berlaku') ? 'selected' : ''; ?>>Berlaku</option>
-                                                <option value="Tidak Berlaku" <?php echo ($data['status'] == 'Tidak Berlaku') ? 'selected' : ''; ?>>Tidak Berlaku</option>
-                                                <option value="Dicabut" <?php echo ($data['status'] == 'Dicabut') ? 'selected' : ''; ?>>Dicabut</option>
-                                                <option value="Diganti" <?php echo ($data['status'] == 'Diganti') ? 'selected' : ''; ?>>Diganti</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="form-group">
-                                        <label class="col-sm-4 control-label">Bahasa</label>
-                                        <div class="col-sm-8">
-                                            <select name="bahasa" class="form-control">
-                                                <option value="Indonesia" <?php echo ($data['bahasa'] == 'Indonesia') ? 'selected' : ''; ?>>Indonesia</option>
-                                                <option value="Inggris" <?php echo ($data['bahasa'] == 'Inggris') ? 'selected' : ''; ?>>Inggris</option>
-                                                <option value="Daerah" <?php echo ($data['bahasa'] == 'Daerah') ? 'selected' : ''; ?>>Daerah</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="form-group">
-                                        <label class="col-sm-4 control-label">Tempat Terbit</label>
-                                        <div class="col-sm-8">
-                                            <input type="text" name="tempatTerbit" class="form-control" 
-                                                   value="<?php echo htmlspecialchars($data['tempatTerbit']); ?>">
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="form-group">
-                                        <label class="col-sm-4 control-label">Sumber</label>
-                                        <div class="col-sm-8">
-                                            <input type="text" name="sumber" class="form-control" 
-                                                   value="<?php echo htmlspecialchars($data['sumber']); ?>">
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="form-group">
-                                        <label class="col-sm-4 control-label">Penerbit</label>
-                                        <div class="col-sm-8">
-                                            <input type="text" name="penerbit" class="form-control" 
-                                                   value="<?php echo htmlspecialchars($data['penerbit']); ?>">
-                                        </div>
-                                    </div>
-                                </div>
+                    <!-- Metadata -->
+                    <h4>Metadata</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="control-label">Singkatan Jenis</label>
+                                <input type="text" name="singkatanJenis" class="form-control" 
+                                       value="<?php echo htmlspecialchars($data['singkatanJenis']); ?>">
                             </div>
                             
-                            <!-- Judul (Full Width) -->
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <div class="form-group">
-                                        <label class="col-sm-2 control-label required">Judul Dokumen</label>
-                                        <div class="col-sm-10">
-                                            <textarea name="judul" class="form-control" rows="3" required><?php echo htmlspecialchars($data['judul']); ?></textarea>
-                                        </div>
+                            <div class="form-group">
+                                <label class="control-label">Subjek</label>
+                                <input type="text" name="subjek" class="form-control" 
+                                       value="<?php echo htmlspecialchars($data['subjek']); ?>">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="control-label">ISBN</label>
+                                <input type="text" name="isbn" class="form-control" 
+                                       value="<?php echo htmlspecialchars($data['isbn']); ?>">
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="control-label">Bidang Hukum</label>
+                                <input type="text" name="bidangHukum" class="form-control" 
+                                       value="<?php echo htmlspecialchars($data['bidangHukum']); ?>">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="control-label">Nomor Induk Buku</label>
+                                <input type="text" name="nomorIndukBuku" class="form-control" 
+                                       value="<?php echo htmlspecialchars($data['nomorIndukBuku']); ?>">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="control-label">Teu Badan</label>
+                                <input type="text" name="teuBadan" class="form-control" 
+                                       value="<?php echo htmlspecialchars($data['teuBadan']); ?>">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="control-label">Deskripsi Fisik</label>
+                                <input type="text" name="deskripsiFisik" class="form-control" 
+                                       value="<?php echo htmlspecialchars($data['deskripsiFisik']); ?>">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="control-label">No Panggil</label>
+                                <input type="text" name="noPanggil" class="form-control" 
+                                       value="<?php echo htmlspecialchars($data['noPanggil']); ?>">
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="control-label">Operasi</label>
+                                <input type="text" name="operasi" class="form-control" 
+                                       value="<?php echo htmlspecialchars($data['operasi']); ?>">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="control-label">Display</label>
+                                <select name="display" class="form-control">
+                                    <option value="Ya" <?php echo ($data['display'] == 'Ya') ? 'selected' : ''; ?>>Ya</option>
+                                    <option value="Tidak" <?php echo ($data['display'] == 'Tidak') ? 'selected' : ''; ?>>Tidak</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- File Dokumen -->
+                    <h4>File Dokumen</h4>
+                    <div class="row">
+                        <!-- Gambar Cover -->
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="control-label">Gambar Cover Saat Ini</label>
+                                <?php if (!empty($data['image_path']) && file_exists($data['image_path'])): ?>
+                                    <div class="text-center">
+                                        <img src="<?php echo $data['image_path']; ?>" class="img-preview-large">
+                                        <p class="file-info">
+                                            <i class="fa fa-file-image-o"></i> 
+                                            <?php echo basename($data['image_path']); ?>
+                                        </p>
                                     </div>
+                                <?php else: ?>
+                                    <div class="alert-box alert-warning">
+                                        <i class="fa fa-image"></i> Tidak ada gambar cover
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="control-label">Ubah Gambar Cover</label>
+                                <input type="file" name="image" class="form-control" accept="image/*">
+                                <div class="file-info">
+                                    <i class="fa fa-info-circle"></i> Ukuran maks: 2MB. Format: JPG, PNG, GIF
                                 </div>
                             </div>
                         </div>
                         
-                        <!-- TAB 2: METADATA -->
-                        <div role="tabpanel" class="tab-pane" id="tab2">
-                            <div class="section-title">Metadata Dokumen</div>
-                            
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="col-sm-4 control-label">Singkatan Jenis</label>
-                                        <div class="col-sm-8">
-                                            <input type="text" name="singkatanJenis" class="form-control" 
-                                                   value="<?php echo htmlspecialchars($data['singkatanJenis']); ?>">
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="form-group">
-                                        <label class="col-sm-4 control-label">Subjek</label>
-                                        <div class="col-sm-8">
-                                            <input type="text" name="subjek" class="form-control" 
-                                                   value="<?php echo htmlspecialchars($data['subjek']); ?>">
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="form-group">
-                                        <label class="col-sm-4 control-label">ISBN</label>
-                                        <div class="col-sm-8">
-                                            <input type="text" name="isbn" class="form-control" 
-                                                   value="<?php echo htmlspecialchars($data['isbn']); ?>">
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="form-group">
-                                        <label class="col-sm-4 control-label">Bidang Hukum</label>
-                                        <div class="col-sm-8">
-                                            <input type="text" name="bidangHukum" class="form-control" 
-                                                   value="<?php echo htmlspecialchars($data['bidangHukum']); ?>">
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="col-sm-4 control-label">Nomor Induk Buku</label>
-                                        <div class="col-sm-8">
-                                            <input type="text" name="nomorIndukBuku" class="form-control" 
-                                                   value="<?php echo htmlspecialchars($data['nomorIndukBuku']); ?>">
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="form-group">
-                                        <label class="col-sm-4 control-label">Teu Badan</label>
-                                        <div class="col-sm-8">
-                                            <input type="text" name="teuBadan" class="form-control" 
-                                                   value="<?php echo htmlspecialchars($data['teuBadan']); ?>">
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="form-group">
-                                        <label class="col-sm-4 control-label">Deskripsi Fisik</label>
-                                        <div class="col-sm-8">
-                                            <input type="text" name="deskripsiFisik" class="form-control" 
-                                                   value="<?php echo htmlspecialchars($data['deskripsiFisik']); ?>">
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="form-group">
-                                        <label class="col-sm-4 control-label">Operasi</label>
-                                        <div class="col-sm-8">
-                                            <input type="text" name="operasi" class="form-control" 
-                                                   value="<?php echo htmlspecialchars($data['operasi']); ?>">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="col-sm-4 control-label">No Panggil</label>
-                                        <div class="col-sm-8">
-                                            <input type="text" name="noPanggil" class="form-control" 
-                                                   value="<?php echo htmlspecialchars($data['noPanggil']); ?>">
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="col-sm-4 control-label">Display</label>
-                                        <div class="col-sm-8">
-                                            <select name="display" class="form-control">
-                                                <option value="Ya" <?php echo ($data['display'] == 'Ya') ? 'selected' : ''; ?>>Ya</option>
-                                                <option value="Tidak" <?php echo ($data['display'] == 'Tidak') ? 'selected' : ''; ?>>Tidak</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- TAB 3: FILE DOKUMEN -->
-                        <div role="tabpanel" class="tab-pane" id="tab3">
-                            <div class="section-title">File dan Dokumen</div>
-                            
-                            <div class="row">
-                                <!-- Gambar Cover -->
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="col-sm-12 control-label">Gambar Cover Saat Ini</label>
-                                        <div class="col-sm-12 text-center">
-                                            <?php if (!empty($data['image_path']) && file_exists($data['image_path'])): ?>
-                                                <img src="<?php echo $data['image_path']; ?>" class="img-preview-large">
-                                                <div class="file-info">
-                                                    <i class="fa fa-file-image-o"></i> 
-                                                    <?php echo basename($data['image_path']); ?>
-                                                </div>
-                                            <?php else: ?>
-                                                <div class="alert-box alert-warning">
-                                                    <i class="fa fa-image"></i> Tidak ada gambar cover
-                                                </div>
-                                            <?php endif; ?>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="form-group">
-                                        <label class="col-sm-12 control-label">Ubah Gambar Cover</label>
-                                        <div class="col-sm-12">
-                                            <input type="file" name="image" class="form-control" accept="image/*">
-                                            <div class="file-info">
-                                                <i class="fa fa-info-circle"></i> Ukuran maks: 2MB. Format: JPG, PNG, GIF
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- File PDF -->
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="col-sm-12 control-label">File PDF Saat Ini</label>
-                                        <div class="col-sm-12 text-center">
-                                            <?php if (!empty($data['pdf_path']) && file_exists($data['pdf_path'])): ?>
-                                                <div class="alert-box alert-info">
-                                                    <i class="fa fa-file-pdf-o fa-3x"></i>
-                                                    <h4>File PDF Tersedia</h4>
-                                                    <p><strong><?php echo basename($data['fileDownload']); ?></strong></p>
-                                                    <p>
-                                                        <a href="<?php echo $data['pdf_path']; ?>" target="_blank" class="btn btn-xs btn-info">
-                                                            <i class="fa fa-eye"></i> Lihat PDF
-                                                        </a>
-                                                    </p>
-                                                </div>
-                                            <?php else: ?>
-                                                <div class="alert-box alert-warning">
-                                                    <i class="fa fa-file-pdf-o fa-3x"></i>
-                                                    <p>Tidak ada file PDF</p>
-                                                </div>
-                                            <?php endif; ?>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="form-group">
-                                        <label class="col-sm-12 control-label">Ubah File PDF</label>
-                                        <div class="col-sm-12">
-                                            <input type="file" name="pdf_file" class="form-control" accept=".pdf">
-                                            <div class="file-info">
-                                                <i class="fa fa-info-circle"></i> Ukuran maks: 10MB. Format: PDF
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- TAB 4: URL & LAINNYA -->
-                        <div role="tabpanel" class="tab-pane" id="tab4">
-                            <div class="section-title">URL dan Informasi Lainnya</div>
-                            
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="col-sm-4 control-label">URL Download</label>
-                                        <div class="col-sm-8">
-                                            <input type="text" name="urlDownload" class="form-control" 
-                                                   value="<?php echo htmlspecialchars($data['urlDownload']); ?>">
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="form-group">
-                                        <label class="col-sm-4 control-label">URL Detail Peraturan</label>
-                                        <div class="col-sm-8">
-                                            <input type="text" name="urlDetailPeraturan" class="form-control" 
-                                                   value="<?php echo htmlspecialchars($data['urlDetailPeraturan']); ?>">
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="col-md-6">
+                        <!-- File PDF -->
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="control-label">File PDF Saat Ini</label>
+                                <?php if (!empty($data['pdf_path']) && file_exists($data['pdf_path'])): ?>
                                     <div class="alert-box alert-info">
-                                        <h4><i class="fa fa-info-circle"></i> Informasi Sistem</h4>
-                                        <p><strong>ID Dokumen:</strong> <?php echo $data['idData']; ?></p>
-                                        <p><strong>Terakhir diupdate:</strong> <?php echo $data['uploaded_at']; ?></p>
+                                        <i class="fa fa-file-pdf-o fa-3x"></i>
+                                        <h4>File PDF Tersedia</h4>
+                                        <p><strong><?php echo basename($data['fileDownload']); ?></strong></p>
+                                        <p>
+                                            <a href="<?php echo $data['pdf_path']; ?>" target="_blank" class="btn btn-xs btn-info">
+                                                <i class="fa fa-eye"></i> Lihat PDF
+                                            </a>
+                                        </p>
                                     </div>
+                                <?php else: ?>
+                                    <div class="alert-box alert-warning">
+                                        <i class="fa fa-file-pdf-o fa-3x"></i>
+                                        <p>Tidak ada file PDF</p>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="control-label">Ubah File PDF</label>
+                                <input type="file" name="pdf_file" class="form-control" accept=".pdf">
+                                <div class="file-info">
+                                    <i class="fa fa-info-circle"></i> Ukuran maks: 10MB. Format: PDF
                                 </div>
                             </div>
                         </div>
                     </div>
                     
-                    <!-- TOMBOL ACTION -->
+                    <!-- URL -->
+                    <h4>URL dan Informasi Lainnya</h4>
                     <div class="row">
-                        <div class="col-md-12">
-                            <hr>
+                        <div class="col-md-6">
                             <div class="form-group">
-                                <div class="col-sm-12 text-center">
-                                    <button type="reset" class="btn btn-default btn-custom">
-                                        <i class="fa fa-refresh"></i> Reset
-                                    </button>
-                                    <a href="index.php?page=englishlegal" class="btn btn-default btn-custom">
-                                        <i class="fa fa-times"></i> Batal
-                                    </a>
-                                    <button type="submit" name="update" class="btn btn-primary btn-custom">
-                                        <i class="fa fa-save"></i> Simpan Perubahan
-                                    </button>
-                                </div>
+                                <label class="control-label">URL Download</label>
+                                <input type="text" name="urlDownload" class="form-control" 
+                                       value="<?php echo htmlspecialchars($data['urlDownload']); ?>">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="control-label">URL Detail Peraturan</label>
+                                <input type="text" name="urlDetailPeraturan" class="form-control" 
+                                       value="<?php echo htmlspecialchars($data['urlDetailPeraturan']); ?>">
                             </div>
                         </div>
+                        
+                        <div class="col-md-6">
+                            <div class="alert-box alert-info">
+                                <h4><i class="fa fa-info-circle"></i> Informasi Sistem</h4>
+                                <p><strong>ID Dokumen:</strong> <?php echo $data['idData']; ?></p>
+                                <p><strong>Terakhir diupdate:</strong> <?php echo $data['uploaded_at']; ?></p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- TOMBOL ACTION -->
+                    <div class="text-center" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+                        <button type="reset" class="btn btn-default btn-custom">
+                            <i class="fa fa-refresh"></i> Reset
+                        </button>
+                        <a href="index.php?page=englishlegal" class="btn btn-default btn-custom">
+                            <i class="fa fa-times"></i> Batal
+                        </a>
+                        <button type="submit" name="update" class="btn btn-primary btn-custom">
+                            <i class="fa fa-save"></i> Simpan Perubahan
+                        </button>
                     </div>
                 </form>
             </div>
@@ -730,72 +738,62 @@ if ($aksi == ''){
 </div>
 
 <script>
-// Validasi form sebelum submit
-document.addEventListener('DOMContentLoaded', function() {
-    var form = document.querySelector('form');
+function validateForm() {
+    // Validasi field wajib
+    var tahun = document.querySelector('input[name="tahun_pengundangan"]').value;
+    var noPeraturan = document.querySelector('input[name="noPeraturan"]').value;
+    var judul = document.querySelector('textarea[name="judul"]').value;
     
-    form.addEventListener('submit', function(e) {
-        // Validasi field wajib
-        var tahun = document.querySelector('input[name="tahun_pengundangan"]').value;
-        var noPeraturan = document.querySelector('input[name="noPeraturan"]').value;
-        var judul = document.querySelector('textarea[name="judul"]').value;
-        
-        if (!tahun.trim() || !noPeraturan.trim() || !judul.trim()) {
-            e.preventDefault();
-            alert('Harap isi semua field yang wajib (bertanda *)!');
+    if (!tahun.trim() || !noPeraturan.trim() || !judul.trim()) {
+        alert('Harap isi semua field yang wajib (bertanda *)!');
+        return false;
+    }
+    
+    // Validasi tanggal
+    var tglPengundangan = document.querySelector('input[name="tanggal_pengundangan"]').value;
+    var tglPenetapan = document.querySelector('input[name="tanggal_penetapan"]').value;
+    
+    if (tglPengundangan && tglPenetapan) {
+        if (new Date(tglPenetapan) > new Date(tglPengundangan)) {
+            if (!confirm('Tanggal Penetapan lebih baru dari Tanggal Pengundangan. Lanjutkan?')) {
+                return false;
+            }
+        }
+    }
+    
+    // Validasi ukuran file gambar
+    var imageInput = document.querySelector('input[name="image"]');
+    if (imageInput.files[0]) {
+        var fileSize = imageInput.files[0].size / 1024 / 1024; // MB
+        if (fileSize > 2) {
+            alert('Ukuran gambar terlalu besar! Maksimal 2MB.');
+            imageInput.value = '';
+            return false;
+        }
+    }
+    
+    // Validasi ukuran file PDF
+    var pdfInput = document.querySelector('input[name="pdf_file"]');
+    if (pdfInput.files[0]) {
+        var fileSize = pdfInput.files[0].size / 1024 / 1024; // MB
+        if (fileSize > 10) {
+            alert('Ukuran PDF terlalu besar! Maksimal 10MB.');
+            pdfInput.value = '';
             return false;
         }
         
-        // Validasi tanggal
-        var tglPengundangan = document.querySelector('input[name="tanggal_pengundangan"]').value;
-        var tglPenetapan = document.querySelector('input[name="tanggal_penetapan"]').value;
-        
-        if (tglPengundangan && tglPenetapan) {
-            if (new Date(tglPenetapan) > new Date(tglPengundangan)) {
-                if (!confirm('Tanggal Penetapan lebih baru dari Tanggal Pengundangan. Lanjutkan?')) {
-                    e.preventDefault();
-                    return false;
-                }
-            }
+        // Validasi ekstensi PDF
+        var fileName = pdfInput.files[0].name;
+        var ext = fileName.split('.').pop().toLowerCase();
+        if (ext !== 'pdf') {
+            alert('Hanya file PDF yang diizinkan!');
+            pdfInput.value = '';
+            return false;
         }
-        
-        // Validasi ukuran file gambar
-        var imageInput = document.querySelector('input[name="image"]');
-        if (imageInput.files[0]) {
-            var fileSize = imageInput.files[0].size / 1024 / 1024; // MB
-            if (fileSize > 2) {
-                e.preventDefault();
-                alert('Ukuran gambar terlalu besar! Maksimal 2MB.');
-                imageInput.value = '';
-                return false;
-            }
-        }
-        
-        // Validasi ukuran file PDF
-        var pdfInput = document.querySelector('input[name="pdf_file"]');
-        if (pdfInput.files[0]) {
-            var fileSize = pdfInput.files[0].size / 1024 / 1024; // MB
-            if (fileSize > 10) {
-                e.preventDefault();
-                alert('Ukuran PDF terlalu besar! Maksimal 10MB.');
-                pdfInput.value = '';
-                return false;
-            }
-            
-            // Validasi ekstensi PDF
-            var fileName = pdfInput.files[0].name;
-            var ext = fileName.split('.').pop().toLowerCase();
-            if (ext !== 'pdf') {
-                e.preventDefault();
-                alert('Hanya file PDF yang diizinkan!');
-                pdfInput.value = '';
-                return false;
-            }
-        }
-        
-        return true;
-    });
-});
+    }
+    
+    return true;
+}
 </script>
 </body>
 </html>
@@ -825,6 +823,86 @@ document.addEventListener('DOMContentLoaded', function() {
 <head>
     <title>Detail Data - Admin JDIH</title>
     <link rel="stylesheet" href="style-admin.css">
+    <style>
+        .detail-panel {
+            background: #fff;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,.1);
+            margin-bottom: 20px;
+        }
+        .detail-header {
+            background: #337ab7;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 5px 5px 0 0;
+            font-size: 18px;
+        }
+        .detail-section {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .detail-section:last-child {
+            border-bottom: none;
+        }
+        .detail-section-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #337ab7;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #eee;
+        }
+        .detail-item {
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 3px;
+            border-left: 3px solid #337ab7;
+        }
+        .detail-label {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        .detail-value {
+            color: #666;
+            word-wrap: break-word;
+        }
+        .badge-detail {
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+        .badge-success { background: #5cb85c; color: white; }
+        .badge-danger { background: #d9534f; color: white; }
+        .badge-warning { background: #f0ad4e; color: white; }
+        .img-detail {
+            max-width: 100%;
+            max-height: 300px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 5px;
+        }
+        .file-preview {
+            text-align: center;
+            padding: 15px;
+        }
+        .action-buttons {
+            padding: 20px;
+            text-align: center;
+            background: #f8f9fa;
+            border-radius: 0 0 5px 5px;
+            border-top: 1px solid #eee;
+        }
+        .btn-detail {
+            margin: 0 5px;
+            min-width: 100px;
+        }
+        .no-data {
+            color: #999;
+            font-style: italic;
+        }
+    </style>
 </head>
 <body>
 <div class="container-fluid">
@@ -838,269 +916,175 @@ document.addEventListener('DOMContentLoaded', function() {
             </span>
         </div>
         
-        <!-- TABS NAVIGASI -->
-        <ul class="nav nav-tabs" role="tablist" style="margin: 0; padding: 0 20px; background: #f8f9fa;">
-            <li role="presentation" class="active">
-                <a href="#detail-tab1" aria-controls="detail-tab1" role="tab" data-toggle="tab">
-                    <i class="fa fa-info"></i> Informasi
-                </a>
-            </li>
-            <li role="presentation">
-                <a href="#detail-tab2" aria-controls="detail-tab2" role="tab" data-toggle="tab">
-                    <i class="fa fa-file"></i> Dokumen
-                </a>
-            </li>
-            <li role="presentation">
-                <a href="#detail-tab3" aria-controls="detail-tab3" role="tab" data-toggle="tab">
-                    <i class="fa fa-cog"></i> Sistem
-                </a>
-            </li>
-        </ul>
-        
-        <!-- TAB CONTENT -->
-        <div class="tab-content">
-            <!-- TAB 1: INFORMASI -->
-            <div role="tabpanel" class="tab-pane active" id="detail-tab1">
-                <div class="detail-section">
-                    <div class="detail-section-title">Informasi Dasar</div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="detail-item">
-                                <div class="detail-label">Tahun Pengundangan:</div>
-                                <div class="detail-value"><?php echo htmlspecialchars($data['tahun_pengundangan']); ?></div>
-                            </div>
-                            
-                            <div class="detail-item">
-                                <div class="detail-label">Tanggal Pengundangan:</div>
-                                <div class="detail-value"><?php echo htmlspecialchars($data['tanggal_pengundangan']); ?></div>
-                            </div>
-                            
-                            <div class="detail-item">
-                                <div class="detail-label">Tanggal Penetapan:</div>
-                                <div class="detail-value"><?php echo htmlspecialchars($data['tanggal_penetapan']); ?></div>
-                            </div>
-                            
-                            <div class="detail-item">
-                                <div class="detail-label">Jenis Dokumen:</div>
-                                <div class="detail-value"><?php echo htmlspecialchars($data['jenis']); ?></div>
-                            </div>
-                            
-                            <div class="detail-item">
-                                <div class="detail-label">No. Peraturan:</div>
-                                <div class="detail-value"><?php echo htmlspecialchars($data['noPeraturan']); ?></div>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <div class="detail-item">
-                                <div class="detail-label">Status:</div>
-                                <div class="detail-value">
-                                    <?php 
-                                    $status_class = '';
-                                    if ($data['status'] == 'Berlaku') $status_class = 'badge-success';
-                                    elseif ($data['status'] == 'Tidak Berlaku') $status_class = 'badge-danger';
-                                    else $status_class = 'badge-warning';
-                                    ?>
-                                    <span class="badge-detail <?php echo $status_class; ?>">
-                                        <?php echo htmlspecialchars($data['status']); ?>
-                                    </span>
-                                </div>
-                            </div>
-                            
-                            <div class="detail-item">
-                                <div class="detail-label">Bahasa:</div>
-                                <div class="detail-value"><?php echo htmlspecialchars($data['bahasa']); ?></div>
-                            </div>
-                            
-                            <div class="detail-item">
-                                <div class="detail-label">Tempat Terbit:</div>
-                                <div class="detail-value"><?php echo htmlspecialchars($data['tempatTerbit']); ?></div>
-                            </div>
-                            
-                            <div class="detail-item">
-                                <div class="detail-label">Sumber:</div>
-                                <div class="detail-value"><?php echo htmlspecialchars($data['sumber']); ?></div>
-                            </div>
-                            
-                            <div class="detail-item">
-                                <div class="detail-label">Penerbit:</div>
-                                <div class="detail-value"><?php echo htmlspecialchars($data['penerbit']); ?></div>
-                            </div>
-                        </div>
+        <div class="detail-section">
+            <div class="detail-section-title">Informasi Dasar</div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="detail-item">
+                        <div class="detail-label">Tahun Pengundangan:</div>
+                        <div class="detail-value"><?php echo htmlspecialchars($data['tahun_pengundangan']); ?></div>
                     </div>
                     
                     <div class="detail-item">
-                        <div class="detail-label">Judul Dokumen:</div>
-                        <div class="detail-value"><?php echo htmlspecialchars($data['judul']); ?></div>
+                        <div class="detail-label">Tanggal Pengundangan:</div>
+                        <div class="detail-value"><?php echo htmlspecialchars($data['tanggal_pengundangan']); ?></div>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <div class="detail-label">Tanggal Penetapan:</div>
+                        <div class="detail-value"><?php echo htmlspecialchars($data['tanggal_penetapan']); ?></div>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <div class="detail-label">Jenis Dokumen:</div>
+                        <div class="detail-value"><?php echo htmlspecialchars($data['jenis']); ?></div>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <div class="detail-label">No. Peraturan:</div>
+                        <div class="detail-value"><?php echo htmlspecialchars($data['noPeraturan']); ?></div>
                     </div>
                 </div>
                 
-                <div class="detail-section">
-                    <div class="detail-section-title">Metadata</div>
+                <div class="col-md-6">
+                    <div class="detail-item">
+                        <div class="detail-label">Status:</div>
+                        <div class="detail-value">
+                            <?php 
+                            $status_class = '';
+                            if ($data['status'] == 'Berlaku') $status_class = 'badge-success';
+                            elseif ($data['status'] == 'Tidak Berlaku') $status_class = 'badge-danger';
+                            else $status_class = 'badge-warning';
+                            ?>
+                            <span class="badge-detail <?php echo $status_class; ?>">
+                                <?php echo htmlspecialchars($data['status']); ?>
+                            </span>
+                        </div>
+                    </div>
                     
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="detail-item">
-                                <div class="detail-label">Singkatan Jenis:</div>
-                                <div class="detail-value"><?php echo htmlspecialchars($data['singkatanJenis']); ?></div>
-                            </div>
-                            
-                            <div class="detail-item">
-                                <div class="detail-label">Subjek:</div>
-                                <div class="detail-value"><?php echo htmlspecialchars($data['subjek']); ?></div>
-                            </div>
-                            
-                            <div class="detail-item">
-                                <div class="detail-label">ISBN:</div>
-                                <div class="detail-value"><?php echo htmlspecialchars($data['isbn']); ?></div>
-                            </div>
-                            
-                            <div class="detail-item">
-                                <div class="detail-label">Bidang Hukum:</div>
-                                <div class="detail-value"><?php echo htmlspecialchars($data['bidangHukum']); ?></div>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <div class="detail-item">
-                                <div class="detail-label">Nomor Induk Buku:</div>
-                                <div class="detail-value"><?php echo htmlspecialchars($data['nomorIndukBuku']); ?></div>
-                            </div>
-                            
-                            <div class="detail-item">
-                                <div class="detail-label">Teu Badan:</div>
-                                <div class="detail-value"><?php echo htmlspecialchars($data['teuBadan']); ?></div>
-                            </div>
-                            
-                            <div class="detail-item">
-                                <div class="detail-label">Deskripsi Fisik:</div>
-                                <div class="detail-value"><?php echo htmlspecialchars($data['deskripsiFisik']); ?></div>
-                            </div>
-                            
-                            <div class="detail-item">
-                                <div class="detail-label">No Panggil:</div>
-                                <div class="detail-value"><?php echo htmlspecialchars($data['noPanggil']); ?></div>
-                            </div>
-                        </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Bahasa:</div>
+                        <div class="detail-value"><?php echo htmlspecialchars($data['bahasa']); ?></div>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <div class="detail-label">Tempat Terbit:</div>
+                        <div class="detail-value"><?php echo htmlspecialchars($data['tempatTerbit']); ?></div>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <div class="detail-label">Sumber:</div>
+                        <div class="detail-value"><?php echo htmlspecialchars($data['sumber']); ?></div>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <div class="detail-label">Penerbit:</div>
+                        <div class="detail-value"><?php echo htmlspecialchars($data['penerbit']); ?></div>
                     </div>
                 </div>
             </div>
             
-            <!-- TAB 2: DOKUMEN -->
-            <div role="tabpanel" class="tab-pane" id="detail-tab2">
-                <div class="detail-section">
-                    <div class="detail-section-title">File Dokumen</div>
-                    
-                    <div class="row">
-                        <!-- Gambar Cover -->
-                        <div class="col-md-6">
-                            <div class="file-preview">
-                                <h4><i class="fa fa-image"></i> Gambar Cover</h4>
-                                <?php if (!empty($data['image_path']) && file_exists($data['image_path'])): ?>
-                                    <img src="<?php echo $data['image_path']; ?>" class="img-detail">
-                                    <p class="mt-3">
-                                        <strong>Nama File:</strong> <?php echo htmlspecialchars($data['image_name']); ?><br>
-                                        <strong>Path:</strong> <?php echo htmlspecialchars($data['image_path']); ?>
-                                    </p>
-                                    <a href="<?php echo $data['image_path']; ?>" target="_blank" class="btn btn-info">
-                                        <i class="fa fa-external-link"></i> Lihat Full Size
-                                    </a>
-                                <?php else: ?>
-                                    <div class="alert alert-warning">
-                                        <i class="fa fa-image fa-3x"></i>
-                                        <p class="mt-2">Tidak ada gambar cover</p>
-                                    </div>
-                                <?php endif; ?>
+            <div class="detail-item">
+                <div class="detail-label">Judul Dokumen:</div>
+                <div class="detail-value"><?php echo htmlspecialchars($data['judul']); ?></div>
+            </div>
+        </div>
+        
+        <div class="detail-section">
+            <div class="detail-section-title">File Dokumen</div>
+            
+            <div class="row">
+                <!-- Gambar Cover -->
+                <div class="col-md-6">
+                    <div class="file-preview">
+                        <h4><i class="fa fa-image"></i> Gambar Cover</h4>
+                        <?php if (!empty($data['image_path']) && file_exists($data['image_path'])): ?>
+                            <img src="<?php echo $data['image_path']; ?>" class="img-detail">
+                            <p class="mt-3">
+                                <strong>Nama File:</strong> <?php echo htmlspecialchars($data['image_name']); ?><br>
+                                <strong>Path:</strong> <?php echo htmlspecialchars($data['image_path']); ?>
+                            </p>
+                            <a href="<?php echo $data['image_path']; ?>" target="_blank" class="btn btn-info">
+                                <i class="fa fa-external-link"></i> Lihat Full Size
+                            </a>
+                        <?php else: ?>
+                            <div class="detail-item">
+                                <i class="fa fa-image"></i>
+                                <p class="no-data">Tidak ada gambar cover</p>
                             </div>
-                        </div>
-                        
-                        <!-- File PDF -->
-                        <div class="col-md-6">
-                            <div class="file-preview">
-                                <h4><i class="fa fa-file-pdf-o"></i> File PDF</h4>
-                                <?php if (!empty($data['pdf_path']) && file_exists($data['pdf_path'])): ?>
-                                    <div class="alert alert-info">
-                                        <i class="fa fa-file-pdf-o fa-4x"></i>
-                                        <h4>File PDF Tersedia</h4>
-                                        <p><strong><?php echo htmlspecialchars($data['fileDownload']); ?></strong></p>
-                                        <p>
-                                            <strong>Ukuran:</strong> <?php echo round(filesize($data['pdf_path']) / 1024, 2); ?> KB<br>
-                                            <strong>Path:</strong> <?php echo htmlspecialchars($data['pdf_path']); ?>
-                                        </p>
-                                        <div class="btn-group">
-                                            <a href="<?php echo $data['pdf_path']; ?>" target="_blank" class="btn btn-info">
-                                                <i class="fa fa-eye"></i> Lihat PDF
-                                            </a>
-                                            <a href="<?php echo $data['pdf_path']; ?>" download class="btn btn-success">
-                                                <i class="fa fa-download"></i> Download
-                                            </a>
-                                        </div>
-                                    </div>
-                                <?php else: ?>
-                                    <div class="alert alert-warning">
-                                        <i class="fa fa-file-pdf-o fa-3x"></i>
-                                        <p class="mt-2">Tidak ada file PDF</p>
-                                    </div>
-                                <?php endif; ?>
-                            </div>
-                        </div>
+                        <?php endif; ?>
                     </div>
-                    
-                    <div class="detail-section">
-                        <div class="detail-section-title">URL Terkait</div>
-                        
-                        <div class="detail-item">
-                            <div class="detail-label">URL Download:</div>
-                            <div class="detail-value">
-                                <?php if (!empty($data['urlDownload'])): ?>
-                                    <a href="<?php echo htmlspecialchars($data['urlDownload']); ?>" target="_blank">
-                                        <?php echo htmlspecialchars($data['urlDownload']); ?>
+                </div>
+                
+                <!-- File PDF -->
+                <div class="col-md-6">
+                    <div class="file-preview">
+                        <h4><i class="fa fa-file-pdf-o"></i> File PDF</h4>
+                        <?php if (!empty($data['pdf_path']) && file_exists($data['pdf_path'])): ?>
+                            <div class="detail-item">
+                                <i class="fa fa-file-pdf-o"></i>
+                                <h4>File PDF Tersedia</h4>
+                                <p><strong><?php echo htmlspecialchars($data['fileDownload']); ?></strong></p>
+                                <p>
+                                    <strong>Ukuran:</strong> <?php echo round(filesize($data['pdf_path']) / 1024, 2); ?> KB<br>
+                                    <strong>Path:</strong> <?php echo htmlspecialchars($data['pdf_path']); ?>
+                                </p>
+                                <div class="mt-3">
+                                    <a href="<?php echo $data['pdf_path']; ?>" target="_blank" class="btn btn-info">
+                                        <i class="fa fa-eye"></i> Lihat PDF
                                     </a>
-                                <?php else: ?>
-                                    <span class="no-data">Tidak tersedia</span>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                        
-                        <div class="detail-item">
-                            <div class="detail-label">URL Detail Peraturan:</div>
-                            <div class="detail-value">
-                                <?php if (!empty($data['urlDetailPeraturan'])): ?>
-                                    <a href="<?php echo htmlspecialchars($data['urlDetailPeraturan']); ?>" target="_blank">
-                                        <?php echo htmlspecialchars($data['urlDetailPeraturan']); ?>
+                                    <a href="<?php echo $data['pdf_path']; ?>" download class="btn btn-success">
+                                        <i class="fa fa-download"></i> Download
                                     </a>
-                                <?php else: ?>
-                                    <span class="no-data">Tidak tersedia</span>
-                                <?php endif; ?>
+                                </div>
                             </div>
-                        </div>
+                        <?php else: ?>
+                            <div class="detail-item">
+                                <i class="fa fa-file-pdf-o"></i>
+                                <p class="no-data">Tidak ada file PDF</p>
+                            </div>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
+        </div>
+        
+        <div class="detail-section">
+            <div class="detail-section-title">Informasi Lainnya</div>
             
-            <!-- TAB 3: SISTEM -->
-            <div role="tabpanel" class="tab-pane" id="detail-tab3">
-                <div class="detail-section">
-                    <div class="detail-section-title">Informasi Sistem</div>
-                    
+            <div class="row">
+                <div class="col-md-6">
                     <div class="detail-item">
-                        <div class="detail-label">ID Data:</div>
-                        <div class="detail-value"><?php echo $data['idData']; ?></div>
+                        <div class="detail-label">URL Download:</div>
+                        <div class="detail-value">
+                            <?php if (!empty($data['urlDownload'])): ?>
+                                <a href="<?php echo htmlspecialchars($data['urlDownload']); ?>" target="_blank">
+                                    <?php echo htmlspecialchars($data['urlDownload']); ?>
+                                </a>
+                            <?php else: ?>
+                                <span class="no-data">Tidak tersedia</span>
+                            <?php endif; ?>
+                        </div>
                     </div>
                     
                     <div class="detail-item">
-                        <div class="detail-label">Operasi:</div>
-                        <div class="detail-value"><?php echo htmlspecialchars($data['operasi']); ?></div>
+                        <div class="detail-label">URL Detail Peraturan:</div>
+                        <div class="detail-value">
+                            <?php if (!empty($data['urlDetailPeraturan'])): ?>
+                                <a href="<?php echo htmlspecialchars($data['urlDetailPeraturan']); ?>" target="_blank">
+                                    <?php echo htmlspecialchars($data['urlDetailPeraturan']); ?>
+                                </a>
+                            <?php else: ?>
+                                <span class="no-data">Tidak tersedia</span>
+                            <?php endif; ?>
+                        </div>
                     </div>
-                    
+                </div>
+                
+                <div class="col-md-6">
                     <div class="detail-item">
-                        <div class="detail-label">Display:</div>
-                        <div class="detail-value"><?php echo htmlspecialchars($data['display']); ?></div>
-                    </div>
-                    
-                    <div class="detail-item">
-                        <div class="detail-label">Waktu Unggah:</div>
+                        <div class="detail-label">Terakhir diupdate:</div>
                         <div class="detail-value"><?php echo htmlspecialchars($data['uploaded_at']); ?></div>
                     </div>
                 </div>
