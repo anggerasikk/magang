@@ -1,1147 +1,957 @@
-<!doctype html>
-<html lang="id">
-<head>
-    <meta charset="utf-8">
-    <title>Pokok Pikiran DPRD - Monografi Hukum - JDIH DPRD Kota Surakarta</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+<?php
+// pokok-pikiran-dprd.php
+session_start();
+include_once "a_db.php";
+
+// ============================================
+// KONFIGURASI PATH YANG BENAR UNTUK MONOGRAFI
+// ============================================
+$base_upload_path = "C:/xampp/htdocs/jdihcilacap_pasang/wb_admin/uploads/";
+$monografi_pdf_path = "C:/xampp/htdocs/jdihcilacap_pasang/wb_admin/uploads/monografi/pdf/";
+$monografi_images_path = "C:/xampp/htdocs/jdihcilacap_pasang/wb_admin/uploads/monografi/images/";
+
+$web_monografi_pdf_path = "/jdihcilacap_pasang/wb_admin/uploads/monografi/pdf/";
+$web_monografi_images_path = "/jdihcilacap_pasang/wb_admin/uploads/monografi/images/";
+
+// ============================================
+// FUNGSI BANTU UNTUK FILE
+// ============================================
+
+// Fungsi untuk menemukan file PDF di server
+function findPDFFile($filename, $id = null) {
+    global $monografi_pdf_path;
     
-    <!-- CSS FILES -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Open+Sans&display=swap" rel="stylesheet">
-                        
-    <link href="css/bootstrap.min.css" rel="stylesheet">
-    <link href="css/bootstrap-icons.css" rel="stylesheet">
-    <link href="css/templatemo-topic-listing.css" rel="stylesheet">
+    if (empty($filename)) {
+        return null;
+    }
     
-    <style>
-        /* OVERRIDE UNTUK HALAMAN MONOGRAFI */
-        body {
-            padding-top: 80px;
-        }
+    // Bersihkan nama file
+    $filename = basename($filename);
+    $clean_filename = preg_replace('/(\.pdf)+$/i', '.pdf', $filename);
+    
+    // Lokasi yang mungkin - UTAMA untuk monografi
+    $possible_locations = [
+        // Lokasi utama monografi
+        $monografi_pdf_path . $clean_filename,
         
-        /* HEADER SECTION */
-        .page-header {
-            background: linear-gradient(15deg, #13547a 0%, #80d0c7 100%);
-            padding: 40px 0 30px 0;
-            margin-top: 0;
-            color: white;
-            position: relative;
-            overflow: hidden;
-        }
+        // Format Windows
+        str_replace('/', '\\', $monografi_pdf_path) . $clean_filename,
         
-        .page-header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ffffff" fill-opacity="0.1" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,112C672,96,768,96,864,112C960,128,1056,160,1152,160C1248,160,1344,128,1392,112L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>');
-            background-size: cover;
-            background-position: bottom;
-            opacity: 0.1;
+        // Document root relatif
+        $_SERVER['DOCUMENT_ROOT'] . '/jdihcilacap_pasang/wb_admin/uploads/monografi/pdf/' . $clean_filename,
+    ];
+    
+    // Jika ada ID, coba cari berdasarkan ID
+    if ($id) {
+        $possible_locations[] = $monografi_pdf_path . $id . '.pdf';
+        $possible_locations[] = $monografi_pdf_path . $id . '.PDF';
+        $possible_locations[] = $monografi_pdf_path . 'monografi_' . $id . '.pdf';
+    }
+    
+    // Cek semua lokasi
+    foreach ($possible_locations as $location) {
+        if (file_exists($location) && is_file($location) && is_readable($location)) {
+            // Verifikasi ini file PDF
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            $mime_type = finfo_file($finfo, $location);
+            finfo_close($finfo);
+            
+            if (stripos($mime_type, 'pdf') !== false) {
+                return $location;
+            }
         }
-        
-        .page-header h1 {
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 700;
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            position: relative;
-            z-index: 2;
-        }
-        
-        .page-header .subtitle {
-            font-size: 1.1rem;
-            opacity: 0.9;
-            margin-bottom: 20px;
-            position: relative;
-            z-index: 2;
-        }
-        
-        .page-header .breadcrumb {
-            background: transparent;
-            padding: 0;
-            margin: 0;
-            position: relative;
-            z-index: 2;
-        }
-        
-        .page-header .breadcrumb-item a {
-            color: rgba(255, 255, 255, 0.8);
-            text-decoration: none;
-        }
-        
-        .page-header .breadcrumb-item.active {
-            color: white;
-        }
-        
-        .page-header .breadcrumb-item+.breadcrumb-item::before {
-            color: rgba(255, 255, 255, 0.8);
-        }
+    }
+    
+    return null;
+}
 
-        /* MAIN CONTENT */
-        .main-content {
-            padding: 50px 0 60px 0;
-            background: #f0f8ff;
+// Fungsi untuk menemukan gambar
+function findImageFile($filename, $id = null) {
+    global $monografi_images_path;
+    
+    if (empty($filename)) {
+        // Coba cari berdasarkan ID
+        if ($id) {
+            $image_extensions = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+            foreach ($image_extensions as $ext) {
+                $test_filename = $id . '.' . $ext;
+                $test_path = $monografi_images_path . $test_filename;
+                
+                if (file_exists($test_path)) {
+                    return $test_path;
+                }
+                
+                // Coba dengan prefix
+                $test_filename2 = 'monografi_' . $id . '.' . $ext;
+                $test_path2 = $monografi_images_path . $test_filename2;
+                
+                if (file_exists($test_path2)) {
+                    return $test_path2;
+                }
+            }
         }
+        return null;
+    }
+    
+    // Bersihkan nama file
+    $filename = basename($filename);
+    
+    // Lokasi yang mungkin - UTAMA untuk monografi
+    $possible_locations = [
+        // Lokasi utama monografi
+        $monografi_images_path . $filename,
         
-        .section-title {
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 600;
-            color: #13547a;
-            margin-bottom: 30px;
-            position: relative;
-            padding-bottom: 15px;
-        }
+        // Format Windows
+        str_replace('/', '\\', $monografi_images_path) . $filename,
         
-        .section-title::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100px;
-            height: 3px;
-            background: linear-gradient(to right, #13547a, #80d0c7);
+        // Document root relatif
+        $_SERVER['DOCUMENT_ROOT'] . '/jdihcilacap_pasang/wb_admin/uploads/monografi/images/' . $filename,
+    ];
+    
+    // Cek semua lokasi
+    foreach ($possible_locations as $location) {
+        if (file_exists($location) && is_file($location) && is_readable($location)) {
+            return $location;
         }
+    }
+    
+    return null;
+}
 
-        /* MONOGRAFI CONTENT */
-        .monografi-container {
-            background: white;
-            border-radius: var(--border-radius-medium);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-            padding: 40px;
-            margin-bottom: 40px;
-        }
-        
-        .monografi-header {
-            text-align: center;
-            margin-bottom: 40px;
-            padding-bottom: 30px;
-            border-bottom: 2px solid #f0f8ff;
-        }
-        
-        .monografi-icon {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, #13547a 0%, #80d0c7 100%);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 20px;
-            color: white;
-            font-size: 2rem;
-        }
-        
-        .monografi-description {
-            color: #666;
-            font-size: 1.1rem;
-            line-height: 1.6;
-            text-align: center;
-            max-width: 800px;
-            margin: 0 auto 40px;
-        }
+// ============================================
+// QUERY DATA UTAMA - DARI TABEL MONOGRAFI
+// Sesuai dengan struktur kolom yang diberikan
+// ============================================
+$query = "SELECT 
+            id_monografi,
+            judul,
+            jenis_monografi,
+            tanggal_pembuatan,
+            tahun_terbit,
+            penulis,
+            penerbit,
+            isbn,
+            bidang_hukum,
+            jumlah_halaman,
+            deskripsi,
+            status,
+            bahasa,
+            file_pdf,
+            thumbnail,
+            created_at,
+            updated_at,
+            id_user
+          FROM monografi 
+          WHERE jenis_monografi LIKE '%Pokok_Pikiran%' 
+          ORDER BY id_monografi DESC";
+$result = mysqli_query($koneksi, $query);
 
-        /* SEARCH BOX */
-        .search-monografi {
-            background: #f8f9fa;
-            border-radius: var(--border-radius-medium);
-            padding: 30px;
-            margin-bottom: 30px;
-            border: 2px solid #e9ecef;
-        }
-        
-        .search-form .input-group {
-            margin-bottom: 20px;
-        }
-        
-        .search-form input {
-            border: 2px solid #13547a;
-            border-right: none;
-            height: 50px;
-            font-size: 1rem;
-        }
-        
-        .search-form input:focus {
-            box-shadow: 0 0 0 0.2rem rgba(19, 84, 122, 0.25);
-        }
-        
-        .search-form .btn-search {
-            background: #13547a;
-            color: white;
-            border: 2px solid #13547a;
-            height: 50px;
-            padding: 0 25px;
-            font-weight: 600;
-        }
-        
-        .search-form .btn-search:hover {
-            background: #0d3a58;
-            border-color: #0d3a58;
-        }
-        
-        .adv-search-link {
-            color: #13547a;
-            text-decoration: none;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            transition: all 0.3s;
-        }
-        
-        .adv-search-link:hover {
-            color: #80d0c7;
-            gap: 8px;
-        }
+if (!$result) {
+    die("Query error: " . mysqli_error($koneksi));
+}
 
-        /* DOCUMENT LIST */
-        .document-list {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        
-        .document-item {
-            background: white;
-            border-radius: var(--border-radius-small);
-            padding: 20px;
-            border: 1px solid #e9ecef;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: flex-start;
-            gap: 20px;
-        }
-        
-        .document-item:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            border-color: #80d0c7;
-        }
-        
-        .document-icon {
-            width: 60px;
-            height: 60px;
-            background: #f0f8ff;
-            border-radius: var(--border-radius-small);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #13547a;
-            font-size: 1.5rem;
-            flex-shrink: 0;
-        }
-        
-        .document-content {
-            flex: 1;
-        }
-        
-        .document-title {
-            color: #13547a;
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 600;
-            font-size: 1.2rem;
-            margin-bottom: 10px;
-            line-height: 1.4;
-        }
-        
-        .document-title a {
-            color: inherit;
-            text-decoration: none;
-            transition: all 0.3s;
-        }
-        
-        .document-title a:hover {
-            color: #80d0c7;
-        }
-        
-        .document-meta {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            margin-bottom: 15px;
-            font-size: 0.9rem;
-            color: #666;
-        }
-        
-        .meta-item {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        
-        .meta-item i {
-            color: #80d0c7;
-        }
-        
-        .document-excerpt {
-            color: #666;
-            line-height: 1.6;
-            margin-bottom: 15px;
-            font-size: 0.95rem;
-        }
-        
-        .document-actions {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        
-        .btn-download {
-            background: #13547a;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: var(--border-radius-small);
-            font-size: 0.9rem;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            transition: all 0.3s;
-        }
-        
-        .btn-download:hover {
-            background: #0d3a58;
-            color: white;
-            transform: translateY(-2px);
-        }
-        
-        .btn-preview {
-            background: #f0f8ff;
-            color: #13547a;
-            border: 1px solid #13547a;
-            padding: 8px 15px;
-            border-radius: var(--border-radius-small);
-            font-size: 0.9rem;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            transition: all 0.3s;
-        }
-        
-        .btn-preview:hover {
-            background: #13547a;
-            color: white;
-            transform: translateY(-2px);
-        }
+// ============================================
+// TOTAL DOKUMEN
+// ============================================
+$total_query = "SELECT COUNT(*) as total 
+                FROM monografi 
+                WHERE jenis_monografi LIKE '%Pokok_Pikiran%'";
+$total_result = mysqli_query($koneksi, $total_query);
+$total_dokumen = mysqli_fetch_assoc($total_result)['total'];
 
-        /* PAGINATION */
-        .pagination-container {
-            display: flex;
-            justify-content: center;
-            margin-top: 30px;
-        }
-        
-        .pagination {
-            display: flex;
-            gap: 5px;
-        }
-        
-        .page-item .page-link {
-            border: none;
-            background: #f8f9fa;
-            color: #13547a;
-            border-radius: var(--border-radius-small);
-            padding: 8px 15px;
-            transition: all 0.3s;
-        }
-        
-        .page-item.active .page-link {
-            background: #13547a;
-            color: white;
-        }
-        
-        .page-item .page-link:hover {
-            background: #e0e0e0;
-            transform: translateY(-2px);
-        }
+// ============================================
+// STATISTIK PER TAHUN
+// ============================================
+$year_stats_query = "
+    SELECT tahun_terbit, COUNT(*) as jumlah
+    FROM monografi
+    WHERE jenis_monografi LIKE '%Pokok_Pikiran%'
+    GROUP BY tahun_terbit
+    ORDER BY tahun_terbit DESC
+    LIMIT 5";
+$year_stats_result = mysqli_query($koneksi, $year_stats_query);
 
-        /* SIDEBAR */
-        .sidebar-menu {
-            background: white;
-            border-radius: var(--border-radius-medium);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-            padding: 25px;
-            margin-bottom: 30px;
-        }
-        
-        .sidebar-menu h4 {
-            color: #13547a;
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 600;
-            font-size: 1.2rem;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #f0f0f0;
-            display: flex;
-            align-items: center;
-        }
-        
-        .sidebar-menu h4 i {
-            color: #80d0c7;
-            margin-right: 10px;
-        }
-        
-        .sidebar-menu ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        
-        .sidebar-menu ul li {
-            margin-bottom: 12px;
-        }
-        
-        .sidebar-menu ul li:last-child {
-            margin-bottom: 0;
-        }
-        
-        .sidebar-menu ul li a {
-            color: var(--p-color);
-            text-decoration: none;
-            padding: 12px 15px;
-            border-radius: var(--border-radius-small);
-            display: flex;
-            align-items: center;
-            transition: all 0.3s;
-            font-weight: 500;
-        }
-        
-        .sidebar-menu ul li.active a {
-            background: #f0f8ff;
-            color: #13547a;
-            font-weight: 600;
-        }
-        
-        .sidebar-menu ul li a:hover {
-            background: #f0f8ff;
-            color: #13547a;
-            transform: translateX(5px);
-        }
-        
-        .sidebar-menu ul li a i {
-            color: #80d0c7;
-            margin-right: 10px;
-            font-size: 0.9rem;
-        }
+// ============================================
+// DOKUMEN TERBARU
+// ============================================
+$popular_query = "
+    SELECT id_monografi, judul, tanggal_pembuatan, tahun_terbit
+    FROM monografi
+    WHERE jenis_monografi LIKE '%Pokok_Pikiran%'
+    ORDER BY created_at DESC
+    LIMIT 5";
+$popular_result = mysqli_query($koneksi, $popular_query);
 
-        /* STATS BOX */
-        .stats-box {
-            background: linear-gradient(135deg, #13547a 0%, #80d0c7 100%);
-            color: white;
-            border-radius: var(--border-radius-medium);
-            padding: 25px;
-            margin-bottom: 30px;
-            text-align: center;
-        }
-        
-        .stats-number {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 5px;
-        }
-        
-        .stats-label {
-            font-size: 1rem;
-            opacity: 0.9;
-        }
-        
-        /* RESPONSIVE */
-        @media (max-width: 768px) {
-            body {
-                padding-top: 70px;
-            }
-            
-            .page-header {
-                padding: 30px 0 20px 0;
-            }
-            
-            .page-header h1 {
-                font-size: 2rem;
-            }
-            
-            .main-content {
-                padding: 30px 0 40px 0;
-            }
-            
-            .monografi-container {
-                padding: 30px;
-            }
-            
-            .document-item {
-                flex-direction: column;
-                gap: 15px;
-            }
-            
-            .document-icon {
-                width: 50px;
-                height: 50px;
-                font-size: 1.2rem;
-            }
-            
-            .document-meta {
-                flex-direction: column;
-                gap: 10px;
-            }
-            
-            .document-actions {
-                justify-content: flex-start;
-            }
-        }
-        
-        @media (max-width: 576px) {
-            .page-header h1 {
-                font-size: 1.8rem;
-            }
-            
-            .section-title {
-                font-size: 1.3rem;
-            }
-            
-            .monografi-icon {
-                width: 60px;
-                height: 60px;
-                font-size: 1.5rem;
-            }
-            
-            .search-form input,
-            .search-form .btn-search {
-                height: 45px;
-            }
-        }
-    </style>
-</head>
+// ============================================
+// TAHUN FILTER
+// ============================================
+$years_query = "
+    SELECT DISTINCT tahun_terbit
+    FROM monografi
+    WHERE jenis_monografi LIKE '%Pokok_Pikiran%'
+    ORDER BY tahun_terbit DESC";
+$years_result = mysqli_query($koneksi, $years_query);
 
-<body id="top">
+$years = [];
+while ($row = mysqli_fetch_assoc($years_result)) {
+    $years[] = $row['tahun_terbit'];
+}
 
-    <!-- NAVBAR -->
-    <nav class="navbar navbar-expand-lg fixed-top navbar-custom">
-        <div class="container">
-            <!-- BRAND -->
-            <a class="navbar-brand d-flex align-items-center" href="index.php">
-                <span class="fw-bold">JDIH DPRD</span>
+// ============================================
+// HEADER
+// ============================================
+$page_title = "Pokok Pikiran DPRD - JDIH DPRD Kota Surakarta";
+$page_description = "Kumpulan Pokok Pikiran Dewan Perwakilan Rakyat Daerah Kota Surakarta";
+
+include "header.php";
+?>
+
+<!-- ===============================
+     STYLE
+================================ -->
+<style>
+<?php 
+// Include CSS dasar
+include "style-keputusan-dprd.css"; 
+?>
+
+/* STYLE KHUSUS UNTUK GAMBAR */
+.card-image {
+    position: relative;
+    width: 100%;
+    height: 200px;
+    overflow: hidden;
+    border-radius: 8px 8px 0 0;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.card-image:hover img {
+    transform: scale(1.05);
+}
+
+.placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    text-align: center;
+}
+
+.placeholder i {
+    font-size: 48px;
+    margin-bottom: 15px;
+    opacity: 0.9;
+}
+
+.placeholder p {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0;
+    line-height: 1.4;
+}
+
+.image-overlay {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 2;
+}
+
+.image-badge {
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+/* TOMBOL DOWNLOAD */
+.download-btn {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.download-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.download-btn.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .card-image {
+        height: 180px;
+    }
+    
+    .document-card {
+        flex-direction: column;
+    }
+}
+
+/* Debug info */
+.debug-info {
+    font-size: 11px;
+    border-left: 3px solid #dc3545;
+    background: #f8f9fa;
+    margin-top: 10px;
+    padding: 10px;
+    border-radius: 4px;
+}
+
+/* Download Status */
+.download-status {
+    font-size: 11px;
+    margin-top: 5px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    display: inline-block;
+}
+.download-status.available {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+.download-status.unavailable {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+/* Custom untuk Pokok Pikiran */
+.pokok-pikiran-badge {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* Styling untuk info tambahan */
+.card-extra-info {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #eee;
+    font-size: 12px;
+    color: #666;
+}
+
+.card-extra-info span {
+    margin-right: 15px;
+    display: inline-block;
+    margin-bottom: 5px;
+}
+
+.card-extra-info i {
+    margin-right: 5px;
+}
+
+/* Tombol aksi */
+.card-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.card-btn {
+    flex: 1;
+    min-width: 120px;
+    text-align: center;
+}
+
+.force-download:hover {
+    background-color: #218838;
+    color: white;
+}
+
+/* Styling khusus untuk monografi */
+.monografi-title {
+    font-size: 1.1rem;
+    line-height: 1.4;
+}
+</style>
+
+<!-- ===============================
+     HEADER SECTION
+================================ -->
+<section class="page-header">
+    <div class="container">
+        <h1 class="text-white">POKOK PIKIRAN DPRD</h1>
+        <p class="subtitle">Pokok Pikiran Dewan Perwakilan Rakyat Daerah Kota Surakarta</p>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="index.php">Beranda</a></li>
+                <li class="breadcrumb-item"><a href="?page=perundangan">Perundang-Undangan</a></li>
+                <li class="breadcrumb-item active">Pokok Pikiran DPRD</li>
+            </ol>
+        </nav>
+    </div>
+</section>
+
+<!-- ===============================
+     MAIN CONTENT
+================================ -->
+<section class="main-content">
+<div class="container">
+<div class="row">
+
+<!-- ===== KONTEN UTAMA ===== -->
+<div class="col-lg-8">
+
+<!-- FILTER TAHUN -->
+<div class="year-filter">
+    <h5><i class="bi bi-calendar"></i> Filter Berdasarkan Tahun</h5>
+    <div class="year-buttons">
+        <button class="year-btn active" data-year="semua">Semua</button>
+        <?php foreach ($years as $year): ?>
+            <button class="year-btn" data-year="<?= $year ?>"><?= $year ?></button>
+        <?php endforeach; ?>
+    </div>
+</div>
+
+<h3 class="section-title">Daftar Pokok Pikiran DPRD Kota Surakarta</h3>
+
+<?php if (mysqli_num_rows($result) > 0): ?>
+<div class="card-container">
+<?php 
+$counter = 0;
+while ($row = mysqli_fetch_assoc($result)):
+    $counter++;
+    $tanggal = date('d F Y', strtotime($row['tanggal_pembuatan']));
+    
+    // ============================================
+    // CARI FILE PDF
+    // ============================================
+    $file_from_db = $row['file_pdf'];
+    $file_found = false;
+    $actual_file_path = null;
+    $download_url = '#';
+    $force_download_url = '#';
+    
+    if (!empty($file_from_db)) {
+        $actual_file_path = findPDFFile($file_from_db, $row['id_monografi']);
+        if ($actual_file_path) {
+            $file_found = true;
+            // URL untuk download langsung
+            $relative_path = str_replace($_SERVER['DOCUMENT_ROOT'], '', $actual_file_path);
+            $download_url = $relative_path . '?t=' . time(); // Tambah timestamp untuk cache busting
+            
+            // URL untuk force download
+            $force_download_url = "force_download.php?file=" . urlencode($relative_path) . "&id=" . $row['id_monografi'] . "&type=monografi";
+        }
+    }
+    
+    // ============================================
+    // CARI GAMBAR/THUMBNAIL
+    // ============================================
+    $image_url = '';
+    $image_found = false;
+    $actual_image_path = null;
+    
+    if (!empty($row['thumbnail'])) {
+        $actual_image_path = findImageFile($row['thumbnail'], $row['id_monografi']);
+        if ($actual_image_path) {
+            $image_found = true;
+            $relative_image_path = str_replace($_SERVER['DOCUMENT_ROOT'], '', $actual_image_path);
+            $image_url = $relative_image_path;
+        }
+    } else {
+        // Jika tidak ada thumbnail di database, cari berdasarkan ID
+        $actual_image_path = findImageFile(null, $row['id_monografi']);
+        if ($actual_image_path) {
+            $image_found = true;
+            $relative_image_path = str_replace($_SERVER['DOCUMENT_ROOT'], '', $actual_image_path);
+            $image_url = $relative_image_path;
+        }
+    }
+    
+    // Pastikan URL gambar dimulai dengan /
+    if (!empty($image_url) && !preg_match('/^https?:\/\//', $image_url) && $image_url[0] !== '/') {
+        $image_url = '/' . $image_url;
+    }
+    
+    // Buat singkatan jenis
+    $singkatan = "PKP";
+    if (!empty($row['jenis_monografi'])) {
+        $jenis = $row['jenis_monografi'];
+        if (strpos($jenis, 'Pokok_Pikiran') !== false) {
+            $singkatan = "PKP";
+        }
+    }
+    
+    // ============================================
+    // URL UNTUK DETAIL - DIPERBAIKI
+    // ============================================
+    $detail = "index.php?page=detail-monografi&id=" . $row['id_monografi'];
+?>
+
+<div class="document-card" data-tahun="<?= $row['tahun_terbit']; ?>" data-id="<?= $row['id_monografi']; ?>">
+    <div class="card-image">
+        <?php if ($image_found && !empty($image_url)): ?>
+            <img src="<?= htmlspecialchars($image_url) ?>" 
+                 alt="<?= htmlspecialchars($row['judul']) ?>"
+                 loading="lazy"
+                 onerror="this.onerror=null; this.style.display='none'; this.parentElement.querySelector('.placeholder').style.display='flex';">
+            <div class="placeholder" style="display: none;">
+                <i class="bi bi-lightbulb"></i>
+                <p><?= htmlspecialchars($singkatan) ?><br>
+                <small>Tahun <?= htmlspecialchars($row['tahun_terbit']) ?></small></p>
+            </div>
+        <?php else: ?>
+            <div class="placeholder pokok-pikiran-badge">
+                <i class="bi bi-lightbulb"></i>
+                <p><?= htmlspecialchars($singkatan) ?><br>
+                <small>Tahun <?= htmlspecialchars($row['tahun_terbit']) ?></small></p>
+            </div>
+        <?php endif; ?>
+        <div class="image-overlay">
+            <span class="image-badge"><?= htmlspecialchars($singkatan) ?></span>
+        </div>
+    </div>
+
+    <div class="card-content">
+        <div class="card-number">Tahun <?= htmlspecialchars($row['tahun_terbit']) ?></div>
+        <h3 class="card-title monografi-title"><?= htmlspecialchars($row['judul']) ?></h3>
+
+        <div class="card-meta">
+            <div class="card-date">
+                <i class="bi bi-calendar"></i> <?= $tanggal ?>
+            </div>
+            <?php if (!empty($row['status'])): ?>
+                <div class="card-status"><?= htmlspecialchars($row['status']) ?></div>
+            <?php endif; ?>
+        </div>
+
+        <?php if (!empty($row['penulis'])): ?>
+        <div class="card-extra-info">
+            <span><i class="bi bi-person"></i> <?= htmlspecialchars($row['penulis']) ?></span>
+            <?php if (!empty($row['penerbit'])): ?>
+            <span><i class="bi bi-building"></i> <?= htmlspecialchars($row['penerbit']) ?></span>
+            <?php endif; ?>
+            <?php if (!empty($row['jumlah_halaman'])): ?>
+            <span><i class="bi bi-file-text"></i> <?= htmlspecialchars($row['jumlah_halaman']) ?> halaman</span>
+            <?php endif; ?>
+            <?php if (!empty($row['bidang_hukum'])): ?>
+            <span><i class="bi bi-journal"></i> <?= htmlspecialchars($row['bidang_hukum']) ?></span>
+            <?php endif; ?>
+        </div>
+        <?php endif; ?>
+
+        <div class="download-status <?= $file_found ? 'available' : 'unavailable' ?>">
+            <i class="bi bi-<?= $file_found ? 'check-circle' : 'x-circle' ?>"></i>
+            <?= $file_found ? 'File PDF tersedia' : 'File PDF tidak tersedia' ?>
+            <?php if ($file_found): ?>
+                <br><small><?= htmlspecialchars(basename($actual_file_path)) ?></small>
+            <?php endif; ?>
+        </div>
+
+        <div class="card-actions">
+            <!-- TOMBOL LIHAT DETAIL - DIPERBAIKI -->
+            <a href="<?= $detail ?>" class="card-btn btn-view">
+                <i class="bi bi-eye"></i> Lihat Detail
             </a>
-
-            <!-- TOGGLER -->
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                data-bs-target="#navbarNav" aria-controls="navbarNav"
-                aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <!-- MENU -->
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav mx-auto mb-2 mb-lg-0 gap-lg-2">
-                    <li class="nav-item">
-                        <a class="nav-link" href="index.php">Beranda</a>
-                    </li>
-
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="dropdownTentangKami"
-                            role="button" data-bs-toggle="dropdown">
-                            Tentang Kami
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="?page=profil-jdih">Profil JDIH</a></li>
-                            <li><a class="dropdown-item" href="?page=struktur-organisasi">Struktur Organisasi</a></li>
-                            <li><a class="dropdown-item" href="?page=alur-pengelolaan">Alur Pengelolaan Produk Hukum</a></li>
-                            <li><a class="dropdown-item" href="?page=sop-pengelola">SOP Pengelola JDIH DPRD Kota Surakarta</a></li>
-                            <li><a class="dropdown-item" href="?page=dasar-hukum">Dasar Hukum JDIH Sekretariat DPRD Kota Surakarta</a></li>
-                            <li><a class="dropdown-item" href="?page=surat-keputusan">Surat Keputusan Pengelola JDIH Sekretariat DPRD Kota Surakarta</a></li>
-                            <li><a class="dropdown-item" href="?page=visi-misi">Visi & Misi</a></li>
-                            <li><a class="dropdown-item" href="?page=video-profil">Video Profil JDIH</a></li>
-                        </ul>
-                    </li>
-
-                    <!-- PERUNDANGAN -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="dropdownPerundangan"
-                            role="button" data-bs-toggle="dropdown">
-                            Perundang-undangan
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="?page=keputusan-dprd">Keputusan DPRD</a></li>
-                            <li><a class="dropdown-item" href="?page=keputusan-pimpinan">Keputusan Pimpinan DPRD</a></li>
-                            <li><a class="dropdown-item" href="?page=keputusan-sekretaris">Keputusan Sekretaris DPRD</a></li>
-                            <li><a class="dropdown-item" href="?page=peraturan-dprd">Peraturan DPRD</a></li>
-                            <li><a class="dropdown-item" href="?page=perda">Peraturan Daerah</a></li>
-                            <li><a class="dropdown-item" href="?page=english-legal">English Legal Product</a></li>
-                        </ul>
-                    </li>
-
-                    <!-- MONOGRAFI -->
-                    <li class="nav-item dropdown active">
-                        <a class="nav-link dropdown-toggle" href="#" id="dropdownMonografi"
-                            role="button" data-bs-toggle="dropdown">
-                            Monografi Hukum
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item active" href="?page=pokok-pikiran-dprd">Pokok Pikiran DPRD</a></li>
-                            <li><a class="dropdown-item" href="?page=kajian-raperda">Kajian Raperda</a></li>
-                            <li><a class="dropdown-item" href="?page=naskah-akademik">Naskah Akademik</a></li>
-                            <li><a class="dropdown-item" href="?page=hasil-fasilitasi">Hasil Fasilitasi Raperda</a></li>
-                            <li><a class="dropdown-item" href="?page=hasil-harmonisasi">Hasil Harmonisasi Raperda</a></li>
-                            <li><a class="dropdown-item" href="?page=karya-ilmiah">Penulisan Karya Ilmiah</a></li>
-                            <li><a class="dropdown-item" href="?page=himpunan">Himpunan Peraturan</a></li>
-                        </ul>
-                    </li>
-
-                    <!-- ARTIKEL HUKUM -->
-                    <li class="nav-item">
-                        <a class="nav-link" href="?page=artikel">Artikel Hukum</a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="?page=yurisprudensi">Yurisprudensi</a>
-                    </li>
-
-                    <!-- INFORMASI -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="dropdownInformasi"
-                            role="button" data-bs-toggle="dropdown">
-                            Informasi
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="?page=kegiatan">Kegiatan JDIH</a></li>
-                            <li><a class="dropdown-item" href="?page=infografis">Infografis & Videografis</a></li>
-                            <li><a class="dropdown-item" href="?page=galeri">Galeri Foto</a></li>
-                            <li><a class="dropdown-item" href="?page=penghargaan">Penghargaan</a></li>
-                            <li><a class="dropdown-item" href="?page=buku">Koleksi Buku</a></li>
-                        </ul>
-                    </li>
-
-                    <!-- KONTAK -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="dropdownKontak"
-                            role="button" data-bs-toggle="dropdown">
-                            Kontak & Saran
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="?page=kontak">Form Kontak</a></li>
-                            <li><a class="dropdown-item" href="?page=saran">Saran & Masukan</a></li>
-                        </ul>
-                    </li>
-                </ul>
-            </div>
+            
+            <!-- TOMBOL DOWNLOAD YANG DIPERBAIKI -->
+            <?php if ($file_found): ?>
+                <!-- Tombol Download Langsung -->
+                <a href="<?= htmlspecialchars($download_url) ?>" 
+                   class="card-btn btn-download download-btn" 
+                   data-id="<?= $row['id_monografi']; ?>"
+                   data-filename="<?= htmlspecialchars(basename($actual_file_path)) ?>"
+                   download>
+                    <i class="bi bi-download"></i> Download PDF
+                </a>
+            <?php else: ?>
+                <a href="#" 
+                   class="card-btn btn-download disabled" 
+                   onclick="event.preventDefault(); showFileNotFoundAlert('<?= htmlspecialchars($row['judul']) ?>');"
+                   title="File PDF tidak tersedia">
+                    <i class="bi bi-download"></i> Download PDF
+                </a>
+            <?php endif; ?>
         </div>
-    </nav>
-
-    <!-- HEADER SECTION -->
-    <section class="page-header">
-        <div class="container">
-            <div class="row">
-                <div class="col-12">
-                    <h1 class="text-white">MONOGRAFI HUKUM</h1>
-                    <p class="subtitle">Pokok Pikiran DPRD Kota Surakarta</p>
-                    <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb">
-                            <li class="breadcrumb-item"><a href="index.php">Beranda</a></li>
-                            <li class="breadcrumb-item"><a href="#">Monografi Hukum</a></li>
-                            <li class="breadcrumb-item active" aria-current="page">Pokok Pikiran DPRD</li>
-                        </ol>
-                    </nav>
-                </div>
-            </div>
+        
+        <!-- DEBUG INFO -->
+        <?php if (isset($_GET['debug'])): ?>
+        <div class="debug-info mt-2 p-2 bg-light rounded">
+            <small class="text-muted">
+                <strong>Debug Info (Dokumen #<?= $counter ?>):</strong><br>
+                ID: <?= $row['id_monografi'] ?><br>
+                Jenis: <?= htmlspecialchars($row['jenis_monografi']) ?><br>
+                File PDF dari DB: <?= htmlspecialchars($file_from_db) ?><br>
+                File Found: <?= $file_found ? 'Ya' : 'Tidak' ?><br>
+                Actual PDF Path: <?= htmlspecialchars($actual_file_path) ?><br>
+                Download URL: <?= htmlspecialchars($download_url) ?><br>
+                Thumbnail dari DB: <?= htmlspecialchars($row['thumbnail']) ?><br>
+                Image Found: <?= $image_found ? 'Ya' : 'Tidak' ?><br>
+                Actual Image Path: <?= htmlspecialchars($actual_image_path) ?><br>
+                Image URL: <?= htmlspecialchars($image_url) ?><br>
+                Detail URL: <?= htmlspecialchars($detail) ?><br>
+                PDF Folder: <?= $monografi_pdf_path ?><br>
+                Images Folder: <?= $monografi_images_path ?>
+            </small>
         </div>
-    </section>
+        <?php endif; ?>
+    </div>
+</div>
 
-    <!-- MAIN CONTENT -->
-    <section class="main-content">
-        <div class="container">
-            <div class="row">
-                
-                <!-- KONTEN UTAMA -->
-                <div class="col-lg-8 mb-4 mb-lg-0">
-                    
-                    <!-- HEADER MONOGRAFI -->
-                    <div class="monografi-container">
-                        <div class="monografi-header">
-                            <div class="monografi-icon">
-                                <i class="bi bi-lightbulb"></i>
-                            </div>
-                            <h2 class="section-title">Pokok Pikiran DPRD</h2>
-                            <p class="monografi-description">
-                                Kumpulan dokumen pokok pikiran DPRD Kota Surakarta yang berisi pandangan, gagasan, 
-                                dan arahan strategis anggota dewan dalam mendukung pembentukan peraturan daerah 
-                                dan pelaksanaan fungsi legislasi, anggaran, dan pengawasan.
-                            </p>
-                        </div>
-                        
-                        <!-- PENCARIAN -->
-                        <div class="search-monografi">
-                            <h4 class="mb-4">Cari Pokok Pikiran DPRD</h4>
-                            <form class="search-form">
-                                <div class="input-group">
-                                    <input type="text" class="form-control" placeholder="Masukkan kata kunci pokok pikiran..." 
-                                           aria-label="Search" aria-describedby="button-search">
-                                    <button class="btn btn-search" type="submit" id="button-search">
-                                        <i class="bi bi-search"></i> CARI
-                                    </button>
-                                </div>
-                                <div class="text-end">
-                                    <a href="#" class="adv-search-link">
-                                        <i class="bi bi-sliders"></i> Pencarian Lanjutan
-                                    </a>
-                                </div>
-                            </form>
-                        </div>
-                        
-                        <!-- STATISTIK -->
-                        <div class="row mb-4">
-                            <div class="col-md-4">
-                                <div class="stats-box">
-                                    <div class="stats-number">128</div>
-                                    <div class="stats-label">Total Dokumen</div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="stats-box">
-                                    <div class="stats-number">12</div>
-                                    <div class="stats-label">Tahun 2024</div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="stats-box">
-                                    <div class="stats-number">96</div>
-                                    <div class="stats-label">Telah Dipublikasi</div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- DAFTAR DOKUMEN -->
-                        <h3 class="section-title">Dokumen Terbaru</h3>
-                        
-                        <div class="document-list">
-                            <!-- Dokumen 1 -->
-                            <div class="document-item">
-                                <div class="document-icon">
-                                    <i class="bi bi-file-earmark-text"></i>
-                                </div>
-                                <div class="document-content">
-                                    <h3 class="document-title">
-                                        <a href="#">Pokok Pikiran DPRD Kota Surakarta Tahun 2024 tentang Penguatan Ekonomi Kreatif dan Pariwisata Berkelanjutan</a>
-                                    </h3>
-                                    <div class="document-meta">
-                                        <div class="meta-item">
-                                            <i class="bi bi-calendar"></i>
-                                            <span>Tanggal: 15 Januari 2024</span>
-                                        </div>
-                                        <div class="meta-item">
-                                            <i class="bi bi-journal-text"></i>
-                                            <span>Nomor: PP/DPRD/01/2024</span>
-                                        </div>
-                                        <div class="meta-item">
-                                            <i class="bi bi-person"></i>
-                                            <span>Komisi: Komisi A (Bidang Pemerintahan)</span>
-                                        </div>
-                                    </div>
-                                    <p class="document-excerpt">
-                                        Dokumen pokok pikiran yang berisi arahan strategis DPRD Kota Surakarta dalam pengembangan ekonomi kreatif dan pariwisata berkelanjutan sebagai pilar pembangunan daerah...
-                                    </p>
-                                    <div class="document-actions">
-                                        <a href="#" class="btn-download">
-                                            <i class="bi bi-download"></i> Download PDF
-                                        </a>
-                                        <a href="#" class="btn-preview">
-                                            <i class="bi bi-eye"></i> Preview
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Dokumen 2 -->
-                            <div class="document-item">
-                                <div class="document-icon">
-                                    <i class="bi bi-file-earmark-text"></i>
-                                </div>
-                                <div class="document-content">
-                                    <h3 class="document-title">
-                                        <a href="#">Pokok Pikiran tentang Penataan Ruang dan Pengendalian Alih Fungsi Lahan Pertanian</a>
-                                    </h3>
-                                    <div class="document-meta">
-                                        <div class="meta-item">
-                                            <i class="bi bi-calendar"></i>
-                                            <span>Tanggal: 10 Desember 2023</span>
-                                        </div>
-                                        <div class="meta-item">
-                                            <i class="bi bi-journal-text"></i>
-                                            <span>Nomor: PP/DPRD/12/2023</span>
-                                        </div>
-                                        <div class="meta-item">
-                                            <i class="bi bi-person"></i>
-                                            <span>Komisi: Komisi B (Bidang Ekonomi)</span>
-                                        </div>
-                                    </div>
-                                    <p class="document-excerpt">
-                                        Arahan kebijakan DPRD dalam penataan ruang wilayah dan pengendalian alih fungsi lahan pertanian untuk menjaga ketahanan pangan dan kelestarian lingkungan...
-                                    </p>
-                                    <div class="document-actions">
-                                        <a href="#" class="btn-download">
-                                            <i class="bi bi-download"></i> Download PDF
-                                        </a>
-                                        <a href="#" class="btn-preview">
-                                            <i class="bi bi-eye"></i> Preview
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Dokumen 3 -->
-                            <div class="document-item">
-                                <div class="document-icon">
-                                    <i class="bi bi-file-earmark-text"></i>
-                                </div>
-                                <div class="document-content">
-                                    <h3 class="document-title">
-                                        <a href="#">Pokok Pikiran Penguatan Sistem Kesehatan Daerah Pasca Pandemi</a>
-                                    </h3>
-                                    <div class="document-meta">
-                                        <div class="meta-item">
-                                            <i class="bi bi-calendar"></i>
-                                            <span>Tanggal: 25 November 2023</span>
-                                        </div>
-                                        <div class="meta-item">
-                                            <i class="bi bi-journal-text"></i>
-                                            <span>Nomor: PP/DPRD/11/2023</span>
-                                        </div>
-                                        <div class="meta-item">
-                                            <i class="bi bi-person"></i>
-                                            <span>Komisi: Komisi C (Bidang Kesejahteraan)</span>
-                                        </div>
-                                    </div>
-                                    <p class="document-excerpt">
-                                        Pandangan dan rekomendasi DPRD tentang penguatan sistem kesehatan daerah, termasuk infrastruktur, SDM, dan pendanaan untuk meningkatkan ketahanan kesehatan masyarakat...
-                                    </p>
-                                    <div class="document-actions">
-                                        <a href="#" class="btn-download">
-                                            <i class="bi bi-download"></i> Download PDF
-                                        </a>
-                                        <a href="#" class="btn-preview">
-                                            <i class="bi bi-eye"></i> Preview
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Dokumen 4 -->
-                            <div class="document-item">
-                                <div class="document-icon">
-                                    <i class="bi bi-file-earmark-text"></i>
-                                </div>
-                                <div class="document-content">
-                                    <h3 class="document-title">
-                                        <a href="#">Pokok Pikiran Digitalisasi Pelayanan Publik dan Smart City</a>
-                                    </h3>
-                                    <div class="document-meta">
-                                        <div class="meta-item">
-                                            <i class="bi bi-calendar"></i>
-                                            <span>Tanggal: 15 Oktober 2023</span>
-                                        </div>
-                                        <div class="meta-item">
-                                            <i class="bi bi-journal-text"></i>
-                                            <span>Nomor: PP/DPRD/10/2023</span>
-                                        </div>
-                                        <div class="meta-item">
-                                            <i class="bi bi-person"></i>
-                                            <span>Komisi: Komisi D (Bidang Pembangunan)</span>
-                                        </div>
-                                    </div>
-                                    <p class="document-excerpt">
-                                        Gagasan dan arahan DPRD dalam mempercepat transformasi digital pelayanan publik dan implementasi konsep smart city untuk meningkatkan efisiensi dan akuntabilitas pemerintahan...
-                                    </p>
-                                    <div class="document-actions">
-                                        <a href="#" class="btn-download">
-                                            <i class="bi bi-download"></i> Download PDF
-                                        </a>
-                                        <a href="#" class="btn-preview">
-                                            <i class="bi bi-eye"></i> Preview
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- PAGINATION -->
-                        <div class="pagination-container">
-                            <nav aria-label="Page navigation">
-                                <ul class="pagination">
-                                    <li class="page-item disabled">
-                                        <a class="page-link" href="#" aria-label="Previous">
-                                            <span aria-hidden="true">&laquo;</span>
-                                        </a>
-                                    </li>
-                                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                                    <li class="page-item"><a class="page-link" href="#">2</a></li>
-                                    <li class="page-item"><a class="page-link" href="#">3</a></li>
-                                    <li class="page-item"><a class="page-link" href="#">4</a></li>
-                                    <li class="page-item"><a class="page-link" href="#">5</a></li>
-                                    <li class="page-item">
-                                        <a class="page-link" href="#" aria-label="Next">
-                                            <span aria-hidden="true">&raquo;</span>
-                                        </a>
-                                    </li>
-                                </ul>
-                            </nav>
-                        </div>
-                        
-                        <!-- INFORMASI TAMBAHAN -->
-                        <div class="mt-5 pt-4 border-top">
-                            <h4 class="mb-3"><i class="bi bi-info-circle text-primary me-2"></i>Informasi Penting</h4>
-                            <div class="alert alert-info" role="alert">
-                                <h5 class="alert-heading"><i class="bi bi-exclamation-triangle-fill me-2"></i>Prosedur Akses Dokumen</h5>
-                                <p class="mb-2">Untuk mengakses dokumen pokok pikiran DPRD:</p>
-                                <ol class="mb-0">
-                                    <li>Dokumen dapat diunduh secara gratis dalam format PDF</li>
-                                    <li>Preview dokumen tersedia untuk dokumen publik</li>
-                                    <li>Dokumen terbatas memerlukan permohonan resmi</li>
-                                    <li>Pengutipan harus menyebutkan sumber secara lengkap</li>
-                                </ol>
-                            </div>
-                        </div>
-                    </div>
-                    
-                </div>
-                
-                <!-- SIDEBAR -->
-                <div class="col-lg-4">
-                    
-                    <!-- MENU MONOGRAFI -->
-                    <div class="sidebar-menu">
-                        <h4><i class="bi bi-collection"></i> Menu Monografi Hukum</h4>
-                        <ul>
-                            <li class="active"><a href="?page=pokok-pikiran-dprd"><i class="bi bi-lightbulb"></i> Pokok Pikiran DPRD</a></li>
-                            <li><a href="?page=kajian-raperda"><i class="bi bi-search"></i> Kajian Raperda</a></li>
-                            <li><a href="?page=naskah-akademik"><i class="bi bi-journal-text"></i> Naskah Akademik</a></li>
-                            <li><a href="?page=hasil-fasilitasi"><i class="bi bi-gear"></i> Hasil Fasilitasi Raperda</a></li>
-                            <li><a href="?page=hasil-harmonisasi"><i class="bi bi-shuffle"></i> Hasil Harmonisasi Raperda</a></li>
-                            <li><a href="?page=karya-ilmiah"><i class="bi bi-pencil"></i> Penulisan Karya Ilmiah</a></li>
-                            <li><a href="?page=himpunan"><i class="bi bi-folder"></i> Himpunan Peraturan</a></li>
-                        </ul>
-                    </div>
-                    
-                    <!-- FILTER TAHUN -->
-                    <div class="sidebar-menu">
-                        <h4><i class="bi bi-filter"></i> Filter Berdasarkan Tahun</h4>
-                        <div class="list-group">
-                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                2024
-                                <span class="badge bg-primary rounded-pill">12</span>
-                            </a>
-                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                2023
-                                <span class="badge bg-primary rounded-pill">24</span>
-                            </a>
-                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                2022
-                                <span class="badge bg-primary rounded-pill">18</span>
-                            </a>
-                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                2021
-                                <span class="badge bg-primary rounded-pill">22</span>
-                            </a>
-                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                2020
-                                <span class="badge bg-primary rounded-pill">15</span>
-                            </a>
-                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                2019
-                                <span class="badge bg-primary rounded-pill">20</span>
-                            </a>
-                        </div>
-                    </div>
-                    
-                    <!-- FILTER KOMISI -->
-                    <div class="sidebar-menu">
-                        <h4><i class="bi bi-diagram-3"></i> Filter Berdasarkan Komisi</h4>
-                        <div class="list-group">
-                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                Komisi A (Pemerintahan)
-                                <span class="badge bg-primary rounded-pill">35</span>
-                            </a>
-                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                Komisi B (Ekonomi)
-                                <span class="badge bg-primary rounded-pill">28</span>
-                            </a>
-                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                Komisi C (Kesejahteraan)
-                                <span class="badge bg-primary rounded-pill">32</span>
-                            </a>
-                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                Komisi D (Pembangunan)
-                                <span class="badge bg-primary rounded-pill">25</span>
-                            </a>
-                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                Badan Legislasi
-                                <span class="badge bg-primary rounded-pill">8</span>
-                            </a>
-                        </div>
-                    </div>
-                    
-                    <!-- DOWNLOAD TAHUNAN -->
-                    <div class="sidebar-menu">
-                        <h4><i class="bi bi-download"></i> Download Tahunan</h4>
-                        <ul>
-                            <li><a href="#"><i class="bi bi-file-earmark-zip"></i> Pokok Pikiran DPRD 2023 (ZIP)</a></li>
-                            <li><a href="#"><i class="bi bi-file-earmark-zip"></i> Pokok Pikiran DPRD 2022 (ZIP)</a></li>
-                            <li><a href="#"><i class="bi bi-file-earmark-zip"></i> Pokok Pikiran DPRD 2021 (ZIP)</a></li>
-                            <li><a href="#"><i class="bi bi-file-earmark-pdf"></i> Katalog Pokok Pikiran 2019-2023 (PDF)</a></li>
-                        </ul>
-                    </div>
-                    
-                    <!-- BANTUAN -->
-                    <div class="sidebar-menu">
-                        <h4><i class="bi bi-question-circle"></i> Bantuan & Panduan</h4>
-                        <ul>
-                            <li><a href="#"><i class="bi bi-info-circle"></i> Cara Mengakses Dokumen</a></li>
-                            <li><a href="#"><i class="bi bi-download"></i> Panduan Download</a></li>
-                            <li><a href="#"><i class="bi bi-search"></i> Tips Pencarian Efektif</a></li>
-                            <li><a href="#"><i class="bi bi-printer"></i> Cetak Dokumen</a></li>
-                            <li><a href="#"><i class="bi bi-envelope"></i> Permohonan Dokumen</a></li>
-                        </ul>
-                    </div>
-                    
-                </div>
-                
-            </div>
-        </div>
-    </section>
+<?php endwhile; ?>
+</div>
+<?php else: ?>
+<div class="no-data">
+    <i class="bi bi-files"></i>
+    <h4>Tidak Ada Data</h4>
+    <p class="text-muted mb-0">
+        Tidak ada pokok pikiran DPRD yang tersedia.
+    </p>
+</div>
+<?php endif; ?>
 
-    <!-- FOOTER -->
-    <footer class="site-footer">
-        <div class="container">
-            <div class="row">
-                
-                <!-- LOGO DAN DESKRIPSI -->
-                <div class="col-lg-4 col-md-6 col-12 mb-4">
-                    <div class="site-footer-logo">
-                        <a href="index.html">
-                            <img src="images/logo-footer.png" alt="logo" class="img-fluid">
-                        </a>
-                    </div>
-                    <p class="text-white">
-                        Jaringan Dokumentasi dan Informasi Hukum (JDIH) DPRD Kota Surakarta 
-                        merupakan sistem informasi hukum yang menyediakan akses terhadap 
-                        produk hukum dan dokumentasi legislasi daerah.
-                    </p>
-                </div>
+<!-- SOLUSI ALTERNATIF JIKA DOWNLOAD MASIH TIDAK BERFUNGSI -->
+<div class="alert alert-info mt-4">
+    <h5><i class="bi bi-info-circle"></i> Panduan Download</h5>
+    <p class="mb-2">Jika mengalami masalah download:</p>
+    <ol class="mb-0">
+        <li>Coba tombol <strong>"Download PDF"</strong> terlebih dahulu</li>
+        <li>Jika tidak berhasil, gunakan tombol <strong>"Force Download"</strong></li>
+        <li>Klik kanan pada tombol download dan pilih "Save link as..."</li>
+        <li>Gunakan halaman detail dokumen untuk download</li>
+        <li>Hubungi administrator jika masalah berlanjut</li>
+    </ol>
+</div>
 
-                <!-- LINK CEPAT -->
-                <div class="col-lg-2 col-md-6 col-12 mx-auto mb-4">
-                    <h6 class="site-footer-title">Menu Cepat</h6>
-                    <ul class="footer-menu">
-                        <li><a href="index.php" class="site-footer-link">Beranda</a></li>
-                        <li><a href="?page=profil-jdih" class="site-footer-link">Profil JDIH</a></li>
-                        <li><a href="?page=perda" class="site-footer-link">Peraturan Daerah</a></li>
-                        <li><a href="?page=artikel" class="site-footer-link">Artikel Hukum</a></li>
-                        <li><a href="?page=kontak" class="site-footer-link">Kontak Kami</a></li>
-                    </ul>
-                </div>
+<!-- INFO PATH -->
+<?php if (isset($_GET['debug'])): ?>
+<div class="alert alert-warning mt-3">
+    <h5><i class="bi bi-folder"></i> Informasi Path Server</h5>
+    <ul class="mb-0">
+        <li>PDF Folder (monografi): <code><?= $monografi_pdf_path ?></code></li>
+        <li>Images Folder (monografi): <code><?= $monografi_images_path ?></code></li>
+        <li>Document Root: <code><?= $_SERVER['DOCUMENT_ROOT'] ?></code></li>
+        <li>File PDF dari DB contoh: <code><?= htmlspecialchars($file_from_db ?? 'Tidak ada contoh') ?></code></li>
+    </ul>
+</div>
+<?php endif; ?>
 
-                <!-- KONTAK -->
-                <div class="col-lg-3 col-md-6 col-12 mb-4">
-                    <h6 class="site-footer-title">Kontak Kami</h6>
-                    <p class="text-white d-flex mb-2">
-                        <i class="bi-geo-alt me-2"></i>
-                        Jl. Jend. Sudirman No. 2, Kec. Banjarsari, Kota Surakarta, Jawa Tengah 57113
-                    </p>
-                    <p class="text-white d-flex mb-2">
-                        <i class="bi-telephone me-2"></i>
-                        <a href="tel:+62271234567" class="site-footer-link">(0271) 234567</a>
-                    </p>
-                    <p class="text-white d-flex">
-                        <i class="bi-envelope me-2"></i>
-                        <a href="mailto:jdih@dprd-surakarta.go.id" class="site-footer-link">jdih@dprd-surakarta.go.id</a>
-                    </p>
-                </div>
+</div>
 
-                <!-- MEDIA SOSIAL -->
-                <div class="col-lg-3 col-md-6 col-12">
-                    <h6 class="site-footer-title">Media Sosial</h6>
-                    <ul class="social-icon">
-                        <li><a href="#" class="social-icon-link bi-facebook"></a></li>
-                        <li><a href="#" class="social-icon-link bi-twitter"></a></li>
-                        <li><a href="#" class="social-icon-link bi-instagram"></a></li>
-                        <li><a href="#" class="social-icon-link bi-youtube"></a></li>
-                        <li><a href="#" class="social-icon-link bi-whatsapp"></a></li>
-                    </ul>
-                    <p class="copyright-text mt-3">Copyright © 2024 JDIH DPRD Kota Surakarta</p>
-                </div>
+<!-- ===== SIDEBAR ===== -->
+<div class="col-lg-4">
 
-            </div>
-        </div>
-    </footer>
+<!-- Reset result pointer untuk sidebar -->
+<?php
+mysqli_data_seek($year_stats_result, 0);
+mysqli_data_seek($popular_result, 0);
+?>
 
-    <!-- JAVASCRIPT FILES -->
-    <script src="js/jquery.min.js"></script>
-    <script src="js/bootstrap.bundle.min.js"></script>
-    <script src="js/jquery.sticky.js"></script>
-    <script src="js/click-scroll.js"></script>
-    <script src="js/custom.js"></script>
+<div class="sidebar-menu">
+<h4><i class="bi bi-list"></i> Menu Perundangan</h4>
+<ul>
+<li><a href="index.php?page=perundangan"><i class="bi bi-grid"></i> Semua Kategori</a></li>
+<li><a href="keputusan-dprd.php"><i class="bi bi-file-earmark-medical"></i> Keputusan DPRD</a></li>
+<li><a href="keputusan-pimpinan.php"><i class="bi bi-file-earmark-ruled"></i> Keputusan Pimpinan DPRD</a></li>
+<li><a href="keputusan-sekretariat.php"><i class="bi bi-file-earmark-text"></i> Keputusan Sekretaris DPRD</a></li>
+<li><a href="peraturan-dprd.php"><i class="bi bi-journal-text"></i> Peraturan DPRD</a></li>
+<li><a href="perda.php"><i class="bi bi-journal-bookmark"></i> Peraturan Daerah</a></li>
+<li class="active"><a href="#"><i class="bi bi-lightbulb"></i> Pokok Pikiran DPRD</a></li>
+<li><a href="index.php?page=english-legal"><i class="bi bi-translate"></i> English Legal Products</a></li>
+</ul>
+</div>
+
+<div class="sidebar-menu">
+<h4><i class="bi bi-bar-chart"></i> Statistik</h4>
+<ul>
+<li>Total: <strong><?= $total_dokumen ?> dokumen</strong></li>
+<?php while ($stat = mysqli_fetch_assoc($year_stats_result)): ?>
+<li><?= $stat['tahun_terbit'] ?> : <strong><?= $stat['jumlah'] ?></strong> dokumen</li>
+<?php endwhile; ?>
+</ul>
+</div>
+
+<div class="sidebar-menu">
+<h4><i class="bi bi-fire"></i> Dokumen Terbaru</h4>
+<ul>
+<?php while ($pop = mysqli_fetch_assoc($popular_result)): ?>
+<li>
+<!-- DIPERBAIKI JUGI DI SIDEBAR -->
+<a href="detail-monografi.php?id=<?= $pop['id_monografi'] ?>">
+<i class="bi bi-file-text"></i> <?= htmlspecialchars(substr($pop['judul'], 0, 50)) ?>...
+</a>
+<small class="text-muted d-block">Tahun: <?= htmlspecialchars($pop['tahun_terbit']) ?></small>
+<small class="text-muted"><?= date('d M Y', strtotime($pop['tanggal_pembuatan'])) ?></small>
+</li>
+<?php endwhile; ?>
+</ul>
+</div>
+
+<!-- LINK CEK DOWNLOAD -->
+<div class="sidebar-menu bg-light">
+<h4><i class="bi bi-download"></i> Test Download</h4>
+<p class="mb-2">Test apakah file PDF bisa diakses:</p>
+<ul>
+<li><a href="<?= $monografi_pdf_path ?>" target="_blank"><i class="bi bi-folder"></i> Lihat Folder PDF</a></li>
+<li><a href="test_download.php" target="_blank"><i class="bi bi-gear"></i> Test Download Script</a></li>
+<li><a href="force_download.php?test=1" target="_blank"><i class="bi bi-download"></i> Test Force Download</a></li>
+</ul>
+</div>
+
+</div>
+</div>
+</div>
+</section>
+
+<?php include "footer.php"; ?>
+
+<script>
+// ============================================
+// FILTER BERDASARKAN TAHUN
+// ============================================
+document.querySelectorAll(".year-btn").forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll(".year-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        const selectedYear = btn.dataset.year;
+        
+        document.querySelectorAll(".document-card").forEach(card => {
+            if (selectedYear === "semua" || card.dataset.tahun === selectedYear) {
+                card.style.display = "flex";
+            } else {
+                card.style.display = "none";
+            }
+        });
+    });
+});
+
+// ============================================
+// FUNGSI UNTUK NOTIFIKASI
+// ============================================
+function showFileNotFoundAlert(judul) {
+    // Gunakan SweetAlert jika ada, atau alert biasa
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            icon: 'warning',
+            title: 'File Tidak Tersedia',
+            html: `File PDF untuk dokumen <strong>${judul}</strong> tidak ditemukan di server.<br><br>
+                  <small>Silakan hubungi administrator untuk melaporkan masalah ini.</small>`,
+            confirmButtonText: 'Mengerti'
+        });
+    } else {
+        alert(`File PDF untuk dokumen "${judul}" tidak ditemukan di server.\n\nSilakan hubungi administrator untuk melaporkan masalah ini.`);
+    }
+}
+
+function showDownloadStarted(filename) {
+    // Gunakan SweetAlert jika ada, atau alert biasa
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            icon: 'success',
+            title: 'Download Dimulai',
+            html: `File <strong>${filename}</strong> sedang didownload...<br><br>
+                  <small>Jika download tidak dimulai, coba klik kanan dan "Save link as..."</small>`,
+            timer: 3000,
+            showConfirmButton: false
+        });
+    } else {
+        console.log(`Download started: ${filename}`);
+        alert(`Download file "${filename}" sedang dimulai.`);
+    }
+}
+
+// ============================================
+// HANDLING DOWNLOAD BUTTON
+// ============================================
+document.addEventListener('DOMContentLoaded', function() {
+    // Untuk tombol download yang aktif
+    const downloadButtons = document.querySelectorAll('.download-btn:not(.disabled)');
     
-    <script>
-        // Fungsi pencarian
-        document.querySelector('.search-form').addEventListener('submit', function(e) {
+    downloadButtons.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            const id = this.getAttribute('data-id');
+            const filename = this.getAttribute('data-filename');
+            
+            // Tampilkan notifikasi
+            showDownloadStarted(filename);
+            
+            // Optional: Log ke console untuk debugging
+            console.log('Download clicked:', {
+                id: id,
+                filename: filename,
+                href: this.href
+            });
+            
+            // Biarkan link bekerja secara normal
+        });
+    });
+    
+    // Untuk tombol force download
+    const forceButtons = document.querySelectorAll('.force-download');
+    forceButtons.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            const id = this.getAttribute('data-id');
+            console.log('Force download clicked for ID:', id);
+            // Biarkan link bekerja secara normal
+        });
+    });
+    
+    // Untuk tombol download yang disabled
+    const disabledButtons = document.querySelectorAll('.btn-download.disabled');
+    disabledButtons.forEach(btn => {
+        btn.addEventListener('click', function(e) {
             e.preventDefault();
-            const keyword = this.querySelector('input[type="text"]').value;
-            
-            if (!keyword.trim()) {
-                alert('Masukkan kata kunci pencarian!');
-                return;
+            const card = this.closest('.document-card');
+            const judul = card.querySelector('.card-title').textContent;
+            showFileNotFoundAlert(judul);
+        });
+    });
+    
+    // ============================================
+    // ERROR HANDLING UNTUK GAMBAR
+    // ============================================
+    const images = document.querySelectorAll('.card-image img');
+    
+    images.forEach(img => {
+        // Cek jika gambar sudah error
+        if (img.complete && img.naturalHeight === 0) {
+            const placeholder = img.parentElement.querySelector('.placeholder');
+            if (placeholder) {
+                img.style.display = 'none';
+                placeholder.style.display = 'flex';
             }
-            
-            alert(`Mencari pokok pikiran DPRD dengan kata kunci: "${keyword}"\n\nHasil pencarian akan ditampilkan di bawah.`);
-        });
+        }
         
-        // Fungsi filter tahun
-        document.querySelectorAll('.list-group-item').forEach(item => {
-            item.addEventListener('click', function(e) {
-                e.preventDefault();
-                const year = this.textContent.split(' ')[0];
-                const count = this.querySelector('.badge').textContent;
-                
-                alert(`Memfilter dokumen tahun: ${year}\n\nJumlah dokumen: ${count} dokumen\n\nFungsi filter akan bekerja dengan request AJAX ke server.`);
-            });
-        });
-        
-        // Fungsi download
-        document.querySelectorAll('.btn-download').forEach(btn => {
-            btn.addEventListener('click', function(e) {
-                e.preventDefault();
-                const docTitle = this.closest('.document-item').querySelector('.document-title a').textContent;
-                
-                alert(`Mengunduh dokumen: "${docTitle}"\n\nDokumen akan mulai diunduh dalam beberapa detik.`);
-                
-                // Simulasi download
-                setTimeout(() => {
-                    alert('Download berhasil!');
-                }, 1000);
-            });
-        });
-        
-        // Fungsi preview
-        document.querySelectorAll('.btn-preview').forEach(btn => {
-            btn.addEventListener('click', function(e) {
-                e.preventDefault();
-                const docTitle = this.closest('.document-item').querySelector('.document-title a').textContent;
-                
-                alert(`Membuka preview dokumen: "${docTitle}"\n\nPreview akan dibuka di tab baru.`);
-                
-                // Dalam implementasi real, akan membuka tab baru dengan viewer PDF
-                // window.open('preview.pdf', '_blank');
-            });
-        });
-        
-        // Highlight menu aktif di sidebar
-        document.querySelectorAll('.sidebar-menu ul li a').forEach(link => {
-            if (link.href === window.location.href) {
-                link.parentElement.classList.add('active');
+        // Event listener untuk error gambar
+        img.addEventListener('error', function() {
+            this.style.display = 'none';
+            const placeholder = this.parentElement.querySelector('.placeholder');
+            if (placeholder) {
+                placeholder.style.display = 'flex';
             }
         });
-    </script>
+    });
+});
 
-</body>
-</html>
+// ============================================
+// FUNGSI ALTERNATIF DOWNLOAD
+// ============================================
+function downloadViaBlob(url, filename) {
+    fetch(url)
+        .then(response => response.blob())
+        .then(blob => {
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
+        })
+        .catch(error => {
+            console.error('Download error:', error);
+            alert('Gagal mendownload file. Silakan coba tombol Force Download.');
+        });
+}
+
+// ============================================
+// TEST DOWNLOAD FUNCTION
+// ============================================
+function testDownload(id) {
+    const testUrl = `test_download.php?id=${id}`;
+    window.open(testUrl, '_blank');
+}
+
+// ============================================
+// DEBUG FUNCTIONS
+// ============================================
+function showPathInfo() {
+    alert('PDF Path: <?= $monografi_pdf_path ?>\nImages Path: <?= $monografi_images_path ?>');
+}
+
+// ============================================
+// DEBUG DETAIL LINK
+// ============================================
+document.addEventListener('DOMContentLoaded', function() {
+    const detailLinks = document.querySelectorAll('.btn-view');
+    
+    detailLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            console.log('Detail link clicked:', this.href);
+            
+            // Optional: Validasi link
+            if (!this.href || this.href === '#') {
+                e.preventDefault();
+                alert('Link detail tidak valid!');
+                return false;
+            }
+            
+            // Optional: Buka di tab baru untuk testing (Shift+click)
+            if (e.shiftKey || e.ctrlKey || e.metaKey) {
+                // Biarkan browser menangani shortcut
+                return true;
+            }
+            
+            // Biarkan link bekerja normal
+            return true;
+        });
+    });
+});
+</script>
+
+<?php 
+// ============================================
+// DEBUG INFO TAMBAHAN
+// ============================================
+if (isset($_GET['debug'])) {
+    echo "<!-- ========== DEBUG INFO ========== -->\n";
+    echo "<!-- PHP Version: " . PHP_VERSION . " -->\n";
+    echo "<!-- Script: " . $_SERVER['PHP_SELF'] . " -->\n";
+    echo "<!-- Document Root: " . $_SERVER['DOCUMENT_ROOT'] . " -->\n";
+    echo "<!-- Monografi PDF Path: " . $monografi_pdf_path . " -->\n";
+    echo "<!-- Monografi Images Path: " . $monografi_images_path . " -->\n";
+    
+    // Cek apakah folder PDF ada dan bisa diakses
+    if (is_dir($monografi_pdf_path)) {
+        echo "<!-- PDF folder exists -->\n";
+        
+        // Coba akses beberapa file
+        $test_files = glob($monografi_pdf_path . "*.pdf");
+        echo "<!-- Found " . count($test_files) . " PDF files in monografi folder -->\n";
+        
+        // Tampilkan 5 file pertama
+        $sample_count = 0;
+        foreach ($test_files as $file) {
+            if ($sample_count < 5) {
+                echo "<!-- Sample PDF: " . basename($file) . " -->\n";
+                $sample_count++;
+            }
+        }
+    } else {
+        echo "<!-- WARNING: Monografi PDF folder NOT found -->\n";
+    }
+    
+    // Cek apakah folder images ada
+    if (is_dir($monografi_images_path)) {
+        echo "<!-- Images folder exists -->\n";
+        $image_files = glob($monografi_images_path . "*.{jpg,jpeg,png,gif,webp}", GLOB_BRACE);
+        echo "<!-- Found " . count($image_files) . " image files -->\n";
+    }
+    
+    echo "<!-- ========== END DEBUG INFO ========== -->\n";
+}
+
+mysqli_close($koneksi); 
+?>

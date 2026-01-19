@@ -129,6 +129,10 @@
         case 'kontak-kami':
             include "kontak-kami.php";
             break;
+        // Di index.php, tambahkan:
+        case 'detail-monografi':
+    include 'detail-monografi.php';
+    break;
     }
             
     ?>

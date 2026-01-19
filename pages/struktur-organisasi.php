@@ -8,7 +8,7 @@
     <title>Struktur Organisasi - JDIH DPRD Kota Surakarta</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     
-    <!-- CSS FILES SAMA DENGAN HOME -->
+    <!-- CSS FILES -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Open+Sans&display=swap" rel="stylesheet">
@@ -20,22 +20,25 @@
     <style>
         /* OVERRIDE UNTUK HALAMAN INI SAJA */
         body {
-            padding-top: 80px; /* Untuk fixed navbar */
+            padding-top: 70px; /* Diperkecil untuk mengurangi celah */
+            margin: 0;
         }
         
-        /* HEADER SECTION */
+        /* HEADER SECTION - DIUBAH UNTUK MENGHILANGKAN CELAH */
         .page-header {
             background: linear-gradient(15deg, #13547a 0%, #80d0c7 100%);
-            padding: 40px 0 30px 0;
-            margin-top: 0;
+            padding: 30px 0 25px 0;
+            margin-top: -10px; /* Mendorong ke atas */
             color: white;
+            position: relative;
+            top: -10px; /* Mengurangi posisi */
         }
         
         .page-header h1 {
             font-family: 'Montserrat', sans-serif;
             font-weight: 700;
             font-size: 2.5rem;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
         
         .page-header .breadcrumb {
@@ -57,28 +60,29 @@
             color: rgba(255, 255, 255, 0.8);
         }
 
-        /* MAIN CONTENT */
+        /* MAIN CONTENT - DIUBAH UNTUK MENGHILANGKAN CELAH */
         .main-content {
-            padding: 40px 0 60px 0;
+            padding: 20px 0 40px 0;
             background: #f0f8ff;
+            margin-top: -5px; /* Mendorong konten lebih dekat ke header */
         }
         
         .content-title {
             font-family: 'Montserrat', sans-serif;
             font-weight: 600;
             color: #13547a;
-            margin-bottom: 30px;
-            padding-bottom: 15px;
+            margin-bottom: 25px;
+            padding-bottom: 12px;
             border-bottom: 2px solid #80d0c7;
         }
 
-        /* CARD STYLING SAMA DENGAN TEMPLATE */
+        /* CARD STYLING */
         .content-card {
             background: white;
             border-radius: var(--border-radius-medium);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-            padding: 30px;
-            margin-bottom: 30px;
+            padding: 25px;
+            margin-bottom: 25px;
             transition: all 0.3s ease;
             height: 100%;
         }
@@ -92,7 +96,7 @@
             color: #13547a;
             font-family: 'Montserrat', sans-serif;
             font-weight: 600;
-            margin-bottom: 20px;
+            margin-bottom: 18px;
             font-size: 1.3rem;
         }
         
@@ -106,9 +110,9 @@
         .struktur-image-container {
             background: white;
             border-radius: var(--border-radius-medium);
-            padding: 20px;
+            padding: 18px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-            margin-bottom: 30px;
+            margin-bottom: 25px;
         }
         
         .struktur-image {
@@ -123,14 +127,14 @@
             background: linear-gradient(135deg, #13547a 0%, #80d0c7 100%);
             color: white;
             border-radius: var(--border-radius-medium);
-            padding: 25px;
-            margin-bottom: 30px;
+            padding: 22px;
+            margin-bottom: 25px;
         }
         
         .info-box h4 {
             color: white;
             font-size: 1.2rem;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             display: flex;
             align-items: center;
         }
@@ -150,8 +154,8 @@
             background: white;
             border-radius: var(--border-radius-medium);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-            padding: 25px;
-            margin-bottom: 30px;
+            padding: 22px;
+            margin-bottom: 25px;
         }
         
         .sidebar-menu h4 {
@@ -159,8 +163,8 @@
             font-family: 'Montserrat', sans-serif;
             font-weight: 600;
             font-size: 1.2rem;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
+            margin-bottom: 18px;
+            padding-bottom: 8px;
             border-bottom: 2px solid #f0f0f0;
             display: flex;
             align-items: center;
@@ -178,7 +182,7 @@
         }
         
         .sidebar-menu ul li {
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
         
         .sidebar-menu ul li:last-child {
@@ -188,7 +192,7 @@
         .sidebar-menu ul li a {
             color: var(--p-color);
             text-decoration: none;
-            padding: 12px 15px;
+            padding: 10px 12px;
             border-radius: var(--border-radius-small);
             display: flex;
             align-items: center;
@@ -214,7 +218,7 @@
             color: white;
             border: none;
             border-radius: var(--border-radius-large);
-            padding: 15px 25px;
+            padding: 14px 22px;
             font-family: 'Montserrat', sans-serif;
             font-weight: 600;
             font-size: 1rem;
@@ -235,14 +239,42 @@
             box-shadow: 0 5px 15px rgba(19, 84, 122, 0.3);
         }
 
+        /* PERBAIKAN UNTUK MENGHILANGKAN CELAH */
+        .navbar-custom {
+            margin-bottom: 0;
+            border-bottom: none;
+        }
+        
+        .site-footer {
+            margin-top: 0;
+            padding-top: 40px;
+        }
+        
+        .container {
+            padding-left: 15px;
+            padding-right: 15px;
+        }
+        
+        .row {
+            margin-left: -8px;
+            margin-right: -8px;
+        }
+        
+        .col-lg-8, .col-lg-4 {
+            padding-left: 8px;
+            padding-right: 8px;
+        }
+
         /* RESPONSIVE */
         @media (max-width: 768px) {
             body {
-                padding-top: 70px;
+                padding-top: 60px; /* Diperkecil untuk mobile */
             }
             
             .page-header {
-                padding: 30px 0 20px 0;
+                padding: 20px 0 18px 0;
+                margin-top: -8px;
+                top: -8px;
             }
             
             .page-header h1 {
@@ -250,23 +282,48 @@
             }
             
             .main-content {
-                padding: 30px 0 40px 0;
+                padding: 15px 0 30px 0;
             }
             
             .content-card,
             .sidebar-menu,
             .info-box {
-                padding: 20px;
+                padding: 18px;
+            }
+            
+            .struktur-image-container {
+                padding: 15px;
             }
         }
         
         @media (max-width: 576px) {
             .page-header h1 {
                 font-size: 1.8rem;
+                margin-bottom: 5px;
+            }
+            
+            .page-header {
+                padding: 15px 0 12px 0;
             }
             
             .content-title {
                 font-size: 1.5rem;
+                margin-bottom: 20px;
+                padding-bottom: 10px;
+            }
+            
+            .main-content {
+                padding: 10px 0 25px 0;
+            }
+            
+            .row {
+                margin-left: -5px;
+                margin-right: -5px;
+            }
+            
+            .col-lg-8, .col-lg-4 {
+                padding-left: 5px;
+                padding-right: 5px;
             }
         }
     </style>
@@ -274,114 +331,8 @@
 
 <body id="top">
 
-    <!-- NAVBAR SAMA DENGAN HOME -->
-    <nav class="navbar navbar-expand-lg fixed-top navbar-custom">
-        <div class="container">
-            <!-- BRAND -->
-            <a class="navbar-brand d-flex align-items-center" href="index.php">
-                <span class="fw-bold">JDIH DPRD</span>
-            </a>
-
-            <!-- TOGGLER -->
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                data-bs-target="#navbarNav" aria-controls="navbarNav"
-                aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <!-- MENU SAMA DENGAN HOME -->
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav mx-auto mb-2 mb-lg-0 gap-lg-2">
-                    <li class="nav-item">
-                        <a class="nav-link" href="index.php">Beranda</a>
-                    </li>
-
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="dropdownTentangKami"
-                            role="button" data-bs-toggle="dropdown">
-                            Tentang Kami
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="?page=struktur-organisasi">Struktur Organisasi</a></li>
-                            <li><a class="dropdown-item" href="?page=alur-pengelolaan">Alur Pengelolaan Produk Hukum</a></li>
-                            <li><a class="dropdown-item" href="?page=sop-pengelola">SOP Pengelola JDIH DPRD Kota Surakarta</a></li>
-                            <li><a class="dropdown-item" href="?page=dasar-hukum">Dasar Hukum JDIH Sekretariat DPRD Kota Surakarta</a></li>
-                            <li><a class="dropdown-item" href="?page=surat-keputusan">Surat Keputusan Pengelola JDIH Sekretariat DPRD Kota Surakarta</a></li>
-                            <li><a class="dropdown-item" href="?page=video-profile">Video Profile JDIH</a></li>
-                        </ul>
-                    </li>
-
-                    <!-- PERUNDANGAN -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="dropdownPerundangan"
-                            role="button" data-bs-toggle="dropdown">
-                            Perundang-undangan
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="?page=keputusan-dprd">Keputusan DPRD</a></li>
-                            <li><a class="dropdown-item" href="?page=keputusan-pimpinan">Keputusan Pimpinan DPRD</a></li>
-                            <li><a class="dropdown-item" href="?page=keputusan-sekretariat">Keputusan Sekretariat DPRD</a></li>
-                            <li><a class="dropdown-item" href="?page=peraturan-dprd">Peraturan DPRD</a></li>
-                            <li><a class="dropdown-item" href="?page=perda">Peraturan Daerah</a></li>
-                            <li><a class="dropdown-item" href="?page=english-legal">English Legal Product</a></li>
-                        </ul>
-                    </li>
-
-                    <!-- MONOGRAFI -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="dropdownMonografi"
-                            role="button" data-bs-toggle="dropdown">
-                            Monografi Hukum
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="?page=kajian-raperda">Kajian Raperda</a></li>
-                            <li><a class="dropdown-item" href="?page=naskah-akademik">Naskah Akademik</a></li>
-                            <li><a class="dropdown-item" href="?page=dokumen-langka">Dokumen Langka</a></li>
-                            <li><a class="dropdown-item" href="?page=risalah">Risalah</a></li>
-                            <li><a class="dropdown-item" href="?page=fasilitasi">Hasil Fasilitasi Raperda</a></li>
-                            <li><a class="dropdown-item" href="?page=karya-ilmiah">Penulisan Karya Ilmiah</a></li>
-                            <li><a class="dropdown-item" href="?page=himpunan">Himpunan Peraturan</a></li>
-                        </ul>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="?page=artikel-hukum">Artikel Hukum</a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="?page=yurisprudensi">Yurisprudensi</a>
-                    </li>
-
-                    <!-- INFORMASI -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="dropdownInformasi"
-                            role="button" data-bs-toggle="dropdown">
-                            Informasi
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="?page=kegiatan">Kegiatan JDIH</a></li>
-                            <li><a class="dropdown-item" href="?page=infografis">Infografis & Videografis</a></li>
-                            <li><a class="dropdown-item" href="?page=galeri">Galeri Foto</a></li>
-                            <li><a class="dropdown-item" href="?page=penghargaan">Penghargaan</a></li>
-                            <li><a class="dropdown-item" href="?page=buku">Koleksi Buku</a></li>
-                        </ul>
-                    </li>
-
-                    <!-- KONTAK -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="dropdownKontak"
-                            role="button" data-bs-toggle="dropdown">
-                            Kontak & Saran
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="?page=kontak">Form Kontak</a></li>
-                            <li><a class="dropdown-item" href="?page=saran">Saran & Masukan</a></li>
-                        </ul>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+    <!-- INCLUDE HEADER -->
+    <?php include('header.php'); ?>
 
     <!-- HEADER SECTION -->
     <section class="page-header">
@@ -495,69 +446,10 @@
         </div>
     </section>
 
-    <!-- FOOTER SAMA DENGAN TEMPLATE -->
-    <footer class="site-footer section-padding">
-        <div class="container">
-            <div class="row">
+    <!-- INCLUDE FOOTER -->
+    <?php include('footer.php'); ?>
 
-                <div class="col-lg-3 col-12 mb-4 pb-2">
-                    <a class="navbar-brand mb-2" href="index.html">
-                        <i class="bi-back"></i>
-                        <span>JDIH DPRD</span>
-                    </a>
-                </div>
-
-                <div class="col-lg-3 col-md-4 col-6">
-                    <h6 class="site-footer-title mb-3">Tautan Cepat</h6>
-
-                    <ul class="site-footer-links">
-                        <li class="site-footer-link-item">
-                            <a href="index.php" class="site-footer-link">Beranda</a>
-                        </li>
-
-                        <li class="site-footer-link-item">
-                            <a href="?page=struktur-organisasi" class="site-footer-link">Struktur Organisasi</a>
-                        </li>
-
-                        <li class="site-footer-link-item">
-                            <a href="?page=perda" class="site-footer-link">Peraturan Daerah</a>
-                        </li>
-
-                        <li class="site-footer-link-item">
-                            <a href="?page=kontak" class="site-footer-link">Kontak</a>
-                        </li>
-                    </ul>
-                </div>
-
-                <div class="col-lg-3 col-md-4 col-6 mb-4 mb-lg-0">
-                    <h6 class="site-footer-title mb-3">Kontak</h6>
-
-                    <p class="text-white d-flex mb-1">
-                        <a href="tel:+62271723456" class="site-footer-link">
-                            (0271) 723456
-                        </a>
-                    </p>
-
-                    <p class="text-white d-flex">
-                        <a href="mailto:jdih@dprd-surakarta.go.id" class="site-footer-link">
-                            jdih@dprd-surakarta.go.id
-                        </a>
-                    </p>
-                </div>
-
-                <div class="col-lg-3 col-md-4 col-12 mt-4 mt-lg-0 ms-auto">
-                    <p class="copyright-text mt-lg-5 mt-4">
-                        Copyright © 2025 JDIH DPRD Kota Surakarta. All rights reserved.
-                        <br><br>
-                        <a rel="nofollow" href="https://dprd-surakarta.go.id" target="_blank">DPRD Kota Surakarta</a>
-                    </p>
-                </div>
-
-            </div>
-        </div>
-    </footer>
-
-    <!-- JAVASCRIPT FILES SAMA DENGAN HOME -->
+    <!-- JAVASCRIPT FILES -->
     <script src="js/jquery.min.js"></script>
     <script src="js/bootstrap.bundle.min.js"></script>
     <script src="js/jquery.sticky.js"></script>

@@ -5,337 +5,52 @@
     <title>Risalah - Monografi Hukum - JDIH DPRD Kota Surakarta</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     
-    <!-- CSS FILES -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Open+Sans&display=swap" rel="stylesheet">
-                        
-    <link href="css/bootstrap.min.css" rel="stylesheet">
-    <link href="css/bootstrap-icons.css" rel="stylesheet">
-    <link href="css/templatemo-topic-listing.css" rel="stylesheet">
+    <style>
+        <?php include "style-keputusan-dprd.css"; ?>
+    </style>
     
     <style>
-        /* OVERRIDE UNTUK HALAMAN MONOGRAFI */
-        body {
-            padding-top: 80px;
-        }
-        
-        /* HEADER SECTION */
-        .page-header {
-            background: linear-gradient(15deg, #13547a 0%, #80d0c7 100%);
-            padding: 40px 0 30px 0;
-            margin-top: 0;
-            color: white;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .page-header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ffffff" fill-opacity="0.1" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,112C672,96,768,96,864,112C960,128,1056,160,1152,160C1248,160,1344,128,1392,112L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>');
-            background-size: cover;
-            background-position: bottom;
-            opacity: 0.1;
-        }
-        
-        .page-header h1 {
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 700;
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            position: relative;
-            z-index: 2;
-        }
-        
-        .page-header .subtitle {
-            font-size: 1.1rem;
-            opacity: 0.9;
-            margin-bottom: 20px;
-            position: relative;
-            z-index: 2;
-        }
-        
-        .page-header .breadcrumb {
-            background: transparent;
-            padding: 0;
-            margin: 0;
-            position: relative;
-            z-index: 2;
-        }
-        
-        .page-header .breadcrumb-item a {
-            color: rgba(255, 255, 255, 0.8);
-            text-decoration: none;
-        }
-        
-        .page-header .breadcrumb-item.active {
-            color: white;
-        }
-        
-        .page-header .breadcrumb-item+.breadcrumb-item::before {
-            color: rgba(255, 255, 255, 0.8);
-        }
-
-        /* MAIN CONTENT */
-        .main-content {
-            padding: 50px 0 60px 0;
-            background: #f0f8ff;
-        }
-        
-        .section-title {
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 600;
-            color: #13547a;
-            margin-bottom: 30px;
-            position: relative;
-            padding-bottom: 15px;
-        }
-        
-        .section-title::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100px;
-            height: 3px;
-            background: linear-gradient(to right, #13547a, #80d0c7);
-        }
-
-        /* MONOGRAFI CONTENT */
-        .monografi-container {
-            background: white;
-            border-radius: var(--border-radius-medium);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-            padding: 40px;
-            margin-bottom: 40px;
-        }
-        
-        .monografi-header {
-            text-align: center;
-            margin-bottom: 40px;
-            padding-bottom: 30px;
-            border-bottom: 2px solid #f0f8ff;
-        }
-        
-        .monografi-icon {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, #13547a 0%, #80d0c7 100%);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 20px;
-            color: white;
-            font-size: 2rem;
-        }
-        
-        .monografi-description {
-            color: #666;
-            font-size: 1.1rem;
-            line-height: 1.6;
-            text-align: center;
-            max-width: 800px;
-            margin: 0 auto 40px;
-        }
-
-        /* SEARCH BOX */
-        .search-monografi {
-            background: #f8f9fa;
-            border-radius: var(--border-radius-medium);
-            padding: 30px;
-            margin-bottom: 30px;
-            border: 2px solid #e9ecef;
-        }
-        
-        .search-form .input-group {
-            margin-bottom: 20px;
-        }
-        
-        .search-form input {
-            border: 2px solid #13547a;
-            border-right: none;
-            height: 50px;
-            font-size: 1rem;
-        }
-        
-        .search-form input:focus {
-            box-shadow: 0 0 0 0.2rem rgba(19, 84, 122, 0.25);
-        }
-        
-        .search-form .btn-search {
-            background: #13547a;
-            color: white;
-            border: 2px solid #13547a;
-            height: 50px;
-            padding: 0 25px;
-            font-weight: 600;
-        }
-        
-        .search-form .btn-search:hover {
-            background: #0d3a58;
-            border-color: #0d3a58;
-        }
-        
-        .adv-search-link {
-            color: #13547a;
-            text-decoration: none;
-            font-weight: 600;
+        /* Additional styles for Risalah */
+        .meeting-badge {
             display: inline-flex;
             align-items: center;
             gap: 5px;
-            transition: all 0.3s;
-        }
-        
-        .adv-search-link:hover {
-            color: #80d0c7;
-            gap: 8px;
-        }
-
-        /* DOCUMENT LIST */
-        .document-list {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        
-        .document-item {
-            background: white;
-            border-radius: var(--border-radius-small);
-            padding: 20px;
-            border: 1px solid #e9ecef;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: flex-start;
-            gap: 20px;
-        }
-        
-        .document-item:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            border-color: #80d0c7;
-        }
-        
-        .document-icon {
-            width: 60px;
-            height: 60px;
-            background: #f0f8ff;
-            border-radius: var(--border-radius-small);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #13547a;
-            font-size: 1.5rem;
-            flex-shrink: 0;
-        }
-        
-        .document-content {
-            flex: 1;
-        }
-        
-        .document-title {
-            color: #13547a;
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 600;
-            font-size: 1.2rem;
-            margin-bottom: 10px;
-            line-height: 1.4;
-        }
-        
-        .document-title a {
-            color: inherit;
-            text-decoration: none;
-            transition: all 0.3s;
-        }
-        
-        .document-title a:hover {
-            color: #80d0c7;
-        }
-        
-        .document-meta {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            margin-bottom: 15px;
-            font-size: 0.9rem;
-            color: #666;
-        }
-        
-        .meta-item {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        
-        .meta-item i {
-            color: #80d0c7;
-        }
-        
-        .document-excerpt {
-            color: #666;
-            line-height: 1.6;
-            margin-bottom: 15px;
-            font-size: 0.95rem;
-        }
-        
-        .document-actions {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        
-        .btn-download {
-            background: #13547a;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: var(--border-radius-small);
-            font-size: 0.9rem;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            transition: all 0.3s;
-        }
-        
-        .btn-download:hover {
-            background: #0d3a58;
-            color: white;
-            transform: translateY(-2px);
-        }
-        
-        .btn-preview {
-            background: #f0f8ff;
-            color: #13547a;
-            border: 1px solid #13547a;
-            padding: 8px 15px;
-            border-radius: var(--border-radius-small);
-            font-size: 0.9rem;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            transition: all 0.3s;
-        }
-        
-        .btn-preview:hover {
-            background: #13547a;
-            color: white;
-            transform: translateY(-2px);
-        }
-
-        /* STATUS BADGE */
-        .status-badge {
-            padding: 5px 10px;
-            border-radius: 20px;
+            padding: 4px 10px;
+            border-radius: 12px;
             font-size: 0.8rem;
-            font-weight: 600;
-            display: inline-block;
+            font-weight: 500;
+            margin-right: 8px;
+            margin-bottom: 10px;
+        }
+        
+        .badge-pleno {
+            background: #cce5ff;
+            color: #004085;
+        }
+        
+        .badge-komisi {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .badge-bamus {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .badge-pansus {
+            background: #e2d9f3;
+            color: #3d2c5a;
+        }
+        
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
         }
         
         .status-final {
@@ -352,355 +67,56 @@
             background: #f8d7da;
             color: #721c24;
         }
-
-        /* TIPE RAPAT BADGE */
-        .type-badge {
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            display: inline-block;
-        }
         
-        .type-pleno {
-            background: #cce5ff;
-            color: #004085;
-        }
-        
-        .type-komisi {
-            background: #d1ecf1;
-            color: #0c5460;
-        }
-        
-        .type-bamus {
-            background: #d4edda;
-            color: #155724;
-        }
-        
-        .type-pansus {
-            background: #e2d9f3;
-            color: #3d2c5a;
-        }
-
-        /* PAGINATION */
-        .pagination-container {
-            display: flex;
-            justify-content: center;
-            margin-top: 30px;
-        }
-        
-        .pagination {
-            display: flex;
-            gap: 5px;
-        }
-        
-        .page-item .page-link {
-            border: none;
+        .meeting-info {
             background: #f8f9fa;
-            color: #13547a;
-            border-radius: var(--border-radius-small);
-            padding: 8px 15px;
-            transition: all 0.3s;
-        }
-        
-        .page-item.active .page-link {
-            background: #13547a;
-            color: white;
-        }
-        
-        .page-item .page-link:hover {
-            background: #e0e0e0;
-            transform: translateY(-2px);
-        }
-
-        /* SIDEBAR */
-        .sidebar-menu {
-            background: white;
-            border-radius: var(--border-radius-medium);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-            padding: 25px;
-            margin-bottom: 30px;
-        }
-        
-        .sidebar-menu h4 {
-            color: #13547a;
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 600;
-            font-size: 1.2rem;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #f0f0f0;
-            display: flex;
-            align-items: center;
-        }
-        
-        .sidebar-menu h4 i {
-            color: #80d0c7;
-            margin-right: 10px;
-        }
-        
-        .sidebar-menu ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        
-        .sidebar-menu ul li {
-            margin-bottom: 12px;
-        }
-        
-        .sidebar-menu ul li:last-child {
-            margin-bottom: 0;
-        }
-        
-        .sidebar-menu ul li a {
-            color: var(--p-color);
-            text-decoration: none;
-            padding: 12px 15px;
-            border-radius: var(--border-radius-small);
-            display: flex;
-            align-items: center;
-            transition: all 0.3s;
-            font-weight: 500;
-        }
-        
-        .sidebar-menu ul li.active a {
-            background: #f0f8ff;
-            color: #13547a;
-            font-weight: 600;
-        }
-        
-        .sidebar-menu ul li a:hover {
-            background: #f0f8ff;
-            color: #13547a;
-            transform: translateX(5px);
-        }
-        
-        .sidebar-menu ul li a i {
-            color: #80d0c7;
-            margin-right: 10px;
+            border-left: 4px solid #13547a;
+            padding: 15px;
+            border-radius: 0 8px 8px 0;
+            margin-top: 15px;
             font-size: 0.9rem;
         }
-
-        /* STATS BOX */
-        .stats-box {
-            background: linear-gradient(135deg, #13547a 0%, #80d0c7 100%);
-            color: white;
-            border-radius: var(--border-radius-medium);
-            padding: 25px;
-            margin-bottom: 30px;
-            text-align: center;
-        }
         
-        .stats-number {
-            font-size: 2.5rem;
-            font-weight: 700;
+        .meeting-info-title {
+            font-weight: 600;
+            color: #13547a;
             margin-bottom: 5px;
         }
         
-        .stats-label {
-            font-size: 1rem;
-            opacity: 0.9;
+        .meeting-details {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 10px;
         }
         
-        /* RESPONSIVE */
-        @media (max-width: 768px) {
-            body {
-                padding-top: 70px;
-            }
-            
-            .page-header {
-                padding: 30px 0 20px 0;
-            }
-            
-            .page-header h1 {
-                font-size: 2rem;
-            }
-            
-            .main-content {
-                padding: 30px 0 40px 0;
-            }
-            
-            .monografi-container {
-                padding: 30px;
-            }
-            
-            .document-item {
-                flex-direction: column;
-                gap: 15px;
-            }
-            
-            .document-icon {
-                width: 50px;
-                height: 50px;
-                font-size: 1.2rem;
-            }
-            
-            .document-meta {
-                flex-direction: column;
-                gap: 10px;
-            }
-            
-            .document-actions {
-                justify-content: flex-start;
-            }
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #718096;
+            font-size: 0.9rem;
         }
         
-        @media (max-width: 576px) {
-            .page-header h1 {
-                font-size: 1.8rem;
-            }
-            
-            .section-title {
-                font-size: 1.3rem;
-            }
-            
-            .monografi-icon {
-                width: 60px;
-                height: 60px;
-                font-size: 1.5rem;
-            }
-            
-            .search-form input,
-            .search-form .btn-search {
-                height: 45px;
-            }
+        .detail-item i {
+            color: #13547a;
+        }
+        
+        .video-badge {
+            background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
         }
     </style>
 </head>
 
 <body id="top">
 
-    <!-- NAVBAR -->
-    <nav class="navbar navbar-expand-lg fixed-top navbar-custom">
-        <div class="container">
-            <!-- BRAND -->
-            <a class="navbar-brand d-flex align-items-center" href="index.php">
-                <span class="fw-bold">JDIH DPRD</span>
-            </a>
-
-            <!-- TOGGLER -->
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                data-bs-target="#navbarNav" aria-controls="navbarNav"
-                aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <!-- MENU -->
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav mx-auto mb-2 mb-lg-0 gap-lg-2">
-                    <li class="nav-item">
-                        <a class="nav-link" href="index.php">Beranda</a>
-                    </li>
-
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="dropdownTentangKami"
-                            role="button" data-bs-toggle="dropdown">
-                            Tentang Kami
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="?page=profil-jdih">Profil JDIH</a></li>
-                            <li><a class="dropdown-item" href="?page=struktur-organisasi">Struktur Organisasi</a></li>
-                            <li><a class="dropdown-item" href="?page=alur-pengelolaan">Alur Pengelolaan Produk Hukum</a></li>
-                            <li><a class="dropdown-item" href="?page=sop-pengelola">SOP Pengelola JDIH DPRD Kota Surakarta</a></li>
-                            <li><a class="dropdown-item" href="?page=dasar-hukum">Dasar Hukum JDIH Sekretariat DPRD Kota Surakarta</a></li>
-                            <li><a class="dropdown-item" href="?page=surat-keputusan">Surat Keputusan Pengelola JDIH Sekretariat DPRD Kota Surakarta</a></li>
-                            <li><a class="dropdown-item" href="?page=visi-misi">Visi & Misi</a></li>
-                            <li><a class="dropdown-item" href="?page=video-profil">Video Profil JDIH</a></li>
-                        </ul>
-                    </li>
-
-                    <!-- PERUNDANGAN -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="dropdownPerundangan"
-                            role="button" data-bs-toggle="dropdown">
-                            Perundang-undangan
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="?page=keputusan-dprd">Keputusan DPRD</a></li>
-                            <li><a class="dropdown-item" href="?page=keputusan-pimpinan">Keputusan Pimpinan DPRD</a></li>
-                            <li><a class="dropdown-item" href="?page=keputusan-sekretaris">Keputusan Sekretaris DPRD</a></li>
-                            <li><a class="dropdown-item" href="?page=peraturan-dprd">Peraturan DPRD</a></li>
-                            <li><a class="dropdown-item" href="?page=perda">Peraturan Daerah</a></li>
-                            <li><a class="dropdown-item" href="?page=english-legal">English Legal Product</a></li>
-                        </ul>
-                    </li>
-
-                    <!-- MONOGRAFI -->
-                    <li class="nav-item dropdown active">
-                        <a class="nav-link dropdown-toggle" href="#" id="dropdownMonografi"
-                            role="button" data-bs-toggle="dropdown">
-                            Monografi Hukum
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="?page=pokok-pikiran-dprd">Pokok Pikiran DPRD</a></li>
-                            <li><a class="dropdown-item" href="?page=kajian-raperda">Kajian Raperda</a></li>
-                            <li><a class="dropdown-item" href="?page=naskah-akademik">Naskah Akademik</a></li>
-                            <li><a class="dropdown-item" href="?page=hasil-fasilitasi">Hasil Fasilitasi Raperda</a></li>
-                            <li><a class="dropdown-item" href="?page=hasil-harmonisasi">Hasil Harmonisasi Raperda</a></li>
-                            <li><a class="dropdown-item" href="?page=karya-ilmiah">Penulisan Karya Ilmiah</a></li>
-                            <li><a class="dropdown-item" href="?page=himpunan">Himpunan Peraturan</a></li>
-                            <li><a class="dropdown-item active" href="?page=risalah">Risalah</a></li>
-                        </ul>
-                    </li>
-
-                    <!-- ARTIKEL HUKUM -->
-                    <li class="nav-item">
-                        <a class="nav-link" href="?page=artikel">Artikel Hukum</a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="?page=yurisprudensi">Yurisprudensi</a></li>
-
-                    <!-- INFORMASI -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="dropdownInformasi"
-                            role="button" data-bs-toggle="dropdown">
-                            Informasi
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="?page=kegiatan">Kegiatan JDIH</a></li>
-                            <li><a class="dropdown-item" href="?page=infografis">Infografis & Videografis</a></li>
-                            <li><a class="dropdown-item" href="?page=galeri">Galeri Foto</a></li>
-                            <li><a class="dropdown-item" href="?page=penghargaan">Penghargaan</a></li>
-                            <li><a class="dropdown-item" href="?page=buku">Koleksi Buku</a></li>
-                        </ul>
-                    </li>
-
-                    <!-- KONTAK -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="dropdownKontak"
-                            role="button" data-bs-toggle="dropdown">
-                            Kontak & Saran
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="?page=kontak">Form Kontak</a></li>
-                            <li><a class="dropdown-item" href="?page=saran">Saran & Masukan</a></li>
-                        </ul>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-
-    <!-- HEADER SECTION -->
-    <section class="page-header">
-        <div class="container">
-            <div class="row">
-                <div class="col-12">
-                    <h1 class="text-white">MONOGRAFI HUKUM</h1>
-                    <p class="subtitle">Risalah Rapat DPRD Kota Surakarta</p>
-                    <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb">
-                            <li class="breadcrumb-item"><a href="index.php">Beranda</a></li>
-                            <li class="breadcrumb-item"><a href="#">Monografi Hukum</a></li>
-                            <li class="breadcrumb-item active" aria-current="page">Risalah</li>
-                        </ol>
-                    </nav>
-                </div>
-            </div>
-        </div>
-    </section>
+    <!-- NAVBAR & HEADER -->
+    <?php include "header.php"; ?>
 
     <!-- MAIN CONTENT -->
     <section class="main-content">
@@ -725,8 +141,8 @@
                         </div>
                         
                         <!-- PENCARIAN -->
-                        <div class="search-monografi">
-                            <h4 class="mb-4">Cari Risalah Rapat</h4>
+                        <div class="year-filter">
+                            <h5>Cari Risalah Rapat</h5>
                             <form class="search-form">
                                 <div class="input-group">
                                     <input type="text" class="form-control" placeholder="Masukkan kata kunci risalah rapat..." 
@@ -735,7 +151,7 @@
                                         <i class="bi bi-search"></i> CARI
                                     </button>
                                 </div>
-                                <div class="text-end">
+                                <div class="text-end mt-3">
                                     <a href="#" class="adv-search-link">
                                         <i class="bi bi-sliders"></i> Pencarian Lanjutan
                                     </a>
@@ -774,184 +190,369 @@
                         <!-- DAFTAR DOKUMEN -->
                         <h3 class="section-title">Risalah Terbaru</h3>
                         
-                        <div class="document-list">
+                        <div class="card-container">
                             <!-- Dokumen 1 -->
-                            <div class="document-item">
-                                <div class="document-icon">
-                                    <i class="bi bi-file-earmark-text"></i>
+                            <div class="document-card">
+                                <div class="card-image">
+                                    <div class="placeholder">
+                                        <i class="bi bi-mic"></i>
+                                        <p>Rapat Paripurna</p>
+                                    </div>
+                                    <div class="image-overlay">
+                                        <span class="image-badge">2024</span>
+                                    </div>
                                 </div>
-                                <div class="document-content">
-                                    <span class="status-badge status-final">FINAL</span>
-                                    <span class="type-badge type-pleno ml-2">RAPAT PARIPURNA</span>
-                                    <h3 class="document-title">
-                                        <a href="#">Risalah Rapat Paripurna DPRD Kota Surakarta Masa Persidangan I Tahun 2024</a>
-                                    </h3>
-                                    <div class="document-meta">
-                                        <div class="meta-item">
-                                            <i class="bi bi-calendar"></i>
-                                            <span>Tanggal: 25 Januari 2024</span>
-                                        </div>
-                                        <div class="meta-item">
-                                            <i class="bi bi-journal-text"></i>
-                                            <span>Nomor: RR/DPRD/01/2024</span>
-                                        </div>
-                                        <div class="meta-item">
-                                            <i class="bi bi-clock"></i>
-                                            <span>Waktu: 09:00 - 15:30 WIB</span>
-                                        </div>
-                                        <div class="meta-item">
-                                            <i class="bi bi-people"></i>
-                                            <span>Peserta: 45 Anggota</span>
+                                <div class="card-content">
+                                    <div class="d-flex flex-wrap mb-3">
+                                        <span class="status-badge status-final">
+                                            <i class="bi bi-check-circle"></i> FINAL
+                                        </span>
+                                        <span class="meeting-badge badge-pleno">
+                                            <i class="bi bi-people"></i> PARIPURNA
+                                        </span>
+                                    </div>
+                                    <div class="card-number">RR/DPRD/01/2024</div>
+                                    <h4 class="card-title">
+                                        <a href="#" class="text-decoration-none text-dark">Risalah Rapat Paripurna DPRD Kota Surakarta Masa Persidangan I Tahun 2024</a>
+                                    </h4>
+                                    <div class="meeting-info">
+                                        <div class="meeting-info-title">Detail Rapat:</div>
+                                        <div class="meeting-details">
+                                            <div class="detail-item">
+                                                <i class="bi bi-calendar"></i>
+                                                <span>25 Januari 2024</span>
+                                            </div>
+                                            <div class="detail-item">
+                                                <i class="bi bi-clock"></i>
+                                                <span>09:00 - 15:30 WIB</span>
+                                            </div>
+                                            <div class="detail-item">
+                                                <i class="bi bi-people"></i>
+                                                <span>45 Anggota</span>
+                                            </div>
                                         </div>
                                     </div>
-                                    <p class="document-excerpt">
-                                        Rapat paripurna pembahasan awal Raperda tentang Penyelenggaraan Pariwisata Berkelanjutan 
-                                        dengan agenda utama presentasi eksekutif dan tanggapan awal fraksi-fraksi...
-                                    </p>
-                                    <div class="document-actions">
-                                        <a href="#" class="btn-download">
-                                            <i class="bi bi-download"></i> Download PDF
-                                        </a>
-                                        <a href="#" class="btn-preview">
+                                    <div class="card-meta">
+                                        <div class="card-date">Upload: 27 Januari 2024</div>
+                                        <div class="card-status">Halaman: 48</div>
+                                    </div>
+                                    <div class="card-actions">
+                                        <a href="#" class="card-btn btn-view">
                                             <i class="bi bi-eye"></i> Preview
                                         </a>
-                                        <a href="#" class="btn-preview">
-                                            <i class="bi bi-camera-video"></i> Rekaman Rapat
+                                        <a href="#" class="card-btn btn-download">
+                                            <i class="bi bi-download"></i> Download
+                                        </a>
+                                        <a href="#" class="card-btn btn-view">
+                                            <i class="bi bi-camera-video"></i> Video
                                         </a>
                                     </div>
                                 </div>
                             </div>
                             
                             <!-- Dokumen 2 -->
-                            <div class="document-item">
-                                <div class="document-icon">
-                                    <i class="bi bi-file-earmark-text"></i>
+                            <div class="document-card">
+                                <div class="card-image">
+                                    <div class="placeholder">
+                                        <i class="bi bi-person-badge"></i>
+                                        <p>Rapat Komisi</p>
+                                    </div>
+                                    <div class="image-overlay">
+                                        <span class="image-badge">2024</span>
+                                    </div>
                                 </div>
-                                <div class="document-content">
-                                    <span class="status-badge status-final">FINAL</span>
-                                    <span class="type-badge type-komisi ml-2">RAPAT KOMISI A</span>
-                                    <h3 class="document-title">
-                                        <a href="#">Risalah Rapat Komisi A DPRD Kota Surakarta tentang Pembahasan Raperda Pelestarian Batik</a>
-                                    </h3>
-                                    <div class="document-meta">
-                                        <div class="meta-item">
-                                            <i class="bi bi-calendar"></i>
-                                            <span>Tanggal: 22 Januari 2024</span>
-                                        </div>
-                                        <div class="meta-item">
-                                            <i class="bi bi-journal-text"></i>
-                                            <span>Nomor: RR/KOM-A/01/2024</span>
-                                        </div>
-                                        <div class="meta-item">
-                                            <i class="bi bi-clock"></i>
-                                            <span>Waktu: 10:00 - 17:00 WIB</span>
-                                        </div>
-                                        <div class="meta-item">
-                                            <i class="bi bi-people"></i>
-                                            <span>Peserta: 12 Anggota + Stakeholder</span>
+                                <div class="card-content">
+                                    <div class="d-flex flex-wrap mb-3">
+                                        <span class="status-badge status-final">
+                                            <i class="bi bi-check-circle"></i> FINAL
+                                        </span>
+                                        <span class="meeting-badge badge-komisi">
+                                            <i class="bi bi-person"></i> KOMISI A
+                                        </span>
+                                    </div>
+                                    <div class="card-number">RR/KOM-A/01/2024</div>
+                                    <h4 class="card-title">
+                                        <a href="#" class="text-decoration-none text-dark">Risalah Rapat Komisi A DPRD tentang Pembahasan Raperda Pelestarian Batik</a>
+                                    </h4>
+                                    <div class="meeting-info">
+                                        <div class="meeting-info-title">Detail Rapat:</div>
+                                        <div class="meeting-details">
+                                            <div class="detail-item">
+                                                <i class="bi bi-calendar"></i>
+                                                <span>22 Januari 2024</span>
+                                            </div>
+                                            <div class="detail-item">
+                                                <i class="bi bi-clock"></i>
+                                                <span>10:00 - 17:00 WIB</span>
+                                            </div>
+                                            <div class="detail-item">
+                                                <i class="bi bi-people"></i>
+                                                <span>12 Anggota</span>
+                                            </div>
                                         </div>
                                     </div>
-                                    <p class="document-excerpt">
-                                        Rapat kerja Komisi A dengan Dinas Kebudayaan dan Pariwisata serta asosiasi pengrajin batik 
-                                        untuk pembahasan mendalam Raperda Pelestarian Batik Surakarta...
-                                    </p>
-                                    <div class="document-actions">
-                                        <a href="#" class="btn-download">
-                                            <i class="bi bi-download"></i> Download PDF
-                                        </a>
-                                        <a href="#" class="btn-preview">
+                                    <div class="card-meta">
+                                        <div class="card-date">Upload: 24 Januari 2024</div>
+                                        <div class="card-status">Halaman: 36</div>
+                                    </div>
+                                    <div class="card-actions">
+                                        <a href="#" class="card-btn btn-view">
                                             <i class="bi bi-eye"></i> Preview
+                                        </a>
+                                        <a href="#" class="card-btn btn-download">
+                                            <i class="bi bi-download"></i> Download
                                         </a>
                                     </div>
                                 </div>
                             </div>
                             
                             <!-- Dokumen 3 -->
-                            <div class="document-item">
-                                <div class="document-icon">
-                                    <i class="bi bi-file-earmark-text"></i>
+                            <div class="document-card">
+                                <div class="card-image">
+                                    <div class="placeholder">
+                                        <i class="bi bi-gear"></i>
+                                        <p>Rapat Bamus</p>
+                                    </div>
+                                    <div class="image-overlay">
+                                        <span class="image-badge">2024</span>
+                                    </div>
                                 </div>
-                                <div class="document-content">
-                                    <span class="status-badge status-draft">DRAFT</span>
-                                    <span class="type-badge type-bamus ml-2">RAPAT BAMUS</span>
-                                    <h3 class="document-title">
-                                        <a href="#">Risalah Rapat Badan Musyawarah DPRD Kota Surakarta tentang Penetapan Agenda Sidang</a>
-                                    </h3>
-                                    <div class="document-meta">
-                                        <div class="meta-item">
-                                            <i class="bi bi-calendar"></i>
-                                            <span>Tanggal: 20 Januari 2024</span>
-                                        </div>
-                                        <div class="meta-item">
-                                            <i class="bi bi-journal-text"></i>
-                                            <span>Nomor: RR/BAMUS/01/2024</span>
-                                        </div>
-                                        <div class="meta-item">
-                                            <i class="bi bi-clock"></i>
-                                            <span>Waktu: 14:00 - 16:30 WIB</span>
-                                        </div>
-                                        <div class="meta-item">
-                                            <i class="bi bi-people"></i>
-                                            <span>Peserta: Pimpinan DPRD + Pimpinan Fraksi</span>
+                                <div class="card-content">
+                                    <div class="d-flex flex-wrap mb-3">
+                                        <span class="status-badge status-draft">
+                                            <i class="bi bi-pencil"></i> DRAFT
+                                        </span>
+                                        <span class="meeting-badge badge-bamus">
+                                            <i class="bi bi-gear"></i> BAMUS
+                                        </span>
+                                    </div>
+                                    <div class="card-number">RR/BAMUS/01/2024</div>
+                                    <h4 class="card-title">
+                                        <a href="#" class="text-decoration-none text-dark">Risalah Rapat Badan Musyawarah DPRD tentang Penetapan Agenda Sidang</a>
+                                    </h4>
+                                    <div class="meeting-info">
+                                        <div class="meeting-info-title">Detail Rapat:</div>
+                                        <div class="meeting-details">
+                                            <div class="detail-item">
+                                                <i class="bi bi-calendar"></i>
+                                                <span>20 Januari 2024</span>
+                                            </div>
+                                            <div class="detail-item">
+                                                <i class="bi bi-clock"></i>
+                                                <span>14:00 - 16:30 WIB</span>
+                                            </div>
+                                            <div class="detail-item">
+                                                <i class="bi bi-people"></i>
+                                                <span>Pimpinan + Fraksi</span>
+                                            </div>
                                         </div>
                                     </div>
-                                    <p class="document-excerpt">
-                                        Rapat Badan Musyawarah untuk menetapkan agenda sidang paripurna periode Januari-Maret 2024 
-                                        termasuk pembahasan 5 Raperda prioritas dan penetapan jadwal rapat...
-                                    </p>
-                                    <div class="document-actions">
-                                        <a href="#" class="btn-download">
-                                            <i class="bi bi-download"></i> Download PDF
-                                        </a>
-                                        <a href="#" class="btn-preview">
+                                    <div class="card-meta">
+                                        <div class="card-date">Upload: 21 Januari 2024</div>
+                                        <div class="card-status">Halaman: 24</div>
+                                    </div>
+                                    <div class="card-actions">
+                                        <a href="#" class="card-btn btn-view">
                                             <i class="bi bi-eye"></i> Preview
+                                        </a>
+                                        <a href="#" class="card-btn btn-download">
+                                            <i class="bi bi-download"></i> Download
                                         </a>
                                     </div>
                                 </div>
                             </div>
                             
                             <!-- Dokumen 4 -->
-                            <div class="document-item">
-                                <div class="document-icon">
-                                    <i class="bi bi-file-earmark-text"></i>
+                            <div class="document-card">
+                                <div class="card-image">
+                                    <div class="placeholder">
+                                        <i class="bi bi-search"></i>
+                                        <p>Rapat Pansus</p>
+                                    </div>
+                                    <div class="image-overlay">
+                                        <span class="image-badge">2024</span>
+                                    </div>
                                 </div>
-                                <div class="document-content">
-                                    <span class="status-badge status-correction">PERLU KOREKSI</span>
-                                    <span class="type-badge type-pansus ml-2">RAPAT PANSUS</span>
-                                    <h3 class="document-title">
-                                        <a href="#">Risalah Rapat Panitia Khusus DPRD tentang Pengawasan Pelaksanaan APBD 2023</a>
-                                    </h3>
-                                    <div class="document-meta">
-                                        <div class="meta-item">
-                                            <i class="bi bi-calendar"></i>
-                                            <span>Tanggal: 18 Januari 2024</span>
-                                        </div>
-                                        <div class="meta-item">
-                                            <i class="bi bi-journal-text"></i>
-                                            <span>Nomor: RR/PANSUS/01/2024</span>
-                                        </div>
-                                        <div class="meta-item">
-                                            <i class="bi bi-clock"></i>
-                                            <span>Waktu: 09:30 - 18:00 WIB</span>
-                                        </div>
-                                        <div class="meta-item">
-                                            <i class="bi bi-people"></i>
-                                            <span>Peserta: 15 Anggota Pansus + BPK</span>
+                                <div class="card-content">
+                                    <div class="d-flex flex-wrap mb-3">
+                                        <span class="status-badge status-correction">
+                                            <i class="bi bi-exclamation-triangle"></i> KOREKSI
+                                        </span>
+                                        <span class="meeting-badge badge-pansus">
+                                            <i class="bi bi-search"></i> PANSUS
+                                        </span>
+                                    </div>
+                                    <div class="card-number">RR/PANSUS/01/2024</div>
+                                    <h4 class="card-title">
+                                        <a href="#" class="text-decoration-none text-dark">Risalah Rapat Panitia Khusus tentang Pengawasan Pelaksanaan APBD 2023</a>
+                                    </h4>
+                                    <div class="meeting-info">
+                                        <div class="meeting-info-title">Detail Rapat:</div>
+                                        <div class="meeting-details">
+                                            <div class="detail-item">
+                                                <i class="bi bi-calendar"></i>
+                                                <span>18 Januari 2024</span>
+                                            </div>
+                                            <div class="detail-item">
+                                                <i class="bi bi-clock"></i>
+                                                <span>09:30 - 18:00 WIB</span>
+                                            </div>
+                                            <div class="detail-item">
+                                                <i class="bi bi-people"></i>
+                                                <span>15 Anggota</span>
+                                            </div>
                                         </div>
                                     </div>
-                                    <p class="document-excerpt">
-                                        Rapat Panitia Khusus pengawasan pelaksanaan APBD 2023 dengan Badan Pemeriksa Keuangan 
-                                        dan perwakilan SKPD terkait temuan audit dan rekomendasi perbaikan...
-                                    </p>
-                                    <div class="document-actions">
-                                        <a href="#" class="btn-download">
-                                            <i class="bi bi-download"></i> Download PDF
-                                        </a>
-                                        <a href="#" class="btn-preview">
+                                    <div class="card-meta">
+                                        <div class="card-date">Upload: 19 Januari 2024</div>
+                                        <div class="card-status">Halaman: 56</div>
+                                    </div>
+                                    <div class="card-actions">
+                                        <a href="#" class="card-btn btn-view">
                                             <i class="bi bi-eye"></i> Preview
                                         </a>
+                                        <a href="#" class="card-btn btn-download">
+                                            <i class="bi bi-download"></i> Download
+                                        </a>
                                     </div>
                                 </div>
+                            </div>
+                            
+                            <!-- Dokumen 5 -->
+                            <div class="document-card">
+                                <div class="card-image">
+                                    <div class="placeholder">
+                                        <i class="bi bi-people"></i>
+                                        <p>Rapat Komisi</p>
+                                    </div>
+                                    <div class="image-overlay">
+                                        <span class="image-badge">2024</span>
+                                    </div>
+                                </div>
+                                <div class="card-content">
+                                    <div class="d-flex flex-wrap mb-3">
+                                        <span class="status-badge status-final">
+                                            <i class="bi bi-check-circle"></i> FINAL
+                                        </span>
+                                        <span class="meeting-badge badge-komisi">
+                                            <i class="bi bi-person"></i> KOMISI B
+                                        </span>
+                                        <span class="video-badge">
+                                            <i class="bi bi-camera-video"></i> ADA VIDEO
+                                        </span>
+                                    </div>
+                                    <div class="card-number">RR/KOM-B/01/2024</div>
+                                    <h4 class="card-title">
+                                        <a href="#" class="text-decoration-none text-dark">Risalah Rapat Komisi B tentang Pembahasan Kebijakan Ekonomi Daerah</a>
+                                    </h4>
+                                    <div class="meeting-info">
+                                        <div class="meeting-info-title">Detail Rapat:</div>
+                                        <div class="meeting-details">
+                                            <div class="detail-item">
+                                                <i class="bi bi-calendar"></i>
+                                                <span>17 Januari 2024</span>
+                                            </div>
+                                            <div class="detail-item">
+                                                <i class="bi bi-clock"></i>
+                                                <span>13:00 - 17:30 WIB</span>
+                                            </div>
+                                            <div class="detail-item">
+                                                <i class="bi bi-people"></i>
+                                                <span>11 Anggota</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card-meta">
+                                        <div class="card-date">Upload: 18 Januari 2024</div>
+                                        <div class="card-status">Halaman: 42</div>
+                                    </div>
+                                    <div class="card-actions">
+                                        <a href="#" class="card-btn btn-view">
+                                            <i class="bi bi-eye"></i> Preview
+                                        </a>
+                                        <a href="#" class="card-btn btn-download">
+                                            <i class="bi bi-download"></i> Download
+                                        </a>
+                                        <a href="#" class="card-btn btn-view">
+                                            <i class="bi bi-camera-video"></i> Video
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Dokumen 6 -->
+                            <div class="document-card">
+                                <div class="card-image">
+                                    <div class="placeholder">
+                                        <i class="bi bi-mic"></i>
+                                        <p>Rapat Paripurna</p>
+                                    </div>
+                                    <div class="image-overlay">
+                                        <span class="image-badge">2023</span>
+                                    </div>
+                                </div>
+                                <div class="card-content">
+                                    <div class="d-flex flex-wrap mb-3">
+                                        <span class="status-badge status-final">
+                                            <i class="bi bi-check-circle"></i> FINAL
+                                        </span>
+                                        <span class="meeting-badge badge-pleno">
+                                            <i class="bi bi-people"></i> PARIPURNA
+                                        </span>
+                                        <span class="video-badge">
+                                            <i class="bi bi-camera-video"></i> ADA VIDEO
+                                        </span>
+                                    </div>
+                                    <div class="card-number">RR/DPRD/12/2023</div>
+                                    <h4 class="card-title">
+                                        <a href="#" class="text-decoration-none text-dark">Risalah Rapat Paripurna Penutupan Masa Sidang Tahun 2023</a>
+                                    </h4>
+                                    <div class="meeting-info">
+                                        <div class="meeting-info-title">Detail Rapat:</div>
+                                        <div class="meeting-details">
+                                            <div class="detail-item">
+                                                <i class="bi bi-calendar"></i>
+                                                <span>28 Desember 2023</span>
+                                            </div>
+                                            <div class="detail-item">
+                                                <i class="bi bi-clock"></i>
+                                                <span>09:00 - 14:00 WIB</span>
+                                            </div>
+                                            <div class="detail-item">
+                                                <i class="bi bi-people"></i>
+                                                <span>45 Anggota</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card-meta">
+                                        <div class="card-date">Upload: 30 Desember 2023</div>
+                                        <div class="card-status">Halaman: 52</div>
+                                    </div>
+                                    <div class="card-actions">
+                                        <a href="#" class="card-btn btn-view">
+                                            <i class="bi bi-eye"></i> Preview
+                                        </a>
+                                        <a href="#" class="card-btn btn-download">
+                                            <i class="bi bi-download"></i> Download
+                                        </a>
+                                        <a href="#" class="card-btn btn-view">
+                                            <i class="bi bi-camera-video"></i> Video
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- FILTER TAHUN -->
+                        <div class="year-filter mt-4">
+                            <h5>Filter Berdasarkan Tahun</h5>
+                            <div class="year-buttons">
+                                <button class="year-btn active">Semua</button>
+                                <button class="year-btn">2024</button>
+                                <button class="year-btn">2023</button>
+                                <button class="year-btn">2022</button>
+                                <button class="year-btn">2021</button>
+                                <button class="year-btn">2020</button>
                             </div>
                         </div>
                         
@@ -979,7 +580,7 @@
                         </div>
                         
                         <!-- STRUKTUR RISALAH -->
-                        <div class="mt-5 pt-4 border-top">
+                        <div class="year-filter mt-5">
                             <h4 class="mb-3"><i class="bi bi-list-ol text-primary me-2"></i>Struktur Risalah Rapat</h4>
                             <div class="accordion" id="accordionStruktur">
                                 <div class="accordion-item">
@@ -1062,65 +663,65 @@
                             <li><a href="?page=hasil-harmonisasi"><i class="bi bi-shuffle"></i> Hasil Harmonisasi Raperda</a></li>
                             <li><a href="?page=karya-ilmiah"><i class="bi bi-pencil"></i> Penulisan Karya Ilmiah</a></li>
                             <li><a href="?page=himpunan"><i class="bi bi-folder"></i> Himpunan Peraturan</a></li>
-                            <li><a href="?page=risalah" class="active"><i class="bi bi-journal-text"></i> Risalah</a></li>
+                            <li class="active"><a href="?page=risalah"><i class="bi bi-journal-text"></i> Risalah</a></li>
                         </ul>
                     </div>
                     
-                    <!-- FILTER TAHUN -->
+                    <!-- STATISTIK RISALAH -->
                     <div class="sidebar-menu">
-                        <h4><i class="bi bi-filter"></i> Filter Berdasarkan Tahun</h4>
-                        <div class="list-group">
-                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                2024
+                        <h4><i class="bi bi-bar-chart"></i> Statistik Risalah</h4>
+                        <ul>
+                            <li class="d-flex justify-content-between">
+                                <span>Total Risalah</span>
+                                <span class="badge bg-primary rounded-pill">342</span>
+                            </li>
+                            <li class="d-flex justify-content-between">
+                                <span>Tahun 2024</span>
                                 <span class="badge bg-primary rounded-pill">18</span>
-                            </a>
-                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                2023
+                            </li>
+                            <li class="d-flex justify-content-between">
+                                <span>Tahun 2023</span>
                                 <span class="badge bg-primary rounded-pill">156</span>
-                            </a>
-                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                2022
-                                <span class="badge bg-primary rounded-pill">142</span>
-                            </a>
-                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                2021
-                                <span class="badge bg-primary rounded-pill">138</span>
-                            </a>
-                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                2020
-                                <span class="badge bg-primary rounded-pill">126</span>
-                            </a>
-                        </div>
+                            </li>
+                            <li class="d-flex justify-content-between">
+                                <span>Risalah Final</span>
+                                <span class="badge bg-success rounded-pill">256</span>
+                            </li>
+                            <li class="d-flex justify-content-between">
+                                <span>Dengan Video</span>
+                                <span class="badge bg-danger rounded-pill">48</span>
+                            </li>
+                        </ul>
                     </div>
                     
                     <!-- FILTER JENIS RAPAT -->
                     <div class="sidebar-menu">
-                        <h4><i class="bi bi-diagram-3"></i> Filter Berdasarkan Jenis Rapat</h4>
+                        <h4><i class="bi bi-diagram-3"></i> Filter Jenis Rapat</h4>
                         <div class="list-group">
                             <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
                                 <span class="d-flex align-items-center">
-                                    <span class="type-badge type-pleno me-2"></span>
+                                    <i class="bi bi-people me-2" style="color: #004085;"></i>
                                     Rapat Paripurna
                                 </span>
                                 <span class="badge bg-primary rounded-pill">86</span>
                             </a>
                             <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
                                 <span class="d-flex align-items-center">
-                                    <span class="type-badge type-komisi me-2"></span>
+                                    <i class="bi bi-person me-2" style="color: #0c5460;"></i>
                                     Rapat Komisi
                                 </span>
                                 <span class="badge bg-primary rounded-pill">168</span>
                             </a>
                             <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
                                 <span class="d-flex align-items-center">
-                                    <span class="type-badge type-bamus me-2"></span>
+                                    <i class="bi bi-gear me-2" style="color: #155724;"></i>
                                     Rapat Bamus
                                 </span>
                                 <span class="badge bg-primary rounded-pill">64</span>
                             </a>
                             <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
                                 <span class="d-flex align-items-center">
-                                    <span class="type-badge type-pansus me-2"></span>
+                                    <i class="bi bi-search me-2" style="color: #3d2c5a;"></i>
                                     Rapat Pansus
                                 </span>
                                 <span class="badge bg-primary rounded-pill">24</span>
@@ -1128,27 +729,27 @@
                         </div>
                     </div>
                     
-                    <!-- FILTER STATUS RISALAH -->
+                    <!-- FILTER STATUS -->
                     <div class="sidebar-menu">
-                        <h4><i class="bi bi-activity"></i> Filter Berdasarkan Status</h4>
+                        <h4><i class="bi bi-activity"></i> Filter Status</h4>
                         <div class="list-group">
                             <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
                                 <span class="d-flex align-items-center">
-                                    <span class="status-badge status-final me-2"></span>
+                                    <i class="bi bi-check-circle text-success me-2"></i>
                                     Final
                                 </span>
                                 <span class="badge bg-success rounded-pill">256</span>
                             </a>
                             <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
                                 <span class="d-flex align-items-center">
-                                    <span class="status-badge status-draft me-2"></span>
+                                    <i class="bi bi-pencil text-warning me-2"></i>
                                     Draft
                                 </span>
                                 <span class="badge bg-warning rounded-pill">68</span>
                             </a>
                             <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
                                 <span class="d-flex align-items-center">
-                                    <span class="status-badge status-correction me-2"></span>
+                                    <i class="bi bi-exclamation-triangle text-danger me-2"></i>
                                     Perlu Koreksi
                                 </span>
                                 <span class="badge bg-danger rounded-pill">18</span>
@@ -1190,76 +791,10 @@
     </section>
 
     <!-- FOOTER -->
-    <footer class="site-footer">
-        <div class="container">
-            <div class="row">
-                
-                <!-- LOGO DAN DESKRIPSI -->
-                <div class="col-lg-4 col-md-6 col-12 mb-4">
-                    <div class="site-footer-logo">
-                        <a href="index.html">
-                            <img src="images/logo-footer.png" alt="logo" class="img-fluid">
-                        </a>
-                    </div>
-                    <p class="text-white">
-                        Jaringan Dokumentasi dan Informasi Hukum (JDIH) DPRD Kota Surakarta 
-                        merupakan sistem informasi hukum yang menyediakan akses terhadap 
-                        produk hukum dan dokumentasi legislasi daerah.
-                    </p>
-                </div>
-
-                <!-- LINK CEPAT -->
-                <div class="col-lg-2 col-md-6 col-12 mx-auto mb-4">
-                    <h6 class="site-footer-title">Menu Cepat</h6>
-                    <ul class="footer-menu">
-                        <li><a href="index.php" class="site-footer-link">Beranda</a></li>
-                        <li><a href="?page=profil-jdih" class="site-footer-link">Profil JDIH</a></li>
-                        <li><a href="?page=perda" class="site-footer-link">Peraturan Daerah</a></li>
-                        <li><a href="?page=artikel" class="site-footer-link">Artikel Hukum</a></li>
-                        <li><a href="?page=kontak" class="site-footer-link">Kontak Kami</a></li>
-                    </ul>
-                </div>
-
-                <!-- KONTAK -->
-                <div class="col-lg-3 col-md-6 col-12 mb-4">
-                    <h6 class="site-footer-title">Kontak Kami</h6>
-                    <p class="text-white d-flex mb-2">
-                        <i class="bi-geo-alt me-2"></i>
-                        Jl. Jend. Sudirman No. 2, Kec. Banjarsari, Kota Surakarta, Jawa Tengah 57113
-                    </p>
-                    <p class="text-white d-flex mb-2">
-                        <i class="bi-telephone me-2"></i>
-                        <a href="tel:+62271234567" class="site-footer-link">(0271) 234567</a>
-                    </p>
-                    <p class="text-white d-flex">
-                        <i class="bi-envelope me-2"></i>
-                        <a href="mailto:jdih@dprd-surakarta.go.id" class="site-footer-link">jdih@dprd-surakarta.go.id</a>
-                    </p>
-                </div>
-
-                <!-- MEDIA SOSIAL -->
-                <div class="col-lg-3 col-md-6 col-12">
-                    <h6 class="site-footer-title">Media Sosial</h6>
-                    <ul class="social-icon">
-                        <li><a href="#" class="social-icon-link bi-facebook"></a></li>
-                        <li><a href="#" class="social-icon-link bi-twitter"></a></li>
-                        <li><a href="#" class="social-icon-link bi-instagram"></a></li>
-                        <li><a href="#" class="social-icon-link bi-youtube"></a></li>
-                        <li><a href="#" class="social-icon-link bi-whatsapp"></a></li>
-                    </ul>
-                    <p class="copyright-text mt-3">Copyright © 2024 JDIH DPRD Kota Surakarta</p>
-                </div>
-
-            </div>
-        </div>
-    </footer>
+    <?php include "footer.php"; ?>
 
     <!-- JAVASCRIPT FILES -->
-    <script src="js/jquery.min.js"></script>
-    <script src="js/bootstrap.bundle.min.js"></script>
-    <script src="js/jquery.sticky.js"></script>
-    <script src="js/click-scroll.js"></script>
-    <script src="js/custom.js"></script>
+    <?php include "js-footer.php"; ?>
     
     <script>
         // Fungsi pencarian
@@ -1275,14 +810,31 @@
             alert(`Mencari risalah rapat dengan kata kunci: "${keyword}"\n\nHasil pencarian akan ditampilkan di bawah.`);
         });
         
-        // Fungsi filter
+        // Fungsi filter tahun
+        document.querySelectorAll('.year-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                // Remove active class from all buttons
+                document.querySelectorAll('.year-btn').forEach(b => {
+                    b.classList.remove('active');
+                });
+                // Add active class to clicked button
+                this.classList.add('active');
+                
+                const year = this.textContent;
+                alert(`Memfilter risalah tahun: ${year}\n\nFungsi filter akan bekerja dengan request AJAX ke server.`);
+            });
+        });
+        
+        // Fungsi filter jenis rapat
         document.querySelectorAll('.list-group-item').forEach(item => {
             item.addEventListener('click', function(e) {
                 e.preventDefault();
                 const filterType = this.closest('.sidebar-menu').querySelector('h4').textContent;
-                const filterValue = this.textContent.trim().split('\n')[0];
+                const filterValue = this.querySelector('span').textContent.trim();
+                const count = this.querySelector('.badge').textContent;
                 
-                alert(`Memfilter berdasarkan ${filterType}: ${filterValue}\n\nFungsi filter akan bekerja dengan request AJAX ke server.`);
+                alert(`Memfilter berdasarkan ${filterType}: ${filterValue}\n\nJumlah risalah: ${count}\n\nFungsi filter akan bekerja dengan request AJAX ke server.`);
             });
         });
         
@@ -1290,7 +842,7 @@
         document.querySelectorAll('.btn-download').forEach(btn => {
             btn.addEventListener('click', function(e) {
                 e.preventDefault();
-                const docTitle = this.closest('.document-item').querySelector('.document-title a').textContent;
+                const docTitle = this.closest('.document-card').querySelector('.card-title a').textContent;
                 
                 alert(`Mengunduh risalah: "${docTitle}"\n\nDokumen akan mulai diunduh dalam beberapa detik.`);
                 
@@ -1302,10 +854,10 @@
         });
         
         // Fungsi preview
-        document.querySelectorAll('.btn-preview').forEach(btn => {
+        document.querySelectorAll('.btn-view').forEach(btn => {
             btn.addEventListener('click', function(e) {
                 e.preventDefault();
-                const docTitle = this.closest('.document-item').querySelector('.document-title a').textContent;
+                const docTitle = this.closest('.document-card').querySelector('.card-title a').textContent;
                 
                 if (this.querySelector('.bi-camera-video')) {
                     alert(`Membuka rekaman video rapat: "${docTitle}"\n\nDalam implementasi real, akan membuka player video.`);
@@ -1330,9 +882,13 @@
         // Highlight menu aktif di sidebar
         document.querySelectorAll('.sidebar-menu ul li a').forEach(link => {
             if (link.href === window.location.href) {
-                link.classList.add('active');
                 link.parentElement.classList.add('active');
             }
+        });
+        
+        // Fungsi aktifkan tahun button
+        document.querySelector('.year-btn.active').addEventListener('click', function(e) {
+            e.preventDefault();
         });
     </script>
 

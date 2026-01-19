@@ -1,507 +1,7 @@
-<?php include 'header.php'; ?>
-
-<style>
-    /* OVERRIDE UNTUK HALAMAN MONOGRAFI */
-    body {
-        padding-top: 80px;
-    }
-    
-    /* HEADER SECTION */
-    .page-header {
-        background: linear-gradient(15deg, #13547a 0%, #80d0c7 100%);
-        padding: 40px 0 30px 0;
-        margin-top: 0;
-        color: white;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .page-header::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ffffff" fill-opacity="0.1" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,112C672,96,768,96,864,112C960,128,1056,160,1152,160C1248,160,1344,128,1392,112L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>');
-        background-size: cover;
-        background-position: bottom;
-        opacity: 0.1;
-    }
-    
-    .page-header h1 {
-        font-family: 'Montserrat', sans-serif;
-        font-weight: 700;
-        font-size: 2.5rem;
-        margin-bottom: 10px;
-        position: relative;
-        z-index: 2;
-    }
-    
-    .page-header .subtitle {
-        font-size: 1.1rem;
-        opacity: 0.9;
-        margin-bottom: 20px;
-        position: relative;
-        z-index: 2;
-    }
-    
-    .page-header .breadcrumb {
-        background: transparent;
-        padding: 0;
-        margin: 0;
-        position: relative;
-        z-index: 2;
-    }
-    
-    .page-header .breadcrumb-item a {
-        color: rgba(255, 255, 255, 0.8);
-        text-decoration: none;
-    }
-    
-    .page-header .breadcrumb-item.active {
-        color: white;
-    }
-    
-    .page-header .breadcrumb-item+.breadcrumb-item::before {
-        color: rgba(255, 255, 255, 0.8);
-    }
-
-    /* MAIN CONTENT */
-    .main-content {
-        padding: 50px 0 60px 0;
-        background: #f0f8ff;
-    }
-    
-    .section-title {
-        font-family: 'Montserrat', sans-serif;
-        font-weight: 600;
-        color: #13547a;
-        margin-bottom: 30px;
-        position: relative;
-        padding-bottom: 15px;
-    }
-    
-    .section-title::after {
-        content: '';
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        width: 100px;
-        height: 3px;
-        background: linear-gradient(to right, #13547a, #80d0c7);
-    }
-
-    /* MONOGRAFI CONTENT */
-    .monografi-container {
-        background: white;
-        border-radius: var(--border-radius-medium);
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-        padding: 40px;
-        margin-bottom: 40px;
-    }
-    
-    .monografi-header {
-        text-align: center;
-        margin-bottom: 40px;
-        padding-bottom: 30px;
-        border-bottom: 2px solid #f0f8ff;
-    }
-    
-    .monografi-icon {
-        width: 80px;
-        height: 80px;
-        background: linear-gradient(135deg, #13547a 0%, #80d0c7 100%);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 20px;
-        color: white;
-        font-size: 2rem;
-    }
-    
-    .monografi-description {
-        color: #666;
-        font-size: 1.1rem;
-        line-height: 1.6;
-        text-align: center;
-        max-width: 800px;
-        margin: 0 auto 40px;
-    }
-
-    /* SEARCH BOX */
-    .search-monografi {
-        background: #f8f9fa;
-        border-radius: var(--border-radius-medium);
-        padding: 30px;
-        margin-bottom: 30px;
-        border: 2px solid #e9ecef;
-    }
-    
-    .search-form .input-group {
-        margin-bottom: 20px;
-    }
-    
-    .search-form input {
-        border: 2px solid #13547a;
-        border-right: none;
-        height: 50px;
-        font-size: 1rem;
-    }
-    
-    .search-form input:focus {
-        box-shadow: 0 0 0 0.2rem rgba(19, 84, 122, 0.25);
-    }
-    
-    .search-form .btn-search {
-        background: #13547a;
-        color: white;
-        border: 2px solid #13547a;
-        height: 50px;
-        padding: 0 25px;
-        font-weight: 600;
-    }
-    
-    .search-form .btn-search:hover {
-        background: #0d3a58;
-        border-color: #0d3a58;
-    }
-    
-    .adv-search-link {
-        color: #13547a;
-        text-decoration: none;
-        font-weight: 600;
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        transition: all 0.3s;
-    }
-    
-    .adv-search-link:hover {
-        color: #80d0c7;
-        gap: 8px;
-    }
-
-    /* COLLECTION LIST */
-    .collection-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 25px;
-        margin-top: 20px;
-    }
-    
-    @media (max-width: 768px) {
-        .collection-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-    
-    .collection-card {
-        background: white;
-        border-radius: var(--border-radius-medium);
-        overflow: hidden;
-        transition: all 0.3s ease;
-        border: 2px solid transparent;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-    }
-    
-    .collection-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
-        border-color: #80d0c7;
-    }
-    
-    .collection-header {
-        background: linear-gradient(135deg, #13547a 0%, #80d0c7 100%);
-        color: white;
-        padding: 25px;
-        text-align: center;
-    }
-    
-    .collection-icon {
-        font-size: 2.5rem;
-        margin-bottom: 15px;
-    }
-    
-    .collection-title {
-        font-family: 'Montserrat', sans-serif;
-        font-weight: 600;
-        font-size: 1.3rem;
-        margin-bottom: 10px;
-    }
-    
-    .collection-count {
-        font-size: 0.9rem;
-        opacity: 0.9;
-    }
-    
-    .collection-body {
-        padding: 25px;
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-    }
-    
-    .collection-description {
-        color: #666;
-        line-height: 1.6;
-        margin-bottom: 20px;
-        flex: 1;
-    }
-    
-    .collection-meta {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 15px;
-        margin-bottom: 20px;
-        font-size: 0.9rem;
-        color: #666;
-    }
-    
-    .meta-item {
-        display: flex;
-        align-items: center;
-        gap: 5px;
-    }
-    
-    .meta-item i {
-        color: #80d0c7;
-    }
-    
-    .collection-actions {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-    }
-    
-    .btn-view {
-        background: #13547a;
-        color: white;
-        border: none;
-        padding: 10px 15px;
-        border-radius: var(--border-radius-small);
-        font-size: 0.9rem;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        transition: all 0.3s;
-        flex: 1;
-        justify-content: center;
-    }
-    
-    .btn-view:hover {
-        background: #0d3a58;
-        color: white;
-        transform: translateY(-2px);
-    }
-    
-    .btn-download {
-        background: #f0f8ff;
-        color: #13547a;
-        border: 1px solid #13547a;
-        padding: 10px 15px;
-        border-radius: var(--border-radius-small);
-        font-size: 0.9rem;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        transition: all 0.3s;
-        flex: 1;
-        justify-content: center;
-    }
-    
-    .btn-download:hover {
-        background: #13547a;
-        color: white;
-        transform: translateY(-2px);
-    }
-
-    /* PAGINATION */
-    .pagination-container {
-        display: flex;
-        justify-content: center;
-        margin-top: 30px;
-    }
-    
-    .pagination {
-        display: flex;
-        gap: 5px;
-    }
-    
-    .page-item .page-link {
-        border: none;
-        background: #f8f9fa;
-        color: #13547a;
-        border-radius: var(--border-radius-small);
-        padding: 8px 15px;
-        transition: all 0.3s;
-    }
-    
-    .page-item.active .page-link {
-        background: #13547a;
-        color: white;
-    }
-    
-    .page-item .page-link:hover {
-        background: #e0e0e0;
-        transform: translateY(-2px);
-    }
-
-    /* SIDEBAR */
-    .sidebar-menu {
-        background: white;
-        border-radius: var(--border-radius-medium);
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-        padding: 25px;
-        margin-bottom: 30px;
-    }
-    
-    .sidebar-menu h4 {
-        color: #13547a;
-        font-family: 'Montserrat', sans-serif;
-        font-weight: 600;
-        font-size: 1.2rem;
-        margin-bottom: 20px;
-        padding-bottom: 10px;
-        border-bottom: 2px solid #f0f0f0;
-        display: flex;
-        align-items: center;
-    }
-    
-    .sidebar-menu h4 i {
-        color: #80d0c7;
-        margin-right: 10px;
-    }
-    
-    .sidebar-menu ul {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
-    
-    .sidebar-menu ul li {
-        margin-bottom: 12px;
-    }
-    
-    .sidebar-menu ul li:last-child {
-        margin-bottom: 0;
-    }
-    
-    .sidebar-menu ul li a {
-        color: var(--p-color);
-        text-decoration: none;
-        padding: 12px 15px;
-        border-radius: var(--border-radius-small);
-        display: flex;
-        align-items: center;
-        transition: all 0.3s;
-        font-weight: 500;
-    }
-    
-    .sidebar-menu ul li.active a {
-        background: #f0f8ff;
-        color: #13547a;
-        font-weight: 600;
-    }
-    
-    .sidebar-menu ul li a:hover {
-        background: #f0f8ff;
-        color: #13547a;
-        transform: translateX(5px);
-    }
-    
-    .sidebar-menu ul li a i {
-        color: #80d0c7;
-        margin-right: 10px;
-        font-size: 0.9rem;
-    }
-
-    /* STATS BOX */
-    .stats-box {
-        background: linear-gradient(135deg, #13547a 0%, #80d0c7 100%);
-        color: white;
-        border-radius: var(--border-radius-medium);
-        padding: 25px;
-        margin-bottom: 30px;
-        text-align: center;
-    }
-    
-    .stats-number {
-        font-size: 2.5rem;
-        font-weight: 700;
-        margin-bottom: 5px;
-    }
-    
-    .stats-label {
-        font-size: 1rem;
-        opacity: 0.9;
-    }
-    
-    /* RESPONSIVE */
-    @media (max-width: 768px) {
-        body {
-            padding-top: 70px;
-        }
-        
-        .page-header {
-            padding: 30px 0 20px 0;
-        }
-        
-        .page-header h1 {
-            font-size: 2rem;
-        }
-        
-        .main-content {
-            padding: 30px 0 40px 0;
-        }
-        
-        .monografi-container {
-            padding: 30px;
-        }
-        
-        .collection-grid {
-            grid-template-columns: 1fr;
-        }
-        
-        .collection-header {
-            padding: 20px;
-        }
-        
-        .collection-body {
-            padding: 20px;
-        }
-    }
-    
-    @media (max-width: 576px) {
-        .page-header h1 {
-            font-size: 1.8rem;
-        }
-        
-        .section-title {
-            font-size: 1.3rem;
-        }
-        
-        .monografi-icon {
-            width: 60px;
-            height: 60px;
-            font-size: 1.5rem;
-        }
-        
-        .search-form input,
-        .search-form .btn-search {
-            height: 45px;
-        }
-        
-        .collection-actions {
-            flex-direction: column;
-        }
-    }
-</style>
+    <style>
+        <?php include "style-keputusan-dprd.css"; ?>
+    </style>
+    <?php include 'header.php'; ?>
 
     <!-- HEADER SECTION -->
     <section class="page-header">
@@ -531,332 +31,367 @@
                 <div class="col-lg-8 mb-4 mb-lg-0">
                     
                     <!-- HEADER MONOGRAFI -->
-                    <div class="monografi-container">
-                        <div class="monografi-header">
-                            <div class="monografi-icon">
-                                <i class="bi bi-folder"></i>
+                    <div class="document-card">
+                        <div class="card-content">
+                            <div class="text-center mb-4">
+                                <div class="monografi-icon" style="width: 80px; height: 80px; background: linear-gradient(135deg, #13547a 0%, #80d0c7 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; color: white; font-size: 2rem;">
+                                    <i class="bi bi-folder"></i>
+                                </div>
+                                <h2 class="section-title">Himpunan Peraturan</h2>
+                                <p class="text-muted">
+                                    Kumpulan kompilasi peraturan perundang-undangan yang telah dikelompokkan 
+                                    berdasarkan tema atau bidang tertentu untuk memudahkan akses dan penelitian 
+                                    hukum di Kota Surakarta.
+                                </p>
                             </div>
-                            <h2 class="section-title">Himpunan Peraturan</h2>
-                            <p class="monografi-description">
-                                Kumpulan kompilasi peraturan perundang-undangan yang telah dikelompokkan 
-                                berdasarkan tema atau bidang tertentu untuk memudahkan akses dan penelitian 
-                                hukum di Kota Surakarta.
-                            </p>
-                        </div>
-                        
-                        <!-- PENCARIAN -->
-                        <div class="search-monografi">
-                            <h4 class="mb-4">Cari Himpunan Peraturan</h4>
-                            <form class="search-form">
-                                <div class="input-group">
-                                    <input type="text" class="form-control" placeholder="Masukkan kata kunci himpunan peraturan..." 
-                                           aria-label="Search" aria-describedby="button-search">
-                                    <button class="btn btn-search" type="submit" id="button-search">
-                                        <i class="bi bi-search"></i> CARI
-                                    </button>
-                                </div>
-                                <div class="text-end">
-                                    <a href="#" class="adv-search-link">
-                                        <i class="bi bi-sliders"></i> Pencarian Lanjutan
-                                    </a>
-                                </div>
-                            </form>
-                        </div>
-                        
-                        <!-- STATISTIK -->
-                        <div class="row mb-4">
-                            <div class="col-md-3">
-                                <div class="stats-box">
-                                    <div class="stats-number">24</div>
-                                    <div class="stats-label">Total Himpunan</div>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="stats-box">
-                                    <div class="stats-number">3</div>
-                                    <div class="stats-label">Tahun 2024</div>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="stats-box">
-                                    <div class="stats-number">856</div>
-                                    <div class="stats-label">Total Peraturan</div>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="stats-box">
-                                    <div class="stats-number">18</div>
-                                    <div class="stats-label">Bidang Tema</div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- DAFTAR HIMPUNAN -->
-                        <h3 class="section-title">Himpunan Peraturan Terbaru</h3>
-                        
-                        <div class="collection-grid">
-                            <!-- Himpunan 1 -->
-                            <div class="collection-card">
-                                <div class="collection-header">
-                                    <div class="collection-icon">
-                                        <i class="bi bi-building"></i>
+                            
+                            <!-- PENCARIAN -->
+                            <div class="year-filter mb-4">
+                                <h4 class="mb-4">Cari Himpunan Peraturan</h4>
+                                <form class="search-form">
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" placeholder="Masukkan kata kunci himpunan peraturan..." 
+                                               aria-label="Search" aria-describedby="button-search">
+                                        <button class="btn btn-view" type="submit" id="button-search">
+                                            <i class="bi bi-search"></i> CARI
+                                        </button>
                                     </div>
-                                    <h3 class="collection-title">Himpunan Peraturan Bidang Pemerintahan</h3>
-                                    <div class="collection-count">142 Peraturan</div>
-                                </div>
-                                <div class="collection-body">
-                                    <p class="collection-description">
-                                        Kumpulan peraturan terkait pemerintahan daerah, organisasi perangkat daerah, 
-                                        tata laksana, dan pelayanan publik di Kota Surakarta.
-                                    </p>
-                                    <div class="collection-meta">
-                                        <div class="meta-item">
-                                            <i class="bi bi-calendar"></i>
-                                            <span>Update: Januari 2024</span>
-                                        </div>
-                                        <div class="meta-item">
-                                            <i class="bi bi-file-earmark-text"></i>
-                                            <span>Format: PDF, DOC</span>
+                                    <div class="text-end mt-2">
+                                        <a href="#" class="adv-search-link text-decoration-none">
+                                            <i class="bi bi-sliders"></i> Pencarian Lanjutan
+                                        </a>
+                                    </div>
+                                </form>
+                            </div>
+                            
+                            <!-- STATISTIK -->
+                            <div class="row mb-4">
+                                <div class="col-md-3 col-6 mb-3">
+                                    <div class="document-card">
+                                        <div class="card-content text-center">
+                                            <div class="card-number fs-2">24</div>
+                                            <div class="card-title">Total Himpunan</div>
                                         </div>
                                     </div>
-                                    <div class="collection-actions">
-                                        <a href="#" class="btn-view">
-                                            <i class="bi bi-eye"></i> Lihat Peraturan
-                                        </a>
-                                        <a href="#" class="btn-download">
-                                            <i class="bi bi-download"></i> Download
-                                        </a>
+                                </div>
+                                <div class="col-md-3 col-6 mb-3">
+                                    <div class="document-card">
+                                        <div class="card-content text-center">
+                                            <div class="card-number fs-2 text-primary">3</div>
+                                            <div class="card-title">Tahun 2024</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-6 mb-3">
+                                    <div class="document-card">
+                                        <div class="card-content text-center">
+                                            <div class="card-number fs-2 text-success">856</div>
+                                            <div class="card-title">Total Peraturan</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-6 mb-3">
+                                    <div class="document-card">
+                                        <div class="card-content text-center">
+                                            <div class="card-number fs-2 text-warning">18</div>
+                                            <div class="card-title">Bidang Tema</div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                             
-                            <!-- Himpunan 2 -->
-                            <div class="collection-card">
-                                <div class="collection-header">
-                                    <div class="collection-icon">
-                                        <i class="bi bi-cash-coin"></i>
+                            <!-- DAFTAR HIMPUNAN -->
+                            <h3 class="section-title">Himpunan Peraturan Terbaru</h3>
+                            
+                            <div class="card-container">
+                                <!-- Himpunan 1 -->
+                                <div class="document-card">
+                                    <div class="card-image">
+                                        <div class="placeholder">
+                                            <i class="bi bi-building"></i>
+                                            <p>PEMERINTAHAN</p>
+                                        </div>
+                                        <div class="image-overlay">
+                                            <span class="image-badge bg-primary">142 Peraturan</span>
+                                        </div>
                                     </div>
-                                    <h3 class="collection-title">Himpunan Peraturan Bidang Keuangan & APBD</h3>
-                                    <div class="collection-count">98 Peraturan</div>
+                                    <div class="card-content">
+                                        <div class="card-number">HP/GOV/01/2024</div>
+                                        <h3 class="card-title">
+                                            <a href="#" class="text-decoration-none text-dark">Himpunan Peraturan Bidang Pemerintahan</a>
+                                        </h3>
+                                        <div class="card-meta">
+                                            <div class="card-date">
+                                                <i class="bi bi-calendar"></i> Januari 2024
+                                            </div>
+                                            <div class="card-status bg-primary">
+                                                PDF, DOC
+                                            </div>
+                                        </div>
+                                        <p class="mt-2 small text-muted">
+                                            Kumpulan peraturan terkait pemerintahan daerah, organisasi perangkat daerah, 
+                                            tata laksana, dan pelayanan publik di Kota Surakarta.
+                                        </p>
+                                        <div class="card-actions">
+                                            <a href="#" class="card-btn btn-view">
+                                                <i class="bi bi-eye"></i> Lihat
+                                            </a>
+                                            <a href="#" class="card-btn btn-download">
+                                                <i class="bi bi-download"></i> Unduh
+                                            </a>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="collection-body">
-                                    <p class="collection-description">
-                                        Kompilasi peraturan tentang pengelolaan keuangan daerah, APBD, pajak daerah, 
-                                        retribusi, dan pengelolaan aset daerah.
-                                    </p>
-                                    <div class="collection-meta">
-                                        <div class="meta-item">
-                                            <i class="bi bi-calendar"></i>
-                                            <span>Update: Desember 2023</span>
+                                
+                                <!-- Himpunan 2 -->
+                                <div class="document-card">
+                                    <div class="card-image">
+                                        <div class="placeholder">
+                                            <i class="bi bi-cash-coin"></i>
+                                            <p>KEUANGAN</p>
                                         </div>
-                                        <div class="meta-item">
-                                            <i class="bi bi-file-earmark-text"></i>
-                                            <span>Format: PDF, XLS</span>
+                                        <div class="image-overlay">
+                                            <span class="image-badge bg-success">98 Peraturan</span>
                                         </div>
                                     </div>
-                                    <div class="collection-actions">
-                                        <a href="#" class="btn-view">
-                                            <i class="bi bi-eye"></i> Lihat Peraturan
-                                        </a>
-                                        <a href="#" class="btn-download">
-                                            <i class="bi bi-download"></i> Download
-                                        </a>
+                                    <div class="card-content">
+                                        <div class="card-number">HP/FIN/02/2023</div>
+                                        <h3 class="card-title">
+                                            <a href="#" class="text-decoration-none text-dark">Himpunan Peraturan Bidang Keuangan & APBD</a>
+                                        </h3>
+                                        <div class="card-meta">
+                                            <div class="card-date">
+                                                <i class="bi bi-calendar"></i> Desember 2023
+                                            </div>
+                                            <div class="card-status bg-success">
+                                                PDF, XLS
+                                            </div>
+                                        </div>
+                                        <p class="mt-2 small text-muted">
+                                            Kompilasi peraturan tentang pengelolaan keuangan daerah, APBD, pajak daerah, 
+                                            retribusi, dan pengelolaan aset daerah.
+                                        </p>
+                                        <div class="card-actions">
+                                            <a href="#" class="card-btn btn-view">
+                                                <i class="bi bi-eye"></i> Lihat
+                                            </a>
+                                            <a href="#" class="card-btn btn-download">
+                                                <i class="bi bi-download"></i> Unduh
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Himpunan 3 -->
+                                <div class="document-card">
+                                    <div class="card-image">
+                                        <div class="placeholder">
+                                            <i class="bi bi-tree"></i>
+                                            <p>LINGKUNGAN</p>
+                                        </div>
+                                        <div class="image-overlay">
+                                            <span class="image-badge bg-info">76 Peraturan</span>
+                                        </div>
+                                    </div>
+                                    <div class="card-content">
+                                        <div class="card-number">HP/ENV/03/2023</div>
+                                        <h3 class="card-title">
+                                            <a href="#" class="text-decoration-none text-dark">Himpunan Peraturan Bidang Lingkungan Hidup</a>
+                                        </h3>
+                                        <div class="card-meta">
+                                            <div class="card-date">
+                                                <i class="bi bi-calendar"></i> November 2023
+                                            </div>
+                                            <div class="card-status bg-info">
+                                                PDF
+                                            </div>
+                                        </div>
+                                        <p class="mt-2 small text-muted">
+                                            Kumpulan peraturan tentang pengelolaan lingkungan, AMDAL, pengendalian pencemaran, 
+                                            pengelolaan sampah, dan ruang terbuka hijau.
+                                        </p>
+                                        <div class="card-actions">
+                                            <a href="#" class="card-btn btn-view">
+                                                <i class="bi bi-eye"></i> Lihat
+                                            </a>
+                                            <a href="#" class="card-btn btn-download">
+                                                <i class="bi bi-download"></i> Unduh
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Himpunan 4 -->
+                                <div class="document-card">
+                                    <div class="card-image">
+                                        <div class="placeholder">
+                                            <i class="bi bi-house"></i>
+                                            <p>TATA RUANG</p>
+                                        </div>
+                                        <div class="image-overlay">
+                                            <span class="image-badge bg-warning">64 Peraturan</span>
+                                        </div>
+                                    </div>
+                                    <div class="card-content">
+                                        <div class="card-number">HP/SPA/04/2023</div>
+                                        <h3 class="card-title">
+                                            <a href="#" class="text-decoration-none text-dark">Himpunan Peraturan Bidang Tata Ruang & Bangunan</a>
+                                        </h3>
+                                        <div class="card-meta">
+                                            <div class="card-date">
+                                                <i class="bi bi-calendar"></i> Oktober 2023
+                                            </div>
+                                            <div class="card-status bg-warning text-dark">
+                                                PDF, DWG
+                                            </div>
+                                        </div>
+                                        <p class="mt-2 small text-muted">
+                                            Kompilasi peraturan tentang rencana tata ruang wilayah, IMB, bangunan gedung, 
+                                            perumahan, dan kawasan permukiman.
+                                        </p>
+                                        <div class="card-actions">
+                                            <a href="#" class="card-btn btn-view">
+                                                <i class="bi bi-eye"></i> Lihat
+                                            </a>
+                                            <a href="#" class="card-btn btn-download">
+                                                <i class="bi bi-download"></i> Unduh
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Himpunan 5 -->
+                                <div class="document-card">
+                                    <div class="card-image">
+                                        <div class="placeholder">
+                                            <i class="bi bi-shop"></i>
+                                            <p>PERDAGANGAN</p>
+                                        </div>
+                                        <div class="image-overlay">
+                                            <span class="image-badge bg-primary">58 Peraturan</span>
+                                        </div>
+                                    </div>
+                                    <div class="card-content">
+                                        <div class="card-number">HP/TRD/05/2023</div>
+                                        <h3 class="card-title">
+                                            <a href="#" class="text-decoration-none text-dark">Himpunan Peraturan Bidang Perdagangan & UMKM</a>
+                                        </h3>
+                                        <div class="card-meta">
+                                            <div class="card-date">
+                                                <i class="bi bi-calendar"></i> September 2023
+                                            </div>
+                                            <div class="card-status bg-primary">
+                                                PDF, DOC
+                                            </div>
+                                        </div>
+                                        <p class="mt-2 small text-muted">
+                                            Kumpulan peraturan tentang perdagangan, pasar tradisional, UMKM, industri kreatif, 
+                                            dan perlindungan konsumen.
+                                        </p>
+                                        <div class="card-actions">
+                                            <a href="#" class="card-btn btn-view">
+                                                <i class="bi bi-eye"></i> Lihat
+                                            </a>
+                                            <a href="#" class="card-btn btn-download">
+                                                <i class="bi bi-download"></i> Unduh
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Himpunan 6 -->
+                                <div class="document-card">
+                                    <div class="card-image">
+                                        <div class="placeholder">
+                                            <i class="bi bi-heart-pulse"></i>
+                                            <p>KESEHATAN</p>
+                                        </div>
+                                        <div class="image-overlay">
+                                            <span class="image-badge bg-success">72 Peraturan</span>
+                                        </div>
+                                    </div>
+                                    <div class="card-content">
+                                        <div class="card-number">HP/HLT/06/2023</div>
+                                        <h3 class="card-title">
+                                            <a href="#" class="text-decoration-none text-dark">Himpunan Peraturan Bidang Kesehatan & Sosial</a>
+                                        </h3>
+                                        <div class="card-meta">
+                                            <div class="card-date">
+                                                <i class="bi bi-calendar"></i> Agustus 2023
+                                            </div>
+                                            <div class="card-status bg-success">
+                                                PDF
+                                            </div>
+                                        </div>
+                                        <p class="mt-2 small text-muted">
+                                            Kompilasi peraturan tentang pelayanan kesehatan, jaminan sosial, perlindungan anak, 
+                                            penyandang disabilitas, dan kesejahteraan sosial.
+                                        </p>
+                                        <div class="card-actions">
+                                            <a href="#" class="card-btn btn-view">
+                                                <i class="bi bi-eye"></i> Lihat
+                                            </a>
+                                            <a href="#" class="card-btn btn-download">
+                                                <i class="bi bi-download"></i> Unduh
+                                            </a>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                             
-                            <!-- Himpunan 3 -->
-                            <div class="collection-card">
-                                <div class="collection-header">
-                                    <div class="collection-icon">
-                                        <i class="bi bi-tree"></i>
-                                    </div>
-                                    <h3 class="collection-title">Himpunan Peraturan Bidang Lingkungan Hidup</h3>
-                                    <div class="collection-count">76 Peraturan</div>
-                                </div>
-                                <div class="collection-body">
-                                    <p class="collection-description">
-                                        Kumpulan peraturan tentang pengelolaan lingkungan, AMDAL, pengendalian pencemaran, 
-                                        pengelolaan sampah, dan ruang terbuka hijau.
-                                    </p>
-                                    <div class="collection-meta">
-                                        <div class="meta-item">
-                                            <i class="bi bi-calendar"></i>
-                                            <span>Update: November 2023</span>
-                                        </div>
-                                        <div class="meta-item">
-                                            <i class="bi bi-file-earmark-text"></i>
-                                            <span>Format: PDF</span>
-                                        </div>
-                                    </div>
-                                    <div class="collection-actions">
-                                        <a href="#" class="btn-view">
-                                            <i class="bi bi-eye"></i> Lihat Peraturan
-                                        </a>
-                                        <a href="#" class="btn-download">
-                                            <i class="bi bi-download"></i> Download
-                                        </a>
-                                    </div>
-                                </div>
+                            <!-- PAGINATION -->
+                            <div class="pagination-container mt-4">
+                                <nav aria-label="Page navigation">
+                                    <ul class="pagination justify-content-center">
+                                        <li class="page-item disabled">
+                                            <a class="page-link" href="#" aria-label="Previous">
+                                                <span aria-hidden="true">&laquo;</span>
+                                            </a>
+                                        </li>
+                                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                                        <li class="page-item"><a class="page-link" href="#">2</a></li>
+                                        <li class="page-item"><a class="page-link" href="#">3</a></li>
+                                        <li class="page-item"><a class="page-link" href="#">4</a></li>
+                                        <li class="page-item"><a class="page-link" href="#">5</a></li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="#" aria-label="Next">
+                                                <span aria-hidden="true">&raquo;</span>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </nav>
                             </div>
                             
-                            <!-- Himpunan 4 -->
-                            <div class="collection-card">
-                                <div class="collection-header">
-                                    <div class="collection-icon">
-                                        <i class="bi bi-house"></i>
-                                    </div>
-                                    <h3 class="collection-title">Himpunan Peraturan Bidang Tata Ruang & Bangunan</h3>
-                                    <div class="collection-count">64 Peraturan</div>
-                                </div>
-                                <div class="collection-body">
-                                    <p class="collection-description">
-                                        Kompilasi peraturan tentang rencana tata ruang wilayah, IMB, bangunan gedung, 
-                                        perumahan, dan kawasan permukiman.
-                                    </p>
-                                    <div class="collection-meta">
-                                        <div class="meta-item">
-                                            <i class="bi bi-calendar"></i>
-                                            <span>Update: Oktober 2023</span>
-                                        </div>
-                                        <div class="meta-item">
-                                            <i class="bi bi-file-earmark-text"></i>
-                                            <span>Format: PDF, DWG</span>
+                            <!-- KEUNGGULAN HIMPUNAN -->
+                            <div class="year-filter mt-5">
+                                <h4 class="section-title"><i class="bi bi-star text-primary me-2"></i>Keunggulan Himpunan Peraturan</h4>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="text-center p-3">
+                                            <div class="mb-3">
+                                                <i class="bi bi-search fs-1 text-primary"></i>
+                                            </div>
+                                            <h5>Mudah Dicari</h5>
+                                            <p class="small">Dikelompokkan berdasarkan tema</p>
                                         </div>
                                     </div>
-                                    <div class="collection-actions">
-                                        <a href="#" class="btn-view">
-                                            <i class="bi bi-eye"></i> Lihat Peraturan
-                                        </a>
-                                        <a href="#" class="btn-download">
-                                            <i class="bi bi-download"></i> Download
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Himpunan 5 -->
-                            <div class="collection-card">
-                                <div class="collection-header">
-                                    <div class="collection-icon">
-                                        <i class="bi bi-shop"></i>
-                                    </div>
-                                    <h3 class="collection-title">Himpunan Peraturan Bidang Perdagangan & UMKM</h3>
-                                    <div class="collection-count">58 Peraturan</div>
-                                </div>
-                                <div class="collection-body">
-                                    <p class="collection-description">
-                                        Kumpulan peraturan tentang perdagangan, pasar tradisional, UMKM, industri kreatif, 
-                                        dan perlindungan konsumen.
-                                    </p>
-                                    <div class="collection-meta">
-                                        <div class="meta-item">
-                                            <i class="bi bi-calendar"></i>
-                                            <span>Update: September 2023</span>
-                                        </div>
-                                        <div class="meta-item">
-                                            <i class="bi bi-file-earmark-text"></i>
-                                            <span>Format: PDF, DOC</span>
+                                    <div class="col-md-4">
+                                        <div class="text-center p-3">
+                                            <div class="mb-3">
+                                                <i class="bi bi-clock-history fs-1 text-primary"></i>
+                                            </div>
+                                            <h5>Selalu Update</h5>
+                                            <p class="small">Diperbarui secara berkala</p>
                                         </div>
                                     </div>
-                                    <div class="collection-actions">
-                                        <a href="#" class="btn-view">
-                                            <i class="bi bi-eye"></i> Lihat Peraturan
-                                        </a>
-                                        <a href="#" class="btn-download">
-                                            <i class="bi bi-download"></i> Download
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Himpunan 6 -->
-                            <div class="collection-card">
-                                <div class="collection-header">
-                                    <div class="collection-icon">
-                                        <i class="bi bi-heart-pulse"></i>
-                                    </div>
-                                    <h3 class="collection-title">Himpunan Peraturan Bidang Kesehatan & Sosial</h3>
-                                    <div class="collection-count">72 Peraturan</div>
-                                </div>
-                                <div class="collection-body">
-                                    <p class="collection-description">
-                                        Kompilasi peraturan tentang pelayanan kesehatan, jaminan sosial, perlindungan anak, 
-                                        penyandang disabilitas, dan kesejahteraan sosial.
-                                    </p>
-                                    <div class="collection-meta">
-                                        <div class="meta-item">
-                                            <i class="bi bi-calendar"></i>
-                                            <span>Update: Agustus 2023</span>
+                                    <div class="col-md-4">
+                                        <div class="text-center p-3">
+                                            <div class="mb-3">
+                                                <i class="bi bi-download fs-1 text-primary"></i>
+                                            </div>
+                                            <h5>Download Lengkap</h5>
+                                            <p class="small">Format lengkap dalam satu file</p>
                                         </div>
-                                        <div class="meta-item">
-                                            <i class="bi bi-file-earmark-text"></i>
-                                            <span>Format: PDF</span>
-                                        </div>
-                                    </div>
-                                    <div class="collection-actions">
-                                        <a href="#" class="btn-view">
-                                            <i class="bi bi-eye"></i> Lihat Peraturan
-                                        </a>
-                                        <a href="#" class="btn-download">
-                                            <i class="bi bi-download"></i> Download
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- PAGINATION -->
-                        <div class="pagination-container">
-                            <nav aria-label="Page navigation">
-                                <ul class="pagination">
-                                    <li class="page-item disabled">
-                                        <a class="page-link" href="#" aria-label="Previous">
-                                            <span aria-hidden="true">&laquo;</span>
-                                        </a>
-                                    </li>
-                                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                                    <li class="page-item"><a class="page-link" href="#">2</a></li>
-                                    <li class="page-item"><a class="page-link" href="#">3</a></li>
-                                    <li class="page-item"><a class="page-link" href="#">4</a></li>
-                                    <li class="page-item">
-                                        <a class="page-link" href="#" aria-label="Next">
-                                            <span aria-hidden="true">&raquo;</span>
-                                        </a>
-                                    </li>
-                                </ul>
-                            </nav>
-                        </div>
-                        
-                        <!-- KEUNGGULAN HIMPUNAN -->
-                        <div class="mt-5 pt-4 border-top">
-                            <h4 class="mb-3"><i class="bi bi-star text-primary me-2"></i>Keunggulan Himpunan Peraturan</h4>
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <div class="text-center p-3">
-                                        <div class="mb-3">
-                                            <i class="bi bi-search fs-1 text-primary"></i>
-                                        </div>
-                                        <h5>Mudah Dicari</h5>
-                                        <p class="small">Dikelompokkan berdasarkan tema</p>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="text-center p-3">
-                                        <div class="mb-3">
-                                            <i class="bi bi-clock-history fs-1 text-primary"></i>
-                                        </div>
-                                        <h5>Selalu Update</h5>
-                                        <p class="small">Diperbarui secara berkala</p>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="text-center p-3">
-                                        <div class="mb-3">
-                                            <i class="bi bi-download fs-1 text-primary"></i>
-                                        </div>
-                                        <h5>Download Lengkap</h5>
-                                        <p class="small">Format lengkap dalam satu file</p>
                                     </div>
                                 </div>
                             </div>
@@ -985,7 +520,7 @@
     document.querySelectorAll('.btn-view').forEach(btn => {
         btn.addEventListener('click', function(e) {
             e.preventDefault();
-            const collectionTitle = this.closest('.collection-card').querySelector('.collection-title').textContent;
+            const collectionTitle = this.closest('.document-card').querySelector('.card-title').textContent;
             
             alert(`Melihat daftar peraturan dalam himpunan: "${collectionTitle}"\n\nDalam implementasi real, akan membuka halaman daftar peraturan.`);
         });
@@ -995,8 +530,8 @@
     document.querySelectorAll('.btn-download').forEach(btn => {
         btn.addEventListener('click', function(e) {
             e.preventDefault();
-            const collectionTitle = this.closest('.collection-card').querySelector('.collection-title').textContent;
-            const collectionCount = this.closest('.collection-card').querySelector('.collection-count').textContent;
+            const collectionTitle = this.closest('.document-card').querySelector('.card-title').textContent;
+            const collectionCount = this.closest('.document-card').querySelector('.image-badge').textContent;
             
             alert(`Mengunduh himpunan peraturan: "${collectionTitle}"\n\n${collectionCount}\n\nDokumen akan mulai diunduh dalam beberapa detik.`);
             

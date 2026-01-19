@@ -1,330 +1,30 @@
 <?php
 $pageTitle = 'Hasil-Fasilitasi - JDIH DPRD Kota Surakarta';
-include 'header.php';
 ?>
 
-<style>
-        /* OVERRIDE UNTUK HALAMAN MONOGRAFI */
-        body {
-            padding-top: 80px;
-        }
-        
-        /* HEADER SECTION */
-        .page-header {
-            background: linear-gradient(15deg, #13547a 0%, #80d0c7 100%);
-            padding: 40px 0 30px 0;
-            margin-top: 0;
-            color: white;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .page-header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ffffff" fill-opacity="0.1" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,112C672,96,768,96,864,112C960,128,1056,160,1152,160C1248,160,1344,128,1392,112L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>');
-            background-size: cover;
-            background-position: bottom;
-            opacity: 0.1;
-        }
-        
-        .page-header h1 {
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 700;
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            position: relative;
-            z-index: 2;
-        }
-        
-        .page-header .subtitle {
-            font-size: 1.1rem;
-            opacity: 0.9;
-            margin-bottom: 20px;
-            position: relative;
-            z-index: 2;
-        }
-        
-        .page-header .breadcrumb {
-            background: transparent;
-            padding: 0;
-            margin: 0;
-            position: relative;
-            z-index: 2;
-        }
-        
-        .page-header .breadcrumb-item a {
-            color: rgba(255, 255, 255, 0.8);
-            text-decoration: none;
-        }
-        
-        .page-header .breadcrumb-item.active {
-            color: white;
-        }
-        
-        .page-header .breadcrumb-item+.breadcrumb-item::before {
-            color: rgba(255, 255, 255, 0.8);
-        }
-
-        /* MAIN CONTENT */
-        .main-content {
-            padding: 50px 0 60px 0;
-            background: #f0f8ff;
-        }
-        
-        .section-title {
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 600;
-            color: #13547a;
-            margin-bottom: 30px;
-            position: relative;
-            padding-bottom: 15px;
-        }
-        
-        .section-title::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100px;
-            height: 3px;
-            background: linear-gradient(to right, #13547a, #80d0c7);
-        }
-
-        /* MONOGRAFI CONTENT */
-        .monografi-container {
-            background: white;
-            border-radius: var(--border-radius-medium);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-            padding: 40px;
-            margin-bottom: 40px;
-        }
-        
-        .monografi-header {
-            text-align: center;
-            margin-bottom: 40px;
-            padding-bottom: 30px;
-            border-bottom: 2px solid #f0f8ff;
-        }
-        
-        .monografi-icon {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, #13547a 0%, #80d0c7 100%);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 20px;
-            color: white;
-            font-size: 2rem;
-        }
-        
-        .monografi-description {
-            color: #666;
-            font-size: 1.1rem;
-            line-height: 1.6;
-            text-align: center;
-            max-width: 800px;
-            margin: 0 auto 40px;
-        }
-
-        /* SEARCH BOX */
-        .search-monografi {
-            background: #f8f9fa;
-            border-radius: var(--border-radius-medium);
-            padding: 30px;
-            margin-bottom: 30px;
-            border: 2px solid #e9ecef;
-        }
-        
-        .search-form .input-group {
-            margin-bottom: 20px;
-        }
-        
-        .search-form input {
-            border: 2px solid #13547a;
-            border-right: none;
-            height: 50px;
-            font-size: 1rem;
-        }
-        
-        .search-form input:focus {
-            box-shadow: 0 0 0 0.2rem rgba(19, 84, 122, 0.25);
-        }
-        
-        .search-form .btn-search {
-            background: #13547a;
-            color: white;
-            border: 2px solid #13547a;
-            height: 50px;
-            padding: 0 25px;
-            font-weight: 600;
-        }
-        
-        .search-form .btn-search:hover {
-            background: #0d3a58;
-            border-color: #0d3a58;
-        }
-        
-        .adv-search-link {
-            color: #13547a;
-            text-decoration: none;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            transition: all 0.3s;
-        }
-        
-        .adv-search-link:hover {
-            color: #80d0c7;
-            gap: 8px;
-        }
-
-        /* DOCUMENT LIST */
-        .document-list {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        
-        .document-item {
-            background: white;
-            border-radius: var(--border-radius-small);
-            padding: 20px;
-            border: 1px solid #e9ecef;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: flex-start;
-            gap: 20px;
-        }
-        
-        .document-item:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            border-color: #80d0c7;
-        }
-        
-        .document-icon {
-            width: 60px;
-            height: 60px;
-            background: #f0f8ff;
-            border-radius: var(--border-radius-small);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #13547a;
-            font-size: 1.5rem;
-            flex-shrink: 0;
-        }
-        
-        .document-content {
-            flex: 1;
-        }
-        
-        .document-title {
-            color: #13547a;
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 600;
-            font-size: 1.2rem;
-            margin-bottom: 10px;
-            line-height: 1.4;
-        }
-        
-        .document-title a {
-            color: inherit;
-            text-decoration: none;
-            transition: all 0.3s;
-        }
-        
-        .document-title a:hover {
-            color: #80d0c7;
-        }
-        
-        .document-meta {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            margin-bottom: 15px;
-            font-size: 0.9rem;
-            color: #666;
-        }
-        
-        .meta-item {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        
-        .meta-item i {
-            color: #80d0c7;
-        }
-        
-        .document-excerpt {
-            color: #666;
-            line-height: 1.6;
-            margin-bottom: 15px;
-            font-size: 0.95rem;
-        }
-        
-        .document-actions {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        
-        .btn-download {
-            background: #13547a;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: var(--border-radius-small);
-            font-size: 0.9rem;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            transition: all 0.3s;
-        }
-        
-        .btn-download:hover {
-            background: #0d3a58;
-            color: white;
-            transform: translateY(-2px);
-        }
-        
-        .btn-preview {
-            background: #f0f8ff;
-            color: #13547a;
-            border: 1px solid #13547a;
-            padding: 8px 15px;
-            border-radius: var(--border-radius-small);
-            font-size: 0.9rem;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            transition: all 0.3s;
-        }
-        
-        .btn-preview:hover {
-            background: #13547a;
-            color: white;
-            transform: translateY(-2px);
-        }
-
-        /* STATUS BADGE */
+<!doctype html>
+<html lang="id">
+<head>
+    <meta charset="utf-8">
+    <title><?php echo $pageTitle; ?></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <style>
+        <?php include "style-keputusan-dprd.css"; ?>
+    </style>
+    
+    <style>
+        /* Additional styles for Hasil Fasilitasi */
         .status-badge {
-            padding: 5px 10px;
-            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 12px;
             font-size: 0.8rem;
-            font-weight: 600;
-            display: inline-block;
+            font-weight: 500;
+            margin-right: 8px;
+            margin-bottom: 10px;
         }
         
         .status-selesai {
@@ -341,214 +41,56 @@ include 'header.php';
             background: #f8d7da;
             color: #721c24;
         }
-
-        /* PAGINATION */
-        .pagination-container {
-            display: flex;
-            justify-content: center;
-            margin-top: 30px;
-        }
         
-        .pagination {
-            display: flex;
-            gap: 5px;
-        }
-        
-        .page-item .page-link {
-            border: none;
+        .facilitator-info {
             background: #f8f9fa;
-            color: #13547a;
-            border-radius: var(--border-radius-small);
-            padding: 8px 15px;
-            transition: all 0.3s;
-        }
-        
-        .page-item.active .page-link {
-            background: #13547a;
-            color: white;
-        }
-        
-        .page-item .page-link:hover {
-            background: #e0e0e0;
-            transform: translateY(-2px);
-        }
-
-        /* SIDEBAR */
-        .sidebar-menu {
-            background: white;
-            border-radius: var(--border-radius-medium);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-            padding: 25px;
-            margin-bottom: 30px;
-        }
-        
-        .sidebar-menu h4 {
-            color: #13547a;
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 600;
-            font-size: 1.2rem;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #f0f0f0;
-            display: flex;
-            align-items: center;
-        }
-        
-        .sidebar-menu h4 i {
-            color: #80d0c7;
-            margin-right: 10px;
-        }
-        
-        .sidebar-menu ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        
-        .sidebar-menu ul li {
-            margin-bottom: 12px;
-        }
-        
-        .sidebar-menu ul li:last-child {
-            margin-bottom: 0;
-        }
-        
-        .sidebar-menu ul li a {
-            color: var(--p-color);
-            text-decoration: none;
-            padding: 12px 15px;
-            border-radius: var(--border-radius-small);
-            display: flex;
-            align-items: center;
-            transition: all 0.3s;
-            font-weight: 500;
-        }
-        
-        .sidebar-menu ul li.active a {
-            background: #f0f8ff;
-            color: #13547a;
-            font-weight: 600;
-        }
-        
-        .sidebar-menu ul li a:hover {
-            background: #f0f8ff;
-            color: #13547a;
-            transform: translateX(5px);
-        }
-        
-        .sidebar-menu ul li a i {
-            color: #80d0c7;
-            margin-right: 10px;
+            border-left: 4px solid #13547a;
+            padding: 15px;
+            border-radius: 0 8px 8px 0;
+            margin-top: 15px;
             font-size: 0.9rem;
         }
-
-        /* STATS BOX */
-        .stats-box {
-            background: linear-gradient(135deg, #13547a 0%, #80d0c7 100%);
-            color: white;
-            border-radius: var(--border-radius-medium);
-            padding: 25px;
-            margin-bottom: 30px;
-            text-align: center;
-        }
         
-        .stats-number {
-            font-size: 2.5rem;
-            font-weight: 700;
+        .facilitator-title {
+            font-weight: 600;
+            color: #13547a;
             margin-bottom: 5px;
         }
         
-        .stats-label {
-            font-size: 1rem;
-            opacity: 0.9;
+        .facilitator-details {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 10px;
         }
         
-        /* RESPONSIVE */
-        @media (max-width: 768px) {
-            body {
-                padding-top: 70px;
-            }
-            
-            .page-header {
-                padding: 30px 0 20px 0;
-            }
-            
-            .page-header h1 {
-                font-size: 2rem;
-            }
-            
-            .main-content {
-                padding: 30px 0 40px 0;
-            }
-            
-            .monografi-container {
-                padding: 30px;
-            }
-            
-            .document-item {
-                flex-direction: column;
-                gap: 15px;
-            }
-            
-            .document-icon {
-                width: 50px;
-                height: 50px;
-                font-size: 1.2rem;
-            }
-            
-            .document-meta {
-                flex-direction: column;
-                gap: 10px;
-            }
-            
-            .document-actions {
-                justify-content: flex-start;
-            }
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #718096;
+            font-size: 0.9rem;
         }
         
-        @media (max-width: 576px) {
-            .page-header h1 {
-                font-size: 1.8rem;
-            }
-            
-            .section-title {
-                font-size: 1.3rem;
-            }
-            
-            .monografi-icon {
-                width: 60px;
-                height: 60px;
-                font-size: 1.5rem;
-            }
-            
-            .search-form input,
-            .search-form .btn-search {
-                height: 45px;
-            }
+        .detail-item i {
+            color: #13547a;
+        }
+        
+        .raperda-link {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
         }
     </style>
 </head>
 
 <body id="top">
 
-    <!-- HEADER SECTION -->
-    <section class="page-header">
-        <div class="container">
-            <div class="row">
-                <div class="col-12">
-                    <h1 class="text-white">MONOGRAFI HUKUM</h1>
-                    <p class="subtitle">Hasil Fasilitasi Raperda Kota Surakarta</p>
-                    <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb">
-                            <li class="breadcrumb-item"><a href="index.php">Beranda</a></li>
-                            <li class="breadcrumb-item"><a href="#">Monografi Hukum</a></li>
-                            <li class="breadcrumb-item active" aria-current="page">Hasil Fasilitasi Raperda</li>
-                        </ol>
-                    </nav>
-                </div>
-            </div>
-        </div>
-    </section>
+    <!-- NAVBAR & HEADER -->
+    <?php include "header.php"; ?>
 
     <!-- MAIN CONTENT -->
     <section class="main-content">
@@ -573,8 +115,8 @@ include 'header.php';
                         </div>
                         
                         <!-- PENCARIAN -->
-                        <div class="search-monografi">
-                            <h4 class="mb-4">Cari Hasil Fasilitasi Raperda</h4>
+                        <div class="year-filter">
+                            <h5>Cari Hasil Fasilitasi Raperda</h5>
                             <form class="search-form">
                                 <div class="input-group">
                                     <input type="text" class="form-control" placeholder="Masukkan kata kunci hasil fasilitasi..." 
@@ -583,7 +125,7 @@ include 'header.php';
                                         <i class="bi bi-search"></i> CARI
                                     </button>
                                 </div>
-                                <div class="text-end">
+                                <div class="text-end mt-3">
                                     <a href="#" class="adv-search-link">
                                         <i class="bi bi-sliders"></i> Pencarian Lanjutan
                                     </a>
@@ -622,179 +164,354 @@ include 'header.php';
                         <!-- DAFTAR DOKUMEN -->
                         <h3 class="section-title">Hasil Fasilitasi Terbaru</h3>
                         
-                        <div class="document-list">
+                        <div class="card-container">
                             <!-- Dokumen 1 -->
-                            <div class="document-item">
-                                <div class="document-icon">
-                                    <i class="bi bi-file-earmark-text"></i>
+                            <div class="document-card">
+                                <div class="card-image">
+                                    <div class="placeholder">
+                                        <i class="bi bi-gear"></i>
+                                        <p>Hasil Fasilitasi</p>
+                                    </div>
+                                    <div class="image-overlay">
+                                        <span class="image-badge">2024</span>
+                                    </div>
                                 </div>
-                                <div class="document-content">
-                                    <span class="status-badge status-selesai">SELESAI</span>
-                                    <h3 class="document-title">
-                                        <a href="#">Hasil Fasilitasi Rapat Penyusunan Raperda tentang Penyelenggaraan Pariwisata Berkelanjutan</a>
-                                    </h3>
-                                    <div class="document-meta">
-                                        <div class="meta-item">
-                                            <i class="bi bi-calendar"></i>
-                                            <span>Tanggal: 22 Januari 2024</span>
-                                        </div>
-                                        <div class="meta-item">
-                                            <i class="bi bi-journal-text"></i>
-                                            <span>Nomor: HF/DPRD/01/2024</span>
-                                        </div>
-                                        <div class="meta-item">
-                                            <i class="bi bi-person"></i>
-                                            <span>Fasilitator: Dr. H. Bambang Sutrisno, SH., MH.</span>
-                                        </div>
-                                        <div class="meta-item">
-                                            <i class="bi bi-tag"></i>
-                                            <span>Raperda: Raperda Pariwisata</span>
+                                <div class="card-content">
+                                    <div class="d-flex flex-wrap mb-3">
+                                        <span class="status-badge status-selesai">
+                                            <i class="bi bi-check-circle"></i> SELESAI
+                                        </span>
+                                        <span class="raperda-link">
+                                            <i class="bi bi-link-45deg"></i> Raperda Pariwisata
+                                        </span>
+                                    </div>
+                                    <div class="card-number">HF/DPRD/01/2024</div>
+                                    <h4 class="card-title">
+                                        <a href="#" class="text-decoration-none text-dark">Hasil Fasilitasi Rapat Penyusunan Raperda tentang Penyelenggaraan Pariwisata Berkelanjutan</a>
+                                    </h4>
+                                    <div class="facilitator-info">
+                                        <div class="facilitator-title">Fasilitator & Detail:</div>
+                                        <div class="facilitator-details">
+                                            <div class="detail-item">
+                                                <i class="bi bi-person"></i>
+                                                <span>Dr. H. Bambang Sutrisno, SH., MH.</span>
+                                            </div>
+                                            <div class="detail-item">
+                                                <i class="bi bi-calendar"></i>
+                                                <span>22 Januari 2024</span>
+                                            </div>
+                                            <div class="detail-item">
+                                                <i class="bi bi-clock"></i>
+                                                <span>09:00 - 15:00 WIB</span>
+                                            </div>
                                         </div>
                                     </div>
-                                    <p class="document-excerpt">
-                                        Notulensi dan kesepakatan hasil fasilitasi rapat penyusunan Raperda Pariwisata Berkelanjutan dengan pemangku kepentingan terkait...
-                                    </p>
-                                    <div class="document-actions">
-                                        <a href="#" class="btn-download">
-                                            <i class="bi bi-download"></i> Download PDF
-                                        </a>
-                                        <a href="#" class="btn-preview">
+                                    <div class="card-meta">
+                                        <div class="card-date">Upload: 24 Januari 2024</div>
+                                        <div class="card-status">Halaman: 28</div>
+                                    </div>
+                                    <div class="card-actions">
+                                        <a href="#" class="card-btn btn-view">
                                             <i class="bi bi-eye"></i> Preview
                                         </a>
-                                        <a href="#" class="btn-preview">
-                                            <i class="bi bi-link-45deg"></i> Lihat Raperda
+                                        <a href="#" class="card-btn btn-download">
+                                            <i class="bi bi-download"></i> Download
+                                        </a>
+                                        <a href="#" class="card-btn btn-view">
+                                            <i class="bi bi-link-45deg"></i> Raperda
                                         </a>
                                     </div>
                                 </div>
                             </div>
                             
                             <!-- Dokumen 2 -->
-                            <div class="document-item">
-                                <div class="document-icon">
-                                    <i class="bi bi-file-earmark-text"></i>
+                            <div class="document-card">
+                                <div class="card-image">
+                                    <div class="placeholder">
+                                        <i class="bi bi-people"></i>
+                                        <p>Konsultasi Publik</p>
+                                    </div>
+                                    <div class="image-overlay">
+                                        <span class="image-badge">2024</span>
+                                    </div>
                                 </div>
-                                <div class="document-content">
-                                    <span class="status-badge status-proses">DALAM PROSES</span>
-                                    <h3 class="document-title">
-                                        <a href="#">Laporan Fasilitasi Konsultasi Publik Raperda Pengelolaan Sampah Berbasis Masyarakat</a>
-                                    </h3>
-                                    <div class="document-meta">
-                                        <div class="meta-item">
-                                            <i class="bi bi-calendar"></i>
-                                            <span>Tanggal: 18 Januari 2024</span>
-                                        </div>
-                                        <div class="meta-item">
-                                            <i class="bi bi-journal-text"></i>
-                                            <span>Nomor: HF/DPRD/02/2024</span>
-                                        </div>
-                                        <div class="meta-item">
-                                            <i class="bi bi-person"></i>
-                                            <span>Fasilitator: Prof. Dr. Sri Wahyuni, SH., MH.</span>
-                                        </div>
-                                        <div class="meta-item">
-                                            <i class="bi bi-tag"></i>
-                                            <span>Raperda: Raperda Sampah</span>
+                                <div class="card-content">
+                                    <div class="d-flex flex-wrap mb-3">
+                                        <span class="status-badge status-proses">
+                                            <i class="bi bi-hourglass-split"></i> DALAM PROSES
+                                        </span>
+                                    </div>
+                                    <div class="card-number">HF/DPRD/02/2024</div>
+                                    <h4 class="card-title">
+                                        <a href="#" class="text-decoration-none text-dark">Laporan Fasilitasi Konsultasi Publik Raperda Pengelolaan Sampah Berbasis Masyarakat</a>
+                                    </h4>
+                                    <div class="facilitator-info">
+                                        <div class="facilitator-title">Fasilitator & Detail:</div>
+                                        <div class="facilitator-details">
+                                            <div class="detail-item">
+                                                <i class="bi bi-person"></i>
+                                                <span>Prof. Dr. Sri Wahyuni, SH., MH.</span>
+                                            </div>
+                                            <div class="detail-item">
+                                                <i class="bi bi-calendar"></i>
+                                                <span>18 Januari 2024</span>
+                                            </div>
+                                            <div class="detail-item">
+                                                <i class="bi bi-clock"></i>
+                                                <span>10:00 - 16:00 WIB</span>
+                                            </div>
                                         </div>
                                     </div>
-                                    <p class="document-excerpt">
-                                        Laporan hasil fasilitasi konsultasi publik dengan masyarakat dan stakeholder terkait pengelolaan sampah berbasis masyarakat...
-                                    </p>
-                                    <div class="document-actions">
-                                        <a href="#" class="btn-download">
-                                            <i class="bi bi-download"></i> Download PDF
-                                        </a>
-                                        <a href="#" class="btn-preview">
+                                    <div class="card-meta">
+                                        <div class="card-date">Upload: 20 Januari 2024</div>
+                                        <div class="card-status">Halaman: 32</div>
+                                    </div>
+                                    <div class="card-actions">
+                                        <a href="#" class="card-btn btn-view">
                                             <i class="bi bi-eye"></i> Preview
+                                        </a>
+                                        <a href="#" class="card-btn btn-download">
+                                            <i class="bi bi-download"></i> Download
                                         </a>
                                     </div>
                                 </div>
                             </div>
                             
                             <!-- Dokumen 3 -->
-                            <div class="document-item">
-                                <div class="document-icon">
-                                    <i class="bi bi-file-earmark-text"></i>
+                            <div class="document-card">
+                                <div class="card-image">
+                                    <div class="placeholder">
+                                        <i class="bi bi-tools"></i>
+                                        <p>Rapat Teknis</p>
+                                    </div>
+                                    <div class="image-overlay">
+                                        <span class="image-badge">2023</span>
+                                    </div>
                                 </div>
-                                <div class="document-content">
-                                    <span class="status-badge status-selesai">SELESAI</span>
-                                    <h3 class="document-title">
-                                        <a href="#">Hasil Fasilitasi Rapat Teknis Penyusunan Raperda Digitalisasi Pelayanan Publik</a>
-                                    </h3>
-                                    <div class="document-meta">
-                                        <div class="meta-item">
-                                            <i class="bi bi-calendar"></i>
-                                            <span>Tanggal: 15 Desember 2023</span>
-                                        </div>
-                                        <div class="meta-item">
-                                            <i class="bi bi-journal-text"></i>
-                                            <span>Nomor: HF/DPRD/12/2023</span>
-                                        </div>
-                                        <div class="meta-item">
-                                            <i class="bi bi-person"></i>
-                                            <span>Fasilitator: Dr. Maya Indriati, S.Si., M.T.</span>
-                                        </div>
-                                        <div class="meta-item">
-                                            <i class="bi bi-tag"></i>
-                                            <span>Raperda: Raperda Digitalisasi</span>
+                                <div class="card-content">
+                                    <div class="d-flex flex-wrap mb-3">
+                                        <span class="status-badge status-selesai">
+                                            <i class="bi bi-check-circle"></i> SELESAI
+                                        </span>
+                                        <span class="raperda-link">
+                                            <i class="bi bi-link-45deg"></i> Raperda Digitalisasi
+                                        </span>
+                                    </div>
+                                    <div class="card-number">HF/DPRD/12/2023</div>
+                                    <h4 class="card-title">
+                                        <a href="#" class="text-decoration-none text-dark">Hasil Fasilitasi Rapat Teknis Penyusunan Raperda Digitalisasi Pelayanan Publik</a>
+                                    </h4>
+                                    <div class="facilitator-info">
+                                        <div class="facilitator-title">Fasilitator & Detail:</div>
+                                        <div class="facilitator-details">
+                                            <div class="detail-item">
+                                                <i class="bi bi-person"></i>
+                                                <span>Dr. Maya Indriati, S.Si., M.T.</span>
+                                            </div>
+                                            <div class="detail-item">
+                                                <i class="bi bi-calendar"></i>
+                                                <span>15 Desember 2023</span>
+                                            </div>
+                                            <div class="detail-item">
+                                                <i class="bi bi-clock"></i>
+                                                <span>13:00 - 18:00 WIB</span>
+                                            </div>
                                         </div>
                                     </div>
-                                    <p class="document-excerpt">
-                                        Catatan kesepakatan dan rekomendasi teknis hasil fasilitasi rapat penyusunan Raperda Digitalisasi Pelayanan Publik...
-                                    </p>
-                                    <div class="document-actions">
-                                        <a href="#" class="btn-download">
-                                            <i class="bi bi-download"></i> Download PDF
-                                        </a>
-                                        <a href="#" class="btn-preview">
+                                    <div class="card-meta">
+                                        <div class="card-date">Upload: 17 Desember 2023</div>
+                                        <div class="card-status">Halaman: 36</div>
+                                    </div>
+                                    <div class="card-actions">
+                                        <a href="#" class="card-btn btn-view">
                                             <i class="bi bi-eye"></i> Preview
                                         </a>
-                                        <a href="#" class="btn-preview">
-                                            <i class="bi bi-link-45deg"></i> Lihat Raperda
+                                        <a href="#" class="card-btn btn-download">
+                                            <i class="bi bi-download"></i> Download
+                                        </a>
+                                        <a href="#" class="card-btn btn-view">
+                                            <i class="bi bi-link-45deg"></i> Raperda
                                         </a>
                                     </div>
                                 </div>
                             </div>
                             
                             <!-- Dokumen 4 -->
-                            <div class="document-item">
-                                <div class="document-icon">
-                                    <i class="bi bi-file-earmark-text"></i>
+                            <div class="document-card">
+                                <div class="card-image">
+                                    <div class="placeholder">
+                                        <i class="bi bi-pause-circle"></i>
+                                        <p>Fasilitasi Ditunda</p>
+                                    </div>
+                                    <div class="image-overlay">
+                                        <span class="image-badge">2023</span>
+                                    </div>
                                 </div>
-                                <div class="document-content">
-                                    <span class="status-badge status-tunda">DITUNDA</span>
-                                    <h3 class="document-title">
-                                        <a href="#">Laporan Fasilitasi Pembahasan Raperda Penataan Pedagang Kaki Lima</a>
-                                    </h3>
-                                    <div class="document-meta">
-                                        <div class="meta-item">
-                                            <i class="bi bi-calendar"></i>
-                                            <span>Tanggal: 8 Desember 2023</span>
-                                        </div>
-                                        <div class="meta-item">
-                                            <i class="bi bi-journal-text"></i>
-                                            <span>Nomor: HF/DPRD/11/2023</span>
-                                        </div>
-                                        <div class="meta-item">
-                                            <i class="bi bi-person"></i>
-                                            <span>Fasilitator: Drs. Agus Setiawan, M.Si.</span>
-                                        </div>
-                                        <div class="meta-item">
-                                            <i class="bi bi-tag"></i>
-                                            <span>Raperda: Raperda PKL</span>
+                                <div class="card-content">
+                                    <div class="d-flex flex-wrap mb-3">
+                                        <span class="status-badge status-tunda">
+                                            <i class="bi bi-exclamation-triangle"></i> DITUNDA
+                                        </span>
+                                    </div>
+                                    <div class="card-number">HF/DPRD/11/2023</div>
+                                    <h4 class="card-title">
+                                        <a href="#" class="text-decoration-none text-dark">Laporan Fasilitasi Pembahasan Raperda Penataan Pedagang Kaki Lima</a>
+                                    </h4>
+                                    <div class="facilitator-info">
+                                        <div class="facilitator-title">Fasilitator & Detail:</div>
+                                        <div class="facilitator-details">
+                                            <div class="detail-item">
+                                                <i class="bi bi-person"></i>
+                                                <span>Drs. Agus Setiawan, M.Si.</span>
+                                            </div>
+                                            <div class="detail-item">
+                                                <i class="bi bi-calendar"></i>
+                                                <span>8 Desember 2023</span>
+                                            </div>
+                                            <div class="detail-item">
+                                                <i class="bi bi-clock"></i>
+                                                <span>09:30 - 14:00 WIB</span>
+                                            </div>
                                         </div>
                                     </div>
-                                    <p class="document-excerpt">
-                                        Hasil fasilitasi pembahasan Raperda Penataan Pedagang Kaki Lima yang ditunda untuk perbaikan substansi dan konsultasi lebih lanjut...
-                                    </p>
-                                    <div class="document-actions">
-                                        <a href="#" class="btn-download">
-                                            <i class="bi bi-download"></i> Download PDF
-                                        </a>
-                                        <a href="#" class="btn-preview">
+                                    <div class="card-meta">
+                                        <div class="card-date">Upload: 10 Desember 2023</div>
+                                        <div class="card-status">Halaman: 24</div>
+                                    </div>
+                                    <div class="card-actions">
+                                        <a href="#" class="card-btn btn-view">
                                             <i class="bi bi-eye"></i> Preview
                                         </a>
+                                        <a href="#" class="card-btn btn-download">
+                                            <i class="bi bi-download"></i> Download
+                                        </a>
                                     </div>
                                 </div>
+                            </div>
+                            
+                            <!-- Dokumen 5 -->
+                            <div class="document-card">
+                                <div class="card-image">
+                                    <div class="placeholder">
+                                        <i class="bi bi-chat-dots"></i>
+                                        <p>FGD / Workshop</p>
+                                    </div>
+                                    <div class="image-overlay">
+                                        <span class="image-badge">2023</span>
+                                    </div>
+                                </div>
+                                <div class="card-content">
+                                    <div class="d-flex flex-wrap mb-3">
+                                        <span class="status-badge status-selesai">
+                                            <i class="bi bi-check-circle"></i> SELESAI
+                                        </span>
+                                        <span class="raperda-link">
+                                            <i class="bi bi-link-45deg"></i> Raperda Transportasi
+                                        </span>
+                                    </div>
+                                    <div class="card-number">HF/DPRD/10/2023</div>
+                                    <h4 class="card-title">
+                                        <a href="#" class="text-decoration-none text-dark">Hasil Fasilitasi FGD Penyusunan Raperda Transportasi Publik Terintegrasi</a>
+                                    </h4>
+                                    <div class="facilitator-info">
+                                        <div class="facilitator-title">Fasilitator & Detail:</div>
+                                        <div class="facilitator-details">
+                                            <div class="detail-item">
+                                                <i class="bi bi-person"></i>
+                                                <span>Dr. Rudi Hartono, S.T., M.T.</span>
+                                            </div>
+                                            <div class="detail-item">
+                                                <i class="bi bi-calendar"></i>
+                                                <span>5 Desember 2023</span>
+                                            </div>
+                                            <div class="detail-item">
+                                                <i class="bi bi-clock"></i>
+                                                <span>08:00 - 17:00 WIB</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card-meta">
+                                        <div class="card-date">Upload: 7 Desember 2023</div>
+                                        <div class="card-status">Halaman: 42</div>
+                                    </div>
+                                    <div class="card-actions">
+                                        <a href="#" class="card-btn btn-view">
+                                            <i class="bi bi-eye"></i> Preview
+                                        </a>
+                                        <a href="#" class="card-btn btn-download">
+                                            <i class="bi bi-download"></i> Download
+                                        </a>
+                                        <a href="#" class="card-btn btn-view">
+                                            <i class="bi bi-link-45deg"></i> Raperda
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Dokumen 6 -->
+                            <div class="document-card">
+                                <div class="card-image">
+                                    <div class="placeholder">
+                                        <i class="bi bi-handshake"></i>
+                                        <p>Mediasi Stakeholder</p>
+                                    </div>
+                                    <div class="image-overlay">
+                                        <span class="image-badge">2023</span>
+                                    </div>
+                                </div>
+                                <div class="card-content">
+                                    <div class="d-flex flex-wrap mb-3">
+                                        <span class="status-badge status-selesai">
+                                            <i class="bi bi-check-circle"></i> SELESAI
+                                        </span>
+                                    </div>
+                                    <div class="card-number">HF/DPRD/09/2023</div>
+                                    <h4 class="card-title">
+                                        <a href="#" class="text-decoration-none text-dark">Hasil Fasilitasi Mediasi Stakeholder Raperda Kawasan Bebas Sampah Plastik</a>
+                                    </h4>
+                                    <div class="facilitator-info">
+                                        <div class="facilitator-title">Fasilitator & Detail:</div>
+                                        <div class="facilitator-details">
+                                            <div class="detail-item">
+                                                <i class="bi bi-person"></i>
+                                                <span>Prof. Dr. Ahmad Fauzi, S.H., M.H.</span>
+                                            </div>
+                                            <div class="detail-item">
+                                                <i class="bi bi-calendar"></i>
+                                                <span>1 Desember 2023</span>
+                                            </div>
+                                            <div class="detail-item">
+                                                <i class="bi bi-clock"></i>
+                                                <span>10:30 - 16:30 WIB</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card-meta">
+                                        <div class="card-date">Upload: 3 Desember 2023</div>
+                                        <div class="card-status">Halaman: 38</div>
+                                    </div>
+                                    <div class="card-actions">
+                                        <a href="#" class="card-btn btn-view">
+                                            <i class="bi bi-eye"></i> Preview
+                                        </a>
+                                        <a href="#" class="card-btn btn-download">
+                                            <i class="bi bi-download"></i> Download
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- FILTER TAHUN -->
+                        <div class="year-filter mt-4">
+                            <h5>Filter Berdasarkan Tahun</h5>
+                            <div class="year-buttons">
+                                <button class="year-btn active">Semua</button>
+                                <button class="year-btn">2024</button>
+                                <button class="year-btn">2023</button>
+                                <button class="year-btn">2022</button>
+                                <button class="year-btn">2021</button>
+                                <button class="year-btn">2020</button>
                             </div>
                         </div>
                         
@@ -822,10 +539,10 @@ include 'header.php';
                         </div>
                         
                         <!-- JENIS FASILITASI -->
-                        <div class="mt-5 pt-4 border-top">
+                        <div class="year-filter mt-5">
                             <h4 class="mb-3"><i class="bi bi-diagram-3 text-primary me-2"></i>Jenis Fasilitasi yang Dilakukan</h4>
                             <div class="row">
-                                <div class="col-md-4">
+                                <div class="col-md-4 mb-4">
                                     <div class="text-center p-3">
                                         <div class="mb-3">
                                             <i class="bi bi-people fs-1 text-primary"></i>
@@ -834,7 +551,7 @@ include 'header.php';
                                         <p class="small">Fasilitasi partisipasi masyarakat</p>
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-4 mb-4">
                                     <div class="text-center p-3">
                                         <div class="mb-3">
                                             <i class="bi bi-gear fs-1 text-primary"></i>
@@ -843,13 +560,40 @@ include 'header.php';
                                         <p class="small">Pembahasan aspek teknis raperda</p>
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-4 mb-4">
                                     <div class="text-center p-3">
                                         <div class="mb-3">
                                             <i class="bi bi-shuffle fs-1 text-primary"></i>
                                         </div>
                                         <h5>Harmonisasi</h5>
                                         <p class="small">Penyelarasan dengan peraturan lain</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-4">
+                                    <div class="text-center p-3">
+                                        <div class="mb-3">
+                                            <i class="bi bi-chat-dots fs-1 text-primary"></i>
+                                        </div>
+                                        <h5>FGD / Workshop</h5>
+                                        <p class="small">Diskusi kelompok terfokus</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-4">
+                                    <div class="text-center p-3">
+                                        <div class="mb-3">
+                                            <i class="bi bi-handshake fs-1 text-primary"></i>
+                                        </div>
+                                        <h5>Mediasi Stakeholder</h5>
+                                        <p class="small">Penyelesaian perbedaan pandangan</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-4">
+                                    <div class="text-center p-3">
+                                        <div class="mb-3">
+                                            <i class="bi bi-graph-up fs-1 text-primary"></i>
+                                        </div>
+                                        <h5>Evaluasi Implementasi</h5>
+                                        <p class="small">Penilaian pelaksanaan peraturan</p>
                                     </div>
                                 </div>
                             </div>
@@ -868,7 +612,7 @@ include 'header.php';
                             <li><a href="?page=pokok-pikiran-dprd"><i class="bi bi-lightbulb"></i> Pokok Pikiran DPRD</a></li>
                             <li><a href="?page=kajian-raperda"><i class="bi bi-search"></i> Kajian Raperda</a></li>
                             <li><a href="?page=naskah-akademik"><i class="bi bi-journal-text"></i> Naskah Akademik</a></li>
-                            <li><a href="?page=hasil-fasilitasi" class="active"><i class="bi bi-gear"></i> Hasil Fasilitasi Raperda</a></li>
+                            <li class="active"><a href="?page=hasil-fasilitasi"><i class="bi bi-gear"></i> Hasil Fasilitasi Raperda</a></li>
                             <li><a href="?page=risalah"><i class="bi bi-chat-left-text"></i> Risalah</a></li>
                             <li><a href="?page=hasil-harmonisasi"><i class="bi bi-shuffle"></i> Hasil Harmonisasi Raperda</a></li>
                             <li><a href="?page=karya-ilmiah"><i class="bi bi-pencil"></i> Penulisan Karya Ilmiah</a></li>
@@ -876,54 +620,54 @@ include 'header.php';
                         </ul>
                     </div>
                     
-                    <!-- FILTER TAHUN -->
+                    <!-- STATISTIK FASILITASI -->
                     <div class="sidebar-menu">
-                        <h4><i class="bi bi-filter"></i> Filter Berdasarkan Tahun</h4>
-                        <div class="list-group">
-                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                2024
+                        <h4><i class="bi bi-bar-chart"></i> Statistik Fasilitasi</h4>
+                        <ul>
+                            <li class="d-flex justify-content-between">
+                                <span>Total Fasilitasi</span>
+                                <span class="badge bg-primary rounded-pill">92</span>
+                            </li>
+                            <li class="d-flex justify-content-between">
+                                <span>Tahun 2024</span>
                                 <span class="badge bg-primary rounded-pill">10</span>
-                            </a>
-                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                2023
+                            </li>
+                            <li class="d-flex justify-content-between">
+                                <span>Tahun 2023</span>
                                 <span class="badge bg-primary rounded-pill">22</span>
-                            </a>
-                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                2022
-                                <span class="badge bg-primary rounded-pill">18</span>
-                            </a>
-                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                2021
-                                <span class="badge bg-primary rounded-pill">20</span>
-                            </a>
-                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                2020
-                                <span class="badge bg-primary rounded-pill">16</span>
-                            </a>
-                        </div>
+                            </li>
+                            <li class="d-flex justify-content-between">
+                                <span>Selesai</span>
+                                <span class="badge bg-success rounded-pill">68</span>
+                            </li>
+                            <li class="d-flex justify-content-between">
+                                <span>Dalam Proses</span>
+                                <span class="badge bg-warning rounded-pill">14</span>
+                            </li>
+                        </ul>
                     </div>
                     
                     <!-- FILTER STATUS -->
                     <div class="sidebar-menu">
-                        <h4><i class="bi bi-activity"></i> Filter Berdasarkan Status</h4>
+                        <h4><i class="bi bi-activity"></i> Filter Status</h4>
                         <div class="list-group">
                             <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
                                 <span class="d-flex align-items-center">
-                                    <span class="status-badge status-selesai me-2"></span>
+                                    <i class="bi bi-check-circle text-success me-2"></i>
                                     Selesai
                                 </span>
                                 <span class="badge bg-success rounded-pill">68</span>
                             </a>
                             <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
                                 <span class="d-flex align-items-center">
-                                    <span class="status-badge status-proses me-2"></span>
+                                    <i class="bi bi-hourglass-split text-warning me-2"></i>
                                     Dalam Proses
                                 </span>
                                 <span class="badge bg-warning rounded-pill">14</span>
                             </a>
                             <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
                                 <span class="d-flex align-items-center">
-                                    <span class="status-badge status-tunda me-2"></span>
+                                    <i class="bi bi-exclamation-triangle text-danger me-2"></i>
                                     Ditunda
                                 </span>
                                 <span class="badge bg-danger rounded-pill">10</span>
@@ -933,7 +677,7 @@ include 'header.php';
                     
                     <!-- FILTER JENIS FASILITASI -->
                     <div class="sidebar-menu">
-                        <h4><i class="bi bi-diagram-3"></i> Filter Berdasarkan Jenis</h4>
+                        <h4><i class="bi bi-diagram-3"></i> Filter Jenis Fasilitasi</h4>
                         <div class="list-group">
                             <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
                                 Konsultasi Publik
@@ -971,12 +715,11 @@ include 'header.php';
         </div>
     </section>
 
+    <!-- FOOTER -->
+    <?php include "footer.php"; ?>
+
     <!-- JAVASCRIPT FILES -->
-    <script src="js/jquery.min.js"></script>
-    <script src="js/bootstrap.bundle.min.js"></script>
-    <script src="js/jquery.sticky.js"></script>
-    <script src="js/click-scroll.js"></script>
-    <script src="js/custom.js"></script>
+    <?php include "js-footer.php"; ?>
     
     <script>
         // Fungsi pencarian
@@ -992,14 +735,31 @@ include 'header.php';
             alert(`Mencari hasil fasilitasi dengan kata kunci: "${keyword}"\n\nHasil pencarian akan ditampilkan di bawah.`);
         });
         
-        // Fungsi filter
+        // Fungsi filter tahun
+        document.querySelectorAll('.year-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                // Remove active class from all buttons
+                document.querySelectorAll('.year-btn').forEach(b => {
+                    b.classList.remove('active');
+                });
+                // Add active class to clicked button
+                this.classList.add('active');
+                
+                const year = this.textContent;
+                alert(`Memfilter hasil fasilitasi tahun: ${year}\n\nFungsi filter akan bekerja dengan request AJAX ke server.`);
+            });
+        });
+        
+        // Fungsi filter status & jenis
         document.querySelectorAll('.list-group-item').forEach(item => {
             item.addEventListener('click', function(e) {
                 e.preventDefault();
                 const filterType = this.closest('.sidebar-menu').querySelector('h4').textContent;
-                const filterValue = this.textContent.trim().split('\n')[0];
+                const filterValue = this.querySelector('span').textContent.trim();
+                const count = this.querySelector('.badge').textContent;
                 
-                alert(`Memfilter berdasarkan ${filterType}: ${filterValue}\n\nFungsi filter akan bekerja dengan request AJAX ke server.`);
+                alert(`Memfilter berdasarkan ${filterType}: ${filterValue}\n\nJumlah dokumen: ${count}\n\nFungsi filter akan bekerja dengan request AJAX ke server.`);
             });
         });
         
@@ -1007,7 +767,7 @@ include 'header.php';
         document.querySelectorAll('.btn-download').forEach(btn => {
             btn.addEventListener('click', function(e) {
                 e.preventDefault();
-                const docTitle = this.closest('.document-item').querySelector('.document-title a').textContent;
+                const docTitle = this.closest('.document-card').querySelector('.card-title a').textContent;
                 
                 alert(`Mengunduh hasil fasilitasi: "${docTitle}"\n\nDokumen akan mulai diunduh dalam beberapa detik.`);
                 
@@ -1019,10 +779,10 @@ include 'header.php';
         });
         
         // Fungsi preview
-        document.querySelectorAll('.btn-preview').forEach(btn => {
+        document.querySelectorAll('.btn-view').forEach(btn => {
             btn.addEventListener('click', function(e) {
                 e.preventDefault();
-                const docTitle = this.closest('.document-item').querySelector('.document-title a').textContent;
+                const docTitle = this.closest('.document-card').querySelector('.card-title a').textContent;
                 
                 if (this.querySelector('.bi-link-45deg')) {
                     alert(`Mengarahkan ke Raperda terkait hasil fasilitasi: "${docTitle}"\n\nDalam implementasi real, akan membuka halaman Raperda.`);
@@ -1031,8 +791,19 @@ include 'header.php';
                 }
             });
         });
+        
+        // Highlight menu aktif di sidebar
+        document.querySelectorAll('.sidebar-menu ul li a').forEach(link => {
+            if (link.href === window.location.href) {
+                link.parentElement.classList.add('active');
+            }
+        });
+        
+        // Fungsi aktifkan tahun button
+        document.querySelector('.year-btn.active').addEventListener('click', function(e) {
+            e.preventDefault();
+        });
     </script>
 
 </body>
 </html>
-<?php include 'footer.php'; ?>
