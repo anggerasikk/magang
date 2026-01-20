@@ -20,26 +20,6 @@
         box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
     }
     
-    /* Pastikan warna teks navbar tetap putih */
-    .navbar-custom .navbar-brand,
-    .navbar-custom .nav-link,
-    .navbar-custom .navbar-toggler-icon {
-        color: white !important;
-    }
-    
-    /* Untuk dropdown menu */
-    .navbar-custom .dropdown-menu {
-        background: linear-gradient(135deg, #13547a 0%, #80d0c7 100%);
-    }
-    
-    .navbar-custom .dropdown-item {
-        color: white !important;
-    }
-    
-    .navbar-custom .dropdown-item:hover {
-        background: rgba(255, 255, 255, 0.2);
-    }
-    
     /* Animations */
     @keyframes fadeIn {
         from { opacity: 0; transform: translateY(20px); }

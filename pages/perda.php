@@ -375,18 +375,6 @@ include "header.php";
     </p>
 </div>
 <?php endif; ?>
-
-<!-- SOLUSI ALTERNATIF JIKA DOWNLOAD MASIH TIDAK BERFUNGSI -->
-<div class="alert alert-info mt-4">
-    <h5><i class="bi bi-info-circle"></i> Masalah Download?</h5>
-    <p class="mb-2">Jika tombol download tidak berfungsi, coba:</p>
-    <ol class="mb-0">
-        <li>Klik kanan pada tombol download dan pilih "Save link as..."</li>
-        <li>Gunakan halaman detail dokumen untuk download</li>
-        <li>Hubungi administrator jika masalah berlanjut</li>
-    </ol>
-</div>
-
 </div>
 
 <!-- ===== SIDEBAR ===== -->
@@ -433,16 +421,6 @@ mysqli_data_seek($popular_result, 0);
 <small class="text-muted"><?= date('d M Y', strtotime($pop['tanggal_penetapan'])) ?></small>
 </li>
 <?php endwhile; ?>
-</ul>
-</div>
-
-<!-- LINK CEK DOWNLOAD -->
-<div class="sidebar-menu bg-light">
-<h4><i class="bi bi-download"></i> Test Download</h4>
-<p class="mb-2">Test apakah file PDF bisa diakses:</p>
-<ul>
-<li><a href="<?= $pdf_base_path ?>" target="_blank"><i class="bi bi-folder"></i> Lihat Folder PDF</a></li>
-<li><a href="test_download.php" target="_blank"><i class="bi bi-gear"></i> Test Download Script</a></li>
 </ul>
 </div>
 

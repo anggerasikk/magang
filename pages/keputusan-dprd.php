@@ -486,18 +486,6 @@ include "header.php";
     </p>
 </div>
 <?php endif; ?>
-
-<!-- SOLUSI ALTERNATIF JIKA DOWNLOAD MASIH TIDAK BERFUNGSI -->
-<div class="alert alert-info mt-4">
-    <h5><i class="bi bi-info-circle"></i> Masalah Download?</h5>
-    <p class="mb-2">Jika tombol download tidak berfungsi, coba:</p>
-    <ol class="mb-0">
-        <li>Klik kanan pada tombol download dan pilih "Save link as..."</li>
-        <li>Gunakan halaman detail dokumen untuk download</li>
-        <li>Hubungi administrator jika masalah berlanjut</li>
-    </ol>
-</div>
-
 </div>
 
 <!-- ===== SIDEBAR ===== -->

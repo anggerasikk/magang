@@ -622,18 +622,6 @@ while ($row = mysqli_fetch_assoc($result)):
 </div>
 <?php endif; ?>
 
-<!-- SOLUSI ALTERNATIF JIKA DOWNLOAD MASIH TIDAK BERFUNGSI -->
-<div class="alert alert-info mt-4">
-    <h5><i class="bi bi-info-circle"></i> Panduan Download</h5>
-    <p class="mb-2">Jika mengalami masalah download:</p>
-    <ol class="mb-0">
-        <li>Coba tombol <strong>"Download PDF"</strong> terlebih dahulu</li>
-        <li>Jika tidak berhasil, gunakan tombol <strong>"Force Download"</strong></li>
-        <li>Klik kanan pada tombol download dan pilih "Save link as..."</li>
-        <li>Gunakan halaman detail dokumen untuk download</li>
-        <li>Hubungi administrator jika masalah berlanjut</li>
-    </ol>
-</div>
 
 <!-- INFO PATH -->
 <?php if (isset($_GET['debug'])): ?>
@@ -696,17 +684,6 @@ mysqli_data_seek($popular_result, 0);
 <small class="text-muted"><?= date('d M Y', strtotime($pop['tanggal_pembuatan'])) ?></small>
 </li>
 <?php endwhile; ?>
-</ul>
-</div>
-
-<!-- LINK CEK DOWNLOAD -->
-<div class="sidebar-menu bg-light">
-<h4><i class="bi bi-download"></i> Test Download</h4>
-<p class="mb-2">Test apakah file PDF bisa diakses:</p>
-<ul>
-<li><a href="<?= $monografi_pdf_path ?>" target="_blank"><i class="bi bi-folder"></i> Lihat Folder PDF</a></li>
-<li><a href="test_download.php" target="_blank"><i class="bi bi-gear"></i> Test Download Script</a></li>
-<li><a href="force_download.php?test=1" target="_blank"><i class="bi bi-download"></i> Test Force Download</a></li>
 </ul>
 </div>
 
@@ -866,15 +843,7 @@ function downloadViaBlob(url, filename) {
         });
 }
 
-// ============================================
-// TEST DOWNLOAD FUNCTION
-// ============================================
-function testDownload(id) {
-    const testUrl = `test_download.php?id=${id}`;
-    window.open(testUrl, '_blank');
-}
-
-// ============================================
+/// ============================================
 // DEBUG FUNCTIONS
 // ============================================
 function showPathInfo() {
