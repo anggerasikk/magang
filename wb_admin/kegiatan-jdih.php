@@ -333,6 +333,19 @@ textarea.form-control {
     color: white;
 }
 
+.btn-detail {
+    background: var(--b);
+    color: var(--t);
+    border: none;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-detail:hover {
+    background: #a7f3d0;
+    color: var(--t);
+}
+
 .btn-add {
     background: var(--c);
     color: white;
@@ -369,6 +382,172 @@ textarea.form-control {
     border-radius: var(--r);
     margin: 10px 0;
     border: 2px solid var(--b);
+}
+
+/* Modal Detail Styles */
+.modal-detail {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    overflow-y: auto;
+}
+
+.modal-content-detail {
+    background-color: var(--w);
+    margin: 50px auto;
+    padding: 30px;
+    border-radius: var(--r);
+    width: 90%;
+    max-width: 900px;
+    box-shadow: 0 10px 50px rgba(0, 0, 0, 0.2);
+    position: relative;
+    animation: modalFadeIn 0.3s;
+}
+
+@keyframes modalFadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.modal-header-detail {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid var(--b);
+}
+
+.modal-title-detail {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--d);
+    margin: 0;
+}
+
+.close-modal {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #666;
+    cursor: pointer;
+    padding: 5px;
+    transition: 0.3s;
+}
+
+.close-modal:hover {
+    color: var(--c);
+    transform: rotate(90deg);
+}
+
+.modal-body-detail {
+    padding: 20px 0;
+}
+
+.detail-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.detail-item {
+    margin-bottom: 15px;
+}
+
+.detail-label {
+    font-weight: 600;
+    color: var(--d);
+    font-size: 14px;
+    margin-bottom: 5px;
+    display: block;
+}
+
+.detail-value {
+    color: var(--t);
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+.detail-value.konten {
+    background: var(--bg);
+    padding: 20px;
+    border-radius: var(--r);
+    border-left: 4px solid var(--c);
+    max-height: 400px;
+    overflow-y: auto;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.modal-images-detail {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    margin: 25px 0;
+    flex-wrap: wrap;
+}
+
+.modal-image-detail {
+    max-width: 300px;
+    max-height: 300px;
+    border-radius: var(--r);
+    object-fit: contain;
+    border: 3px solid var(--b);
+    background: var(--bg);
+    padding: 5px;
+}
+
+.image-caption {
+    text-align: center;
+    font-size: 12px;
+    color: #666;
+    margin-top: 8px;
+}
+
+.modal-footer-detail {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid var(--b);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .artikel-header {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .btn-group {
+        flex-wrap: wrap;
+    }
+    
+    .form-artikel {
+        padding: 15px;
+    }
+    
+    .modal-content-detail {
+        margin: 20px auto;
+        padding: 20px;
+        width: 95%;
+    }
+    
+    .modal-title-detail {
+        font-size: 20px;
+    }
+    
+    .modal-image-detail {
+        max-width: 100%;
+        max-height: 250px;
+    }
 }
 </style>
 
@@ -499,7 +678,7 @@ textarea.form-control {
             </div>
         <?php else: ?>
             <?php foreach ($artikel_list as $artikel): ?>
-                <div class="artikel-card">
+                <div class="artikel-card" id="artikel-<?php echo $artikel['id_artikel']; ?>">
                     <div class="artikel-header">
                         <div style="flex: 1;">
                             <h4 class="artikel-title">
@@ -528,7 +707,9 @@ textarea.form-control {
                     <?php if ($artikel['thumbnail_path'] && file_exists($artikel['thumbnail_path'])): ?>
                         <img src="<?php echo $artikel['thumbnail_path']; ?>" 
                              alt="Thumbnail" 
-                             style="max-width: 200px; max-height: 120px; object-fit: cover; border-radius: var(--r); margin-bottom: 10px;">
+                             class="thumbnail-preview"
+                             style="max-width: 200px; max-height: 120px; object-fit: cover; border-radius: var(--r); margin-bottom: 10px; cursor: pointer;"
+                             onclick="showDetailArtikel(<?php echo htmlspecialchars(json_encode($artikel), ENT_QUOTES, 'UTF-8'); ?>)">
                     <?php endif; ?>
                     
                     <div class="artikel-excerpt">
@@ -548,11 +729,76 @@ textarea.form-control {
                            class="btn-delete btn-sm">
                             <i class="fa fa-trash"></i> Hapus
                         </a>
+                        <button type="button" 
+                                class="btn-detail btn-sm"
+                                onclick="showDetailArtikel(<?php echo htmlspecialchars(json_encode($artikel), ENT_QUOTES, 'UTF-8'); ?>)">
+                            <i class="fa fa-eye"></i> Lihat Detail
+                        </button>
                     </div>
                 </div>
             <?php endforeach; ?>
         <?php endif; ?>
     <?php endif; ?>
+</div>
+
+<!-- Modal Detail Artikel -->
+<div id="modalDetailArtikel" class="modal-detail">
+    <div class="modal-content-detail">
+        <div class="modal-header-detail">
+            <h3 class="modal-title-detail" id="detailTitleArtikel"></h3>
+            <button class="close-modal" onclick="closeDetailArtikel()">&times;</button>
+        </div>
+        <div class="modal-body-detail">
+            <div class="detail-info-grid">
+                <div class="detail-item">
+                    <span class="detail-label">Judul Artikel</span>
+                    <div class="detail-value" id="detailJudul"></div>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Penulis</span>
+                    <div class="detail-value" id="detailPenulis"></div>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Tanggal Publikasi</span>
+                    <div class="detail-value" id="detailTanggal"></div>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Status</span>
+                    <div class="detail-value" id="detailStatus"></div>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Views</span>
+                    <div class="detail-value" id="detailViews"></div>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Meta Keywords</span>
+                    <div class="detail-value" id="detailKeywords"></div>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Meta Description</span>
+                    <div class="detail-value" id="detailDescription"></div>
+                </div>
+            </div>
+            
+            <div class="modal-images-detail" id="detailImagesArtikel">
+                <!-- Thumbnail akan dimasukkan via JavaScript -->
+            </div>
+            
+            <div class="detail-item" style="margin-top: 20px;">
+                <span class="detail-label">Konten Lengkap</span>
+                <div class="detail-value konten" id="detailKonten"></div>
+            </div>
+            
+            <div class="modal-footer-detail">
+                <button class="btn btn-default" onclick="closeDetailArtikel()">
+                    <i class="fa fa-times"></i> Tutup
+                </button>
+                <button class="btn btn-primary" id="btnEditDetailArtikel" onclick="editDetailArtikel()">
+                    <i class="fa fa-edit"></i> Edit Artikel
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -563,6 +809,98 @@ function confirmDelete(id) {
     }
 }
 
+// Variable global untuk menyimpan ID artikel saat ini
+let currentArtikelId = null;
+
+// Fungsi untuk menampilkan detail artikel
+function showDetailArtikel(artikel) {
+    currentArtikelId = artikel.id_artikel;
+    
+    // Set data ke modal
+    document.getElementById('detailTitleArtikel').textContent = artikel.judul;
+    document.getElementById('detailJudul').textContent = artikel.judul;
+    document.getElementById('detailPenulis').textContent = artikel.nama_penulis;
+    
+    // Format tanggal
+    if (artikel.tanggal_publikasi) {
+        const tanggal = new Date(artikel.tanggal_publikasi);
+        document.getElementById('detailTanggal').textContent = tanggal.toLocaleDateString('id-ID', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    } else {
+        document.getElementById('detailTanggal').textContent = '-';
+    }
+    
+    // Set status dengan badge
+    const statusText = artikel.status.charAt(0).toUpperCase() + artikel.status.slice(1);
+    const statusClass = `status-${artikel.status}`;
+    document.getElementById('detailStatus').innerHTML = `<span class="status-badge ${statusClass}">${statusText}</span>`;
+    
+    // Set views
+    document.getElementById('detailViews').textContent = artikel.views ? new Intl.NumberFormat('id-ID').format(artikel.views) : '0';
+    
+    // Set meta data
+    document.getElementById('detailKeywords').textContent = artikel.meta_keywords || 'Tidak ada keywords';
+    document.getElementById('detailDescription').textContent = artikel.meta_description || 'Tidak ada description';
+    
+    // Set konten lengkap (dengan formatting HTML)
+    document.getElementById('detailKonten').innerHTML = artikel.konten_artikel || 'Tidak ada konten';
+    
+    // Set gambar
+    const imagesContainer = document.getElementById('detailImagesArtikel');
+    imagesContainer.innerHTML = '';
+    
+    if (artikel.thumbnail_path) {
+        const imgDiv = document.createElement('div');
+        imgDiv.innerHTML = `
+            <img src="${artikel.thumbnail_path}" alt="Thumbnail Artikel" class="modal-image-detail">
+            <div class="image-caption">Thumbnail Artikel</div>
+        `;
+        imagesContainer.appendChild(imgDiv);
+    }
+    
+    // Jika tidak ada gambar, tampilkan pesan
+    if (!artikel.thumbnail_path) {
+        imagesContainer.innerHTML = '<p style="color:#666; text-align:center;">Tidak ada thumbnail tersedia</p>';
+    }
+    
+    // Tampilkan modal
+    document.getElementById('modalDetailArtikel').style.display = 'block';
+    document.body.style.overflow = 'hidden';
+}
+
+// Fungsi untuk menutup modal detail artikel
+function closeDetailArtikel() {
+    document.getElementById('modalDetailArtikel').style.display = 'none';
+    document.body.style.overflow = 'auto';
+}
+
+// Fungsi untuk edit dari modal detail
+function editDetailArtikel() {
+    if (currentArtikelId) {
+        window.location.href = `index.php?page=kegiatan-jdih&action=edit&id=${currentArtikelId}`;
+    }
+}
+
+// Tutup modal jika klik di luar konten modal
+window.onclick = function(event) {
+    const modal = document.getElementById('modalDetailArtikel');
+    if (event.target === modal) {
+        closeDetailArtikel();
+    }
+}
+
+// Tutup modal dengan tombol ESC
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        closeDetailArtikel();
+    }
+});
+
 // Preview thumbnail sebelum upload
 document.addEventListener('DOMContentLoaded', function() {
     const thumbnailInput = document.getElementById('thumbnail');
@@ -572,7 +910,6 @@ document.addEventListener('DOMContentLoaded', function() {
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    // Cek apakah sudah ada preview
                     let preview = thumbnailInput.nextElementSibling.querySelector('.thumbnail-preview');
                     if (!preview) {
                         preview = document.createElement('img');
