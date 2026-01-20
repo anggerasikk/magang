@@ -241,7 +241,9 @@ if(!isset($_SESSION['login']) || !isset($_SESSION['level'])) {
                 'himpunan-peraturan' => 'Himpunan Peraturan',
                 'penulisan-karya-ilmiah' => 'Penulisan Karya Ilmiah',
                 'hasil-harmonisasi' => 'Hasil Harmonisasi Raperda',
-                'hasil-fasilitasi' => 'Hasil Fasilitasi Raperda',                
+                'hasil-fasilitasi' => 'Hasil Fasilitasi Raperda',   
+                'artikel_hukum' => 'Artikel Hukum',
+                'kegiatan-jdih' => 'Kegiatan JDIH'             
             ];
             
             $currentTitle = isset($pageTitles[$page]) ? $pageTitles[$page] : 'Dashboard';
@@ -318,6 +320,9 @@ if(!isset($_SESSION['login']) || !isset($_SESSION['level'])) {
                     break;
                 case 'artikel_hukum';
                     include "artikel-hukum.php";
+                    break;
+                case 'kegiatan-jdih';
+                    include "kegiatan-jdih.php";
                     break;
                 default:
                     include "dashboard.php";
