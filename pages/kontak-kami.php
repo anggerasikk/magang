@@ -1,5 +1,111 @@
 <?php
 // kontak-kami.php
+
+// Include koneksi database
+require_once 'a_db.php';
+include 'header.php';
+
+// Inisialisasi variabel
+$success_message = '';
+$error_message = '';
+$validation_errors = [];
+
+// Proses form jika ada POST request
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Ambil dan sanitasi data
+    $nama = mysqli_real_escape_string($koneksi, $_POST['name'] ?? '');
+    $email = mysqli_real_escape_string($koneksi, $_POST['email'] ?? '');
+    $telepon = mysqli_real_escape_string($koneksi, $_POST['phone'] ?? '');
+    $subjek = mysqli_real_escape_string($koneksi, $_POST['subject'] ?? '');
+    $pesan = mysqli_real_escape_string($koneksi, $_POST['message'] ?? '');
+    
+    // Validasi
+    $errors = [];
+    
+    // Validasi nama
+    if (empty($nama)) {
+        $errors[] = "Nama lengkap wajib diisi";
+    } elseif (strlen($nama) < 3) {
+        $errors[] = "Nama minimal 3 karakter";
+    }
+    
+    // Validasi email
+    if (empty($email)) {
+        $errors[] = "Email wajib diisi";
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $errors[] = "Format email tidak valid";
+    }
+    
+    // Validasi subjek
+    if (empty($subjek)) {
+        $errors[] = "Jenis pesan wajib dipilih";
+    }
+    
+    // Validasi pesan
+    if (empty($pesan)) {
+        $errors[] = "Pesan wajib diisi";
+    } elseif (strlen($pesan) < 10) {
+        $errors[] = "Pesan minimal 10 karakter";
+    }
+    
+    // Cek checkbox persetujuan
+    if (!isset($_POST['privacy'])) {
+        $errors[] = "Anda harus menyetujui kebijakan privasi";
+    }
+    
+    // Jika tidak ada error, simpan ke database
+    if (empty($errors)) {
+        // Cek apakah table sudah ada
+        $check_table = $koneksi->query("SHOW TABLES LIKE 'pesan_kontak'");
+        
+        // Buat table jika belum ada
+        if ($check_table->num_rows == 0) {
+            $create_table = "CREATE TABLE IF NOT EXISTS pesan_kontak (
+                id INT(11) AUTO_INCREMENT PRIMARY KEY,
+                nama VARCHAR(100) NOT NULL,
+                email VARCHAR(100) NOT NULL,
+                telepon VARCHAR(20),
+                subjek VARCHAR(50) NOT NULL,
+                pesan TEXT NOT NULL,
+                tanggal_dikirim TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                status VARCHAR(20) DEFAULT 'terkirim'
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
+            
+            if (!$koneksi->query($create_table)) {
+                $error_message = "Gagal membuat tabel database: " . $koneksi->error;
+                $validation_errors = $errors;
+            }
+        }
+        
+        // Jika tidak ada error, lanjutkan penyimpanan
+        if (empty($error_message)) {
+            // Siapkan query dengan prepared statement
+            $sql = "INSERT INTO pesan_kontak (nama, email, telepon, subjek, pesan) VALUES (?, ?, ?, ?, ?)";
+            $stmt = $koneksi->prepare($sql);
+            
+            if ($stmt) {
+                // Bind parameter
+                $stmt->bind_param("sssss", $nama, $email, $telepon, $subjek, $pesan);
+                
+                // Eksekusi
+                if ($stmt->execute()) {
+                    $success_message = "Terima kasih! Pesan Anda telah berhasil dikirim. Kami akan menghubungi Anda segera.";
+                    
+                    // Reset form data
+                    $_POST = array(); // Reset semua data POST
+                } else {
+                    $error_message = "Maaf, terjadi kesalahan saat menyimpan data. Error: " . $stmt->error;
+                }
+                
+                $stmt->close();
+            } else {
+                $error_message = "Maaf, terjadi kesalahan sistem. Error: " . $koneksi->error;
+            }
+        }
+    } else {
+        $validation_errors = $errors;
+    }
+}
 ?>
 <!doctype html>
 <html lang="id">
@@ -17,8 +123,6 @@
     <link href="css/bootstrap-icons.css" rel="stylesheet">
     <link href="css/templatemo-topic-listing.css" rel="stylesheet">
     
-    <!-- NAVBAR CSS -->
-    <link href="css/navbar.css" rel="stylesheet">
 
     <style>
         /* OVERRIDE UNTUK HALAMAN KONTAK */
@@ -277,6 +381,46 @@
             color: #13547a;
         }
         
+        /* ALERT MESSAGES */
+        .alert {
+            border-radius: 10px;
+            border: none;
+            padding: 15px 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .alert-success {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+        
+        .alert-danger {
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+        
+        .alert-warning {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            color: #856404;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .alert ul {
+            margin-top: 10px;
+            padding-left: 20px;
+        }
+        
+        .alert ul li {
+            margin-bottom: 5px;
+        }
+        
+        .alert .btn-close {
+            padding: 1rem;
+        }
+        
         /* CUSTOM BUTTON - SAMA DENGAN BERANDA */
         .custom-btn {
             background: linear-gradient(135deg, #13547a 0%, #80d0c7 100%);
@@ -354,108 +498,6 @@
 </head>
 
 <body id="top">
-
-    <!-- NAVBAR SAMA DENGAN BERANDA -->
-    <nav class="navbar navbar-expand-lg fixed-top navbar-custom">
-        <div class="container">
-            <!-- BRAND -->
-            <a class="navbar-brand d-flex align-items-center" href="index.php">
-                <span class="fw-bold">JDIH DPRD</span>
-            </a>
-
-            <!-- TOGGLER -->
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                data-bs-target="#navbarNav" aria-controls="navbarNav"
-                aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <!-- MENU -->
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav mx-auto mb-2 mb-lg-0 gap-lg-2">
-                    <li class="nav-item">
-                        <a class="nav-link" href="index.php">Beranda</a>
-                    </li>
-
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="dropdownTentangKami"
-                            role="button" data-bs-toggle="dropdown">
-                            Tentang Kami
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="?page=Profil-JDIH">Profil JDIH</a></li>
-                            <li><a class="dropdown-item" href="?page=struktur-organisasi">Struktur Organisasi</a></li>
-                            <li><a class="dropdown-item" href="?page=alur-pengelolaan">Alur Pengelolaan Produk Hukum</a></li>
-                            <li><a class="dropdown-item" href="?page=sop-pengelola">SOP Pengelola JDIH DPRD Kota Surakarta</a></li>
-                            <li><a class="dropdown-item" href="?page=dasar-hukum">Dasar Hukum JDIH Sekretariat DPRD Kota Surakarta</a></li>
-                            <li><a class="dropdown-item" href="?page=surat-keputusan">Surat Keputusan Pengelola JDIH Sekretariat DPRD Kota Surakarta</a></li>
-                            <li><a class="dropdown-item" href="?page=video-profile">Video Profile JDIH</a></li>
-                        </ul>
-                    </li>
-
-                    <!-- PERUNDANGAN -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="dropdownPerundangan"
-                            role="button" data-bs-toggle="dropdown">
-                            Perundang-undangan
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="?page=keputusan-dprd">Keputusan DPRD</a></li>
-                            <li><a class="dropdown-item" href="?page=keputusan-pimpinan">Keputusan Pimpinan DPRD</a></li>
-                            <li><a class="dropdown-item" href="?page=keputusan-sekretariat">Keputusan Sekretariat DPRD</a></li>
-                            <li><a class="dropdown-item" href="?page=peraturan-dprd">Peraturan DPRD</a></li>
-                            <li><a class="dropdown-item" href="?page=perda">Peraturan Daerah</a></li>
-                            <li><a class="dropdown-item" href="?page=english-legal">English Legal Product</a></li>
-                        </ul>
-                    </li>
-
-                    <!-- MONOGRAFI -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="dropdownMonografi"
-                            role="button" data-bs-toggle="dropdown">
-                            Monografi Hukum
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="?page=pokok-pikiran">Pokok Pikiran</a></li>
-                            <li><a class="dropdown-item" href="?page=kajian-raperda">Kajian Raperda</a></li>
-                            <li><a class="dropdown-item" href="?page=naskah-akademik">Naskah Akademik</a></li>
-                            <li><a class="dropdown-item" href="?page=dokumen-langka">Dokumen Langka</a></li>
-                            <li><a class="dropdown-item" href="?page=risalah">Risalah</a></li>
-                            <li><a class="dropdown-item" href="?page=hasil-fasilitasi">Hasil Fasilitasi Raperda</a></li>
-                            <li><a class="dropdown-item" href="?page=karya-ilmiah">Penulisan Karya Ilmiah</a></li>
-                            <li><a class="dropdown-item" href="?page=himpunan">Himpunan Peraturan</a></li>
-                        </ul>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="?page=artikel-hukum">Artikel Hukum</a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="?page=yurisprudensi">Yurisprudensi</a>
-                    </li>
-
-                    <!-- INFORMASI -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="dropdownInformasi"
-                            role="button" data-bs-toggle="dropdown">
-                            Informasi
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="?page=kegiatan">Kegiatan JDIH</a></li>
-                            <li><a class="dropdown-item" href="?page=infografis">Infografis & Videografis</a></li>
-                            <li><a class="dropdown-item" href="?page=galeri">Galeri Foto</a></li>
-                            <li><a class="dropdown-item" href="?page=penghargaan">Penghargaan</a></li>
-                            <li><a class="dropdown-item" href="?page=buku">Koleksi Buku</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" href="kontak-kami.php">Kontak Kami</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
 
     <!-- PAGE HEADER - SAMA DENGAN BERANDA -->
     <section class="page-header">
@@ -552,13 +594,45 @@
                     <div class="contact-form-section">
                         <h2 class="section-title mb-4">Kirim Pesan kepada Kami</h2>
                         
+                        <!-- Alert Messages -->
+                        <?php if (!empty($success_message)): ?>
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="bi bi-check-circle-fill me-2"></i>
+                            <?php echo htmlspecialchars($success_message); ?>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                        <?php endif; ?>
+                        
+                        <?php if (!empty($error_message)): ?>
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            <?php echo htmlspecialchars($error_message); ?>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                        <?php endif; ?>
+                        
+                        <?php if (!empty($validation_errors)): ?>
+                        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                            <i class="bi bi-exclamation-circle-fill me-2"></i>
+                            <strong>Perbaiki kesalahan berikut:</strong>
+                            <ul class="mb-0 mt-2">
+                                <?php foreach ($validation_errors as $error): ?>
+                                <li><?php echo htmlspecialchars($error); ?></li>
+                                <?php endforeach; ?>
+                            </ul>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                        <?php endif; ?>
+                        
                         <form id="contactForm" method="POST" action="">
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="name" class="form-label">Nama Lengkap *</label>
                                         <input type="text" class="form-control" id="name" name="name" 
-                                               placeholder="Masukkan nama lengkap" required>
+                                               placeholder="Masukkan nama lengkap" 
+                                               value="<?php echo isset($_POST['name']) ? htmlspecialchars($_POST['name']) : ''; ?>"
+                                               required>
                                     </div>
                                 </div>
                                 
@@ -566,7 +640,9 @@
                                     <div class="mb-3">
                                         <label for="email" class="form-label">Alamat Email *</label>
                                         <input type="email" class="form-control" id="email" name="email" 
-                                               placeholder="contoh@email.com" required>
+                                               placeholder="contoh@email.com" 
+                                               value="<?php echo isset($_POST['email']) ? htmlspecialchars($_POST['email']) : ''; ?>"
+                                               required>
                                     </div>
                                 </div>
                             </div>
@@ -576,7 +652,8 @@
                                     <div class="mb-3">
                                         <label for="phone" class="form-label">Nomor Telepon</label>
                                         <input type="tel" class="form-control" id="phone" name="phone" 
-                                               placeholder="08xxxxxxxxxx">
+                                               placeholder="08xxxxxxxxxx"
+                                               value="<?php echo isset($_POST['phone']) ? htmlspecialchars($_POST['phone']) : ''; ?>">
                                     </div>
                                 </div>
                                 
@@ -585,11 +662,11 @@
                                         <label for="subject" class="form-label">Jenis Pesan *</label>
                                         <select class="form-select" id="subject" name="subject" required>
                                             <option value="" selected disabled>Pilih jenis pesan</option>
-                                            <option value="informasi">Permintaan Informasi</option>
-                                            <option value="saran">Saran dan Masukan</option>
-                                            <option value="konsultasi">Konsultasi Hukum</option>
-                                            <option value="kerjasama">Penawaran Kerjasama</option>
-                                            <option value="lainnya">Lainnya</option>
+                                            <option value="informasi" <?php echo (isset($_POST['subject']) && $_POST['subject'] == 'informasi') ? 'selected' : ''; ?>>Permintaan Informasi</option>
+                                            <option value="saran" <?php echo (isset($_POST['subject']) && $_POST['subject'] == 'saran') ? 'selected' : ''; ?>>Saran dan Masukan</option>
+                                            <option value="konsultasi" <?php echo (isset($_POST['subject']) && $_POST['subject'] == 'konsultasi') ? 'selected' : ''; ?>>Konsultasi Hukum</option>
+                                            <option value="kerjasama" <?php echo (isset($_POST['subject']) && $_POST['subject'] == 'kerjasama') ? 'selected' : ''; ?>>Penawaran Kerjasama</option>
+                                            <option value="lainnya" <?php echo (isset($_POST['subject']) && $_POST['subject'] == 'lainnya') ? 'selected' : ''; ?>>Lainnya</option>
                                         </select>
                                     </div>
                                 </div>
@@ -598,12 +675,12 @@
                             <div class="mb-3">
                                 <label for="message" class="form-label">Isi Pesan *</label>
                                 <textarea class="form-control" id="message" name="message" 
-                                          placeholder="Tulis pesan Anda di sini..." rows="5" required></textarea>
+                                          placeholder="Tulis pesan Anda di sini..." rows="5" required><?php echo isset($_POST['message']) ? htmlspecialchars($_POST['message']) : ''; ?></textarea>
                             </div>
                             
                             <div class="mb-3">
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="privacy" required>
+                                    <input class="form-check-input" type="checkbox" id="privacy" name="privacy" required <?php echo isset($_POST['privacy']) ? 'checked' : ''; ?>>
                                     <label class="form-check-label" for="privacy">
                                         Saya setuju dengan <a href="#" class="text-decoration-none">kebijakan privasi</a> 
                                         dan <a href="#" class="text-decoration-none">persyaratan layanan</a>
@@ -801,48 +878,6 @@
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Contact form submission
-            const contactForm = document.getElementById('contactForm');
-            
-            contactForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                // Get form data
-                const formData = new FormData(contactForm);
-                const name = formData.get('name');
-                const email = formData.get('email');
-                const subject = formData.get('subject');
-                const message = formData.get('message');
-                
-                // Simple validation
-                if (!name || !email || !subject || !message) {
-                    alert('Harap lengkapi semua bidang yang wajib diisi.');
-                    return;
-                }
-                
-                // Show loading state
-                const submitBtn = contactForm.querySelector('.submit-btn');
-                const originalText = submitBtn.innerHTML;
-                submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Mengirim...';
-                submitBtn.disabled = true;
-                
-                // Simulate form submission (replace with actual AJAX call)
-                setTimeout(() => {
-                    // Success message
-                    alert('Terima kasih! Pesan Anda telah berhasil dikirim. Kami akan menghubungi Anda segera.');
-                    
-                    // Reset form
-                    contactForm.reset();
-                    
-                    // Reset button
-                    submitBtn.innerHTML = originalText;
-                    submitBtn.disabled = false;
-                    
-                    // Scroll to top
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                }, 1500);
-            });
-            
             // Phone number formatting
             const phoneInput = document.getElementById('phone');
             phoneInput.addEventListener('input', function(e) {
@@ -884,16 +919,21 @@
                 });
             });
             
-            // Navbar active state
-            const currentPage = 'kontak-kami.php';
-            const navLinks = document.querySelectorAll('.nav-link');
-            navLinks.forEach(link => {
-                if (link.getAttribute('href') === currentPage) {
-                    link.classList.add('active');
-                } else {
-                    link.classList.remove('active');
-                }
-            });
+            // Auto-hide alerts after 5 seconds
+            setTimeout(() => {
+                const alerts = document.querySelectorAll('.alert');
+                alerts.forEach(alert => {
+                    const closeButton = alert.querySelector('.btn-close');
+                    if (closeButton) {
+                        closeButton.click();
+                    }
+                });
+            }, 5000);
+            
+            // Debug: Tampilkan error jika ada di console
+            <?php if (!empty($error_message)): ?>
+            console.error("PHP Error: <?php echo $error_message; ?>");
+            <?php endif; ?>
         });
     </script>
 

@@ -87,8 +87,8 @@
             </a>
             <ul class="dropdown-menu">
                 <li><a href="index.php?page=kegiatan-jdih"><i class="fa fa-calendar"></i> Kegiatan JDIH</a></li>
-                <li><a href="index.php?page=infografis-videografis"><i class="fa fa-bar-chart"></i> Infografis & Videografis</a></li>
-                <li><a href="index.php?page=galeri-foto"><i class="fa fa-camera"></i> Galeri Foto</a></li>
+                <li><a href="index.php?page=grafis"><i class="fa fa-bar-chart"></i> Infografis & Videografis</a></li>
+                <li><a href="index.php?page=galeri"><i class="fa fa-camera"></i> Galeri Foto</a></li>
                 <li><a href="index.php?page=penghargaan"><i class="fa fa-trophy"></i> Penghargaan</a></li>
                 <li><a href="index.php?page=buku"><i class="fa fa-book"></i> Koleksi Buku Perpustakaan</a></li>
             </ul>

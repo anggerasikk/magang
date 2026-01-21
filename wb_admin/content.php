@@ -247,6 +247,8 @@ if(!isset($_SESSION['login']) || !isset($_SESSION['level'])) {
                 'penghargaan' => 'Penghargaan',  
                 'buku' => 'Buku Perpustakaan',
                 'yurisprudensi' => 'Yurisprudensi',
+                'galeri' => 'Galeri Foto',
+                'grafis' => 'Infografis & Videografis',
             ];
             
             $currentTitle = isset($pageTitles[$page]) ? $pageTitles[$page] : 'Dashboard';
@@ -336,6 +338,12 @@ if(!isset($_SESSION['login']) || !isset($_SESSION['level'])) {
                 case 'yurisprudensi';
                     include "yurisprudensi.php";
                     break;
+                case 'galeri';
+                    include "galeri.php";
+                    break; 
+                case 'grafis';
+                    include "grafis.php";
+                    break; 
                 default:
                     include "dashboard.php";
                     break;
