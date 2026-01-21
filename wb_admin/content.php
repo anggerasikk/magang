@@ -29,7 +29,8 @@ if(!isset($_SESSION['login']) || !isset($_SESSION['level'])) {
     
     <!-- Google Font -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
     <style>
     :root{
     --c:#0ea5a4;
@@ -249,6 +250,7 @@ if(!isset($_SESSION['login']) || !isset($_SESSION['level'])) {
                 'yurisprudensi' => 'Yurisprudensi',
                 'galeri' => 'Galeri Foto',
                 'grafis' => 'Infografis & Videografis',
+                'kontak-kami' => 'Kontak Kami',
             ];
             
             $currentTitle = isset($pageTitles[$page]) ? $pageTitles[$page] : 'Dashboard';
@@ -344,6 +346,9 @@ if(!isset($_SESSION['login']) || !isset($_SESSION['level'])) {
                 case 'grafis';
                     include "grafis.php";
                     break; 
+                case 'kontak-kami';
+                    include "kontak-kami.php";
+                    break;
                 default:
                     include "dashboard.php";
                     break;

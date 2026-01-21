@@ -2,6 +2,84 @@
 // galeri.php
 $pageTitle = 'Galeri Foto - JDIH DPRD Kota Surakarta';
 include 'header.php';
+
+require_once 'a_db.php';
+
+// Query untuk mengambil album (parent_id = NULL dan tipe = 'album')
+$query_album = "SELECT * FROM galeri_foto WHERE tipe = 'album' ORDER BY urutan";
+$result_album = mysqli_query($koneksi, $query_album);
+
+// Ambil parameter filter dari URL
+$filter = isset($_GET['filter']) ? $_GET['filter'] : 'all';
+$current_page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+if ($current_page < 1) $current_page = 1;
+
+$per_page = 9;
+$offset = ($current_page - 1) * $per_page;
+
+// Query untuk mengambil foto berdasarkan filter
+if ($filter == 'all') {
+    // Ambil SEMUA item: album cover DAN foto
+    $query_foto = "SELECT 
+                    gf.*,
+                    parent.judul as album_judul,
+                    CASE 
+                        WHEN gf.tipe = 'album' THEN 'album'
+                        ELSE 'foto'
+                    END as item_type
+                   FROM galeri_foto gf
+                   LEFT JOIN galeri_foto parent ON gf.parent_id = parent.id
+                   WHERE (gf.tipe = 'foto' OR (gf.tipe = 'album' AND gf.is_cover = 1))
+                   ORDER BY 
+                     CASE WHEN gf.tipe = 'album' THEN 1 ELSE 2 END,
+                     gf.tanggal_dibuat DESC 
+                   LIMIT $per_page OFFSET $offset";
+    
+    $query_count = "SELECT COUNT(*) as total 
+                    FROM galeri_foto 
+                    WHERE tipe = 'foto' OR (tipe = 'album' AND is_cover = 1)";
+} else {
+    // Ambil hanya foto dalam album tertentu
+    $filter = (int)$filter;
+    $query_foto = "SELECT f.*, a.judul as album_judul, 'foto' as item_type
+                   FROM galeri_foto f 
+                   LEFT JOIN galeri_foto a ON f.parent_id = a.id 
+                   WHERE f.tipe = 'foto' AND a.id = $filter
+                   ORDER BY f.tanggal_dibuat DESC 
+                   LIMIT $per_page OFFSET $offset";
+    $query_count = "SELECT COUNT(*) as total FROM galeri_foto f 
+                    LEFT JOIN galeri_foto a ON f.parent_id = a.id 
+                    WHERE f.tipe = 'foto' AND a.id = $filter";
+}
+
+$result_foto = mysqli_query($koneksi, $query_foto);
+$result_count = mysqli_query($koneksi, $query_count);
+
+if ($result_count) {
+    $total_data_row = mysqli_fetch_assoc($result_count);
+    $total_data = $total_data_row['total'];
+} else {
+    $total_data = 0;
+}
+
+$total_pages = ceil($total_data / $per_page);
+
+// Ambil semua foto untuk modal (tanpa pagination untuk modal)
+$query_all_fotos = "SELECT f.*, a.judul as album_judul 
+                    FROM galeri_foto f 
+                    LEFT JOIN galeri_foto a ON f.parent_id = a.id 
+                    WHERE f.tipe = 'foto' 
+                    ORDER BY f.tanggal_dibuat DESC";
+$result_all_fotos = mysqli_query($koneksi, $query_all_fotos);
+$all_fotos = [];
+if ($result_all_fotos) {
+    while ($foto = mysqli_fetch_assoc($result_all_fotos)) {
+        $all_fotos[] = $foto;
+    }
+}
+
+// Reset pointer result album untuk digunakan lagi nanti
+mysqli_data_seek($result_album, 0);
 ?>
 
 <style>
@@ -78,6 +156,8 @@ include 'header.php';
         font-weight: 600;
         transition: all 0.3s;
         cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
     }
     
     .filter-btn:hover,
@@ -85,6 +165,7 @@ include 'header.php';
         background: linear-gradient(135deg, #13547a 0%, #80d0c7 100%);
         color: white;
         border-color: transparent;
+        text-decoration: none;
     }
     
     /* GALLERY GRID */
@@ -159,6 +240,28 @@ include 'header.php';
         margin-right: 5px;
     }
     
+    /* BADGE untuk jenis item */
+    .item-badge {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: linear-gradient(135deg, #ff7e5f 0%, #feb47b 100%);
+        color: white;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        z-index: 10;
+    }
+    
+    .item-badge.album {
+        background: linear-gradient(135deg, #13547a 0%, #80d0c7 100%);
+    }
+    
+    .item-badge.foto {
+        background: linear-gradient(135deg, #ff7e5f 0%, #feb47b 100%);
+    }
+    
     /* MODAL STYLES */
     .modal-content {
         background: transparent;
@@ -172,6 +275,8 @@ include 'header.php';
     
     .modal-body img {
         max-width: 100%;
+        max-height: 70vh;
+        object-fit: contain;
         border-radius: 10px;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     }
@@ -196,6 +301,7 @@ include 'header.php';
         border-radius: 8px;
         font-weight: 600;
         transition: all 0.3s;
+        text-decoration: none;
     }
     
     .page-item.active .page-link {
@@ -208,6 +314,39 @@ include 'header.php';
         background: #f0f8ff;
         border-color: #13547a;
         color: #13547a;
+        text-decoration: none;
+    }
+    
+    .page-item.disabled .page-link {
+        color: #6c757d;
+        pointer-events: none;
+        background-color: #fff;
+        border-color: #dee2e6;
+    }
+    
+    /* NO DATA MESSAGE */
+    .no-data {
+        text-align: center;
+        padding: 50px;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    }
+    
+    .no-data i {
+        font-size: 3rem;
+        color: #80d0c7;
+        margin-bottom: 20px;
+    }
+    
+    .no-data h4 {
+        color: #13547a;
+        margin-bottom: 15px;
+    }
+    
+    .no-data p {
+        color: #666;
+        margin-bottom: 20px;
     }
     
     /* RESPONSIVE */
@@ -269,333 +408,246 @@ include 'header.php';
         <div class="gallery-filter">
             <h4 class="mb-4" style="color: #13547a;">Filter Album</h4>
             <div class="filter-tags">
-                <button class="filter-btn active" data-filter="all">Semua</button>
-                <button class="filter-btn" data-filter="sosialisasi">Sosialisasi</button>
-                <button class="filter-btn" data-filter="pelatihan">Pelatihan</button>
-                <button class="filter-btn" data-filter="rapat">Rapat</button>
-                <button class="filter-btn" data-filter="kunjungan">Kunjungan Kerja</button>
-                <button class="filter-btn" data-filter="acara">Acara Khusus</button>
-                <button class="filter-btn" data-filter="workshop">Workshop</button>
+                <a href="?filter=all&page=1" class="filter-btn <?php echo $filter == 'all' ? 'active' : ''; ?>">
+                    Semua
+                </a>
+                <?php 
+                if ($result_album && mysqli_num_rows($result_album) > 0):
+                    while ($album = mysqli_fetch_assoc($result_album)): 
+                ?>
+                    <a href="?filter=<?php echo $album['id']; ?>&page=1" 
+                       class="filter-btn <?php echo $filter == $album['id'] ? 'active' : ''; ?>">
+                        <?php echo htmlspecialchars($album['judul']); ?>
+                    </a>
+                <?php 
+                    endwhile;
+                else:
+                ?>
+                    <span class="text-muted">Belum ada album</span>
+                <?php endif; ?>
             </div>
         </div>
         
         <!-- GALLERY GRID -->
         <div class="gallery-grid">
-            <!-- Item 1 -->
-            <div class="gallery-item" data-category="sosialisasi" data-bs-toggle="modal" data-bs-target="#imageModal1">
-                <img src="https://images.unsplash.com/photo-1589829545856-d10d557cf95f?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" 
-                     alt="Sosialisasi CFD">
-                <div class="gallery-overlay">
-                    <h4 class="gallery-title">Sosialisasi JDIH di CFD</h4>
-                    <div class="gallery-date">
-                        <i class="bi bi-calendar"></i> 25 November 2024
+            <?php if ($result_foto && mysqli_num_rows($result_foto) > 0): ?>
+                <?php while ($item = mysqli_fetch_assoc($result_foto)): 
+                    $tanggal = date('d F Y', strtotime($item['tanggal_dibuat']));
+                    
+                    // Tentukan apakah ini album atau foto
+                    $is_album = ($item['item_type'] ?? ($item['tipe'] ?? '')) == 'album';
+                    
+                    // Perbaiki path gambar - gambar ada di wb_admin/uploads/galeri/
+                    $url_gambar = $item['url_gambar'];
+                    
+                    // Jika path tidak dimulai dengan http, tambahkan path ke wb_admin/uploads/galeri/
+                    if (!preg_match('/^http/', $url_gambar)) {
+                        // Hapus 'uploads/galeri/' dari database karena path di database salah
+                        // Path di database: 'uploads/galeri/namafile.jpg'
+                        // Path sebenarnya: 'wb_admin/uploads/galeri/namafile.jpg'
+                        
+                        // Ekstrak nama file saja
+                        $filename = basename($url_gambar);
+                        
+                        // Buat path baru yang benar
+                        $correct_path = '../wb_admin/uploads/galeri/' . $filename;
+                        
+                        // Cek apakah file ada di lokasi yang benar
+                        if (file_exists($correct_path)) {
+                            $url_gambar = $correct_path;
+                        } else {
+                            // Coba alternatif: langsung dari path database (tapi dengan ../wb_admin/)
+                            $alternate_path = '../wb_admin/' . $url_gambar;
+                            if (file_exists($alternate_path)) {
+                                $url_gambar = $alternate_path;
+                            } else {
+                                // Fallback ke gambar placeholder
+                                $url_gambar = $is_album ? 
+                                    'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80' :
+                                    'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80';
+                            }
+                        }
+                    }
+                    
+                    // Tentukan modal target
+                    if ($is_album) {
+                        // Untuk album, klik akan filter album tersebut
+                        $modal_target = '';
+                        $onclick = "window.location.href='?filter=" . $item['id'] . "&page=1'";
+                        $cursor_style = 'cursor: pointer;';
+                    } else {
+                        // Untuk foto, buka modal
+                        $modal_target = 'data-bs-toggle="modal" data-bs-target="#imageModal' . $item['id'] . '"';
+                        $onclick = '';
+                        $cursor_style = '';
+                    }
+                ?>
+                    <div class="gallery-item" 
+                         data-category="<?php echo $item['parent_id']; ?>" 
+                         <?php echo $modal_target; ?>
+                         data-foto-id="<?php echo $item['id']; ?>"
+                         onclick="<?php echo $onclick; ?>"
+                         style="<?php echo $cursor_style; ?>">
+                        
+                        <!-- Badge untuk jenis item -->
+                        <div class="item-badge <?php echo $is_album ? 'album' : 'foto'; ?>">
+                            <?php echo $is_album ? 'ALBUM' : 'FOTO'; ?>
+                        </div>
+                        
+                        <img src="<?php echo htmlspecialchars($url_gambar); ?>" 
+                             alt="<?php echo htmlspecialchars($item['judul']); ?>"
+                             onerror="this.onerror=null; this.src='<?php echo $is_album ? 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80' : 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80'; ?>'">
+                        <div class="gallery-overlay">
+                            <h4 class="gallery-title"><?php echo htmlspecialchars($item['judul']); ?></h4>
+                            <?php if (!$is_album && !empty($item['album_judul'])): ?>
+                                <div class="gallery-category mb-2" style="color: rgba(255,255,255,0.8); font-size: 0.85rem;">
+                                    <i class="bi bi-folder"></i> <?php echo htmlspecialchars($item['album_judul']); ?>
+                                </div>
+                            <?php elseif ($is_album): ?>
+                                <div class="gallery-category mb-2" style="color: rgba(255,255,255,0.8); font-size: 0.85rem;">
+                                    <i class="bi bi-images"></i> Album Foto
+                                </div>
+                            <?php endif; ?>
+                            <div class="gallery-date">
+                                <i class="bi bi-calendar"></i> <?php echo $tanggal; ?>
+                            </div>
+                        </div>
+                    </div>
+                <?php endwhile; ?>
+            <?php else: ?>
+                <div class="col-12">
+                    <div class="no-data">
+                        <i class="bi bi-images"></i>
+                        <h4>Tidak ada foto ditemukan</h4>
+                        <p>Belum ada foto yang diunggah untuk album ini.</p>
+                        <a href="?filter=all&page=1" class="filter-btn">Lihat Semua Foto</a>
                     </div>
                 </div>
-            </div>
-            
-            <!-- Item 2 -->
-            <div class="gallery-item" data-category="pelatihan" data-bs-toggle="modal" data-bs-target="#imageModal2">
-                <img src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" 
-                     alt="Pelatihan Digital">
-                <div class="gallery-overlay">
-                    <h4 class="gallery-title">Pelatihan Infrastruktur Digital</h4>
-                    <div class="gallery-date">
-                        <i class="bi bi-calendar"></i> 10 Januari 2021
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Item 3 -->
-            <div class="gallery-item" data-category="rapat" data-bs-toggle="modal" data-bs-target="#imageModal3">
-                <img src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" 
-                     alt="Public Hearing">
-                <div class="gallery-overlay">
-                    <h4 class="gallery-title">Public Hearing Pansus</h4>
-                    <div class="gallery-date">
-                        <i class="bi bi-calendar"></i> 10 Januari 2021
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Item 4 -->
-            <div class="gallery-item" data-category="workshop" data-bs-toggle="modal" data-bs-target="#imageModal4">
-                <img src="https://images.unsplash.com/photo-1545235617-9465d2a55698?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" 
-                     alt="Workshop">
-                <div class="gallery-overlay">
-                    <h4 class="gallery-title">Workshop Penyusunan Produk Hukum</h4>
-                    <div class="gallery-date">
-                        <i class="bi bi-calendar"></i> 8 Januari 2021
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Item 5 -->
-            <div class="gallery-item" data-category="kunjungan" data-bs-toggle="modal" data-bs-target="#imageModal5">
-                <img src="https://images.unsplash.com/photo-1543269865-cbf427effbad?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" 
-                     alt="Kunjungan Kerja">
-                <div class="gallery-overlay">
-                    <h4 class="gallery-title">Kunjungan Kerja ke DPRD Lain</h4>
-                    <div class="gallery-date">
-                        <i class="bi bi-calendar"></i> 15 Desember 2024
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Item 6 -->
-            <div class="gallery-item" data-category="acara" data-bs-toggle="modal" data-bs-target="#imageModal6">
-                <img src="https://images.unsplash.com/photo-1551135049-8a33b2fb2f61?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" 
-                     alt="Penghargaan">
-                <div class="gallery-overlay">
-                    <h4 class="gallery-title">Penerimaan Penghargaan Nasional</h4>
-                    <div class="gallery-date">
-                        <i class="bi bi-calendar"></i> 5 Desember 2024
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Item 7 -->
-            <div class="gallery-item" data-category="sosialisasi" data-bs-toggle="modal" data-bs-target="#imageModal7">
-                <img src="https://images.unsplash.com/photo-1517457373958-b7bdd4587205?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" 
-                     alt="Sosialisasi Perda">
-                <div class="gallery-overlay">
-                    <h4 class="gallery-title">Sosialisasi Perda di Kelurahan</h4>
-                    <div class="gallery-date">
-                        <i class="bi bi-calendar"></i> 20 November 2024
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Item 8 -->
-            <div class="gallery-item" data-category="pelatihan" data-bs-toggle="modal" data-bs-target="#imageModal8">
-                <img src="https://images.unsplash.com/photo-1497366754035-f200968a6e72?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" 
-                     alt="Pelatihan JDIH">
-                <div class="gallery-overlay">
-                    <h4 class="gallery-title">Pelatihan Pengelolaan JDIH</h4>
-                    <div class="gallery-date">
-                        <i class="bi bi-calendar"></i> 5 November 2024
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Item 9 -->
-            <div class="gallery-item" data-category="acara" data-bs-toggle="modal" data-bs-target="#imageModal9">
-                <img src="https://images.unsplash.com/photo-1511578314322-379afb476865?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" 
-                     alt="Launching Aplikasi">
-                <div class="gallery-overlay">
-                    <h4 class="gallery-title">Launching Aplikasi JDIH Mobile</h4>
-                    <div class="gallery-date">
-                        <i class="bi bi-calendar"></i> 1 Oktober 2024
-                    </div>
-                </div>
-            </div>
+            <?php endif; ?>
         </div>
         
         <!-- PAGINATION -->
-        <nav aria-label="Page navigation">
-            <ul class="pagination">
-                <li class="page-item disabled">
-                    <a class="page-link" href="#" aria-label="Previous">
-                        <span aria-hidden="true">&laquo;</span>
-                    </a>
-                </li>
-                <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                <li class="page-item"><a class="page-link" href="#">2</a></li>
-                <li class="page-item"><a class="page-link" href="#">3</a></li>
-                <li class="page-item">
-                    <a class="page-link" href="#" aria-label="Next">
-                        <span aria-hidden="true">&raquo;</span>
-                    </a>
-                </li>
-            </ul>
-        </nav>
+        <?php if ($total_pages > 1): ?>
+            <nav aria-label="Page navigation">
+                <ul class="pagination">
+                    <!-- Previous Button -->
+                    <li class="page-item <?php echo $current_page == 1 ? 'disabled' : ''; ?>">
+                        <a class="page-link" 
+                           href="?filter=<?php echo htmlspecialchars($filter); ?>&page=<?php echo max(1, $current_page - 1); ?>" 
+                           aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    
+                    <!-- Page Numbers -->
+                    <?php 
+                    // Tampilkan maksimal 5 halaman di sekitar halaman aktif
+                    $start_page = max(1, $current_page - 2);
+                    $end_page = min($total_pages, $start_page + 4);
+                    if ($end_page - $start_page < 4) {
+                        $start_page = max(1, $end_page - 4);
+                    }
+                    
+                    for ($i = $start_page; $i <= $end_page; $i++): ?>
+                        <li class="page-item <?php echo $i == $current_page ? 'active' : ''; ?>">
+                            <a class="page-link" href="?filter=<?php echo htmlspecialchars($filter); ?>&page=<?php echo $i; ?>">
+                                <?php echo $i; ?>
+                            </a>
+                        </li>
+                    <?php endfor; ?>
+                    
+                    <!-- Next Button -->
+                    <li class="page-item <?php echo $current_page >= $total_pages ? 'disabled' : ''; ?>">
+                        <a class="page-link" 
+                           href="?filter=<?php echo htmlspecialchars($filter); ?>&page=<?php echo min($total_pages, $current_page + 1); ?>" 
+                           aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <!-- Page Info -->
+            <div class="text-center text-muted mt-2">
+                <?php 
+                $start_item = ($current_page - 1) * $per_page + 1;
+                $end_item = min($current_page * $per_page, $total_data);
+                ?>
+                Menampilkan <?php echo $start_item; ?> - <?php echo $end_item; ?> dari <?php echo $total_data; ?> item
+            </div>
+        <?php endif; ?>
     </div>
 </section>
 
-<!-- IMAGE MODALS -->
-<div class="modal fade" id="imageModal1" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-body">
-                <img src="https://images.unsplash.com/photo-1589829545856-d10d557cf95f?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80" 
-                     alt="Sosialisasi CFD" class="img-fluid">
-                <div class="mt-3 text-white">
-                    <h5>Sosialisasi JDIH di Car Free Day Surakarta</h5>
-                    <p>Kegiatan sosialisasi produk hukum kepada masyarakat di CFD Surakarta - 25 November 2024</p>
+<!-- IMAGE MODALS (hanya untuk foto, bukan album) -->
+<?php if (!empty($all_fotos)): ?>
+    <?php foreach ($all_fotos as $foto): 
+        $tanggal = date('d F Y', strtotime($foto['tanggal_dibuat']));
+        // Perbaiki path gambar untuk modal juga
+        $url_gambar_modal = $foto['url_gambar'];
+        
+        if (!preg_match('/^http/', $url_gambar_modal)) {
+            // Ekstrak nama file saja
+            $filename = basename($url_gambar_modal);
+            $correct_path = '../wb_admin/uploads/galeri/' . $filename;
+            
+            if (file_exists($correct_path)) {
+                $url_gambar_modal = $correct_path;
+            } else {
+                $alternate_path = '../wb_admin/' . $url_gambar_modal;
+                if (file_exists($alternate_path)) {
+                    $url_gambar_modal = $alternate_path;
+                } else {
+                    $url_gambar_modal = 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80';
+                }
+            }
+        }
+    ?>
+        <div class="modal fade" id="imageModal<?php echo $foto['id']; ?>" tabindex="-1">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <img src="<?php echo htmlspecialchars($url_gambar_modal); ?>" 
+                             alt="<?php echo htmlspecialchars($foto['judul']); ?>" 
+                             class="img-fluid"
+                             onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80'">
+                        <div class="mt-3 text-white">
+                            <h5><?php echo htmlspecialchars($foto['judul']); ?></h5>
+                            <?php if (!empty($foto['deskripsi'])): ?>
+                                <p><?php echo htmlspecialchars($foto['deskripsi']); ?></p>
+                            <?php endif; ?>
+                            <div class="row mt-2">
+                                <div class="col-md-6">
+                                    <small><i class="bi bi-calendar"></i> <?php echo $tanggal; ?></small>
+                                </div>
+                                <?php if (!empty($foto['album_judul'])): ?>
+                                    <div class="col-md-6 text-md-end">
+                                        <small><i class="bi bi-folder"></i> <?php echo htmlspecialchars($foto['album_judul']); ?></small>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-</div>
-
-<div class="modal fade" id="imageModal2" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-body">
-                <img src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80" 
-                     alt="Pelatihan Digital" class="img-fluid">
-                <div class="mt-3 text-white">
-                    <h5>Pelatihan Infrastruktur Digital JDIH</h5>
-                    <p>Pelatihan peningkatan kompetensi pengelola JDIH dalam teknologi informasi - 10 Januari 2021</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="imageModal3" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-body">
-                <img src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80" 
-                     alt="Public Hearing" class="img-fluid">
-                <div class="mt-3 text-white">
-                    <h5>Public Hearing Panitia Khusus</h5>
-                    <p>Sidang dengar pendapat publik dengan stakeholders terkait Raperda - 10 Januari 2021</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="imageModal4" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-body">
-                <img src="https://images.unsplash.com/photo-1545235617-9465d2a55698?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80" 
-                     alt="Workshop" class="img-fluid">
-                <div class="mt-3 text-white">
-                    <h5>Workshop Penyusunan Produk Hukum</h5>
-                    <p>Kegiatan workshop teknik penyusunan peraturan perundang-undangan - 8 Januari 2021</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="imageModal5" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-body">
-                <img src="https://images.unsplash.com/photo-1543269865-cbf427effbad?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80" 
-                     alt="Kunjungan Kerja" class="img-fluid">
-                <div class="mt-3 text-white">
-                    <h5>Kunjungan Kerja ke DPRD Kota Lain</h5>
-                    <p>Studi banding dan pertukaran pengalaman pengelolaan JDIH - 15 Desember 2024</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="imageModal6" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-body">
-                <img src="https://images.unsplash.com/photo-1551135049-8a33b2fb2f61?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80" 
-                     alt="Penghargaan" class="img-fluid">
-                <div class="mt-3 text-white">
-                    <h5>Penerimaan Penghargaan Nasional</h5>
-                    <p>JDIH DPRD Kota Surakarta menerima penghargaan sebagai Sistem JDIH Terbaik Tingkat Nasional - 5 Desember 2024</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="imageModal7" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-body">
-                <img src="https://images.unsplash.com/photo-1517457373958-b7bdd4587205?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80" 
-                     alt="Sosialisasi Perda" class="img-fluid">
-                <div class="mt-3 text-white">
-                    <h5>Sosialisasi Perda di Kelurahan</h5>
-                    <p>Kegiatan sosialisasi peraturan daerah di tingkat kelurahan - 20 November 2024</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="imageModal8" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-body">
-                <img src="https://images.unsplash.com/photo-1497366754035-f200968a6e72?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80" 
-                     alt="Pelatihan JDIH" class="img-fluid">
-                <div class="mt-3 text-white">
-                    <h5>Pelatihan Pengelolaan JDIH</h5>
-                    <p>Pelatihan teknis pengelolaan sistem JDIH untuk staf sekretariat - 5 November 2024</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="imageModal9" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-body">
-                <img src="https://images.unsplash.com/photo-1511578314322-379afb476865?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80" 
-                     alt="Launching Aplikasi" class="img-fluid">
-                <div class="mt-3 text-white">
-                    <h5>Launching Aplikasi JDIH Mobile</h5>
-                    <p>Peluncuran aplikasi mobile JDIH untuk akses produk hukum melalui smartphone - 1 Oktober 2024</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+    <?php endforeach; ?>
+<?php endif; ?>
 
 <script>
     // JavaScript khusus untuk halaman galeri
     document.addEventListener('DOMContentLoaded', function() {
-        // Gallery filter functionality
-        const filterButtons = document.querySelectorAll('.filter-btn');
-        const galleryItems = document.querySelectorAll('.gallery-item');
-        
-        filterButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                // Remove active class from all buttons
-                filterButtons.forEach(btn => btn.classList.remove('active'));
-                
-                // Add active class to clicked button
-                this.classList.add('active');
-                
-                const filterValue = this.getAttribute('data-filter');
-                
-                // Show/hide gallery items based on filter
-                galleryItems.forEach(item => {
-                    if (filterValue === 'all') {
-                        item.style.display = 'block';
-                        setTimeout(() => {
-                            item.style.opacity = '1';
-                        }, 10);
-                    } else {
-                        const category = item.getAttribute('data-category');
-                        if (category === filterValue) {
-                            item.style.display = 'block';
-                            setTimeout(() => {
-                                item.style.opacity = '1';
-                            }, 10);
-                        } else {
-                            item.style.opacity = '0';
-                            setTimeout(() => {
-                                item.style.display = 'none';
-                            }, 300);
-                        }
-                    }
-                });
-            });
-        });
-        
         // Gallery item click animation
+        const galleryItems = document.querySelectorAll('.gallery-item');
         galleryItems.forEach(item => {
             item.addEventListener('click', function() {
-                this.style.transform = 'scale(0.95)';
-                setTimeout(() => {
-                    this.style.transform = '';
-                }, 150);
+                // Hanya beri animasi jika bukan album (album sudah ada onclick sendiri)
+                if (!this.querySelector('.item-badge.album')) {
+                    this.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        this.style.transform = '';
+                    }, 150);
+                }
             });
         });
         
@@ -616,49 +668,74 @@ include 'header.php';
             });
         });
         
-        // Pagination functionality
-        const pageLinks = document.querySelectorAll('.page-link');
-        pageLinks.forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                const pageItem = this.parentElement;
-                
-                if (!pageItem.classList.contains('disabled') && !pageItem.classList.contains('active')) {
-                    // Remove active class from all page items
-                    document.querySelectorAll('.page-item').forEach(item => {
-                        item.classList.remove('active');
-                    });
-                    
-                    // Add active class to clicked page item
-                    pageItem.classList.add('active');
-                    
-                    const pageText = this.textContent.trim();
-                    if (!isNaN(pageText)) {
-                        console.log(`Navigating to gallery page: ${pageText}`);
-                        // Here you would typically load new gallery items via AJAX
-                    }
-                }
-            });
-        });
-        
         // Keyboard navigation for gallery
         document.addEventListener('keydown', function(e) {
             const activeModal = document.querySelector('.modal.show');
             if (activeModal) {
                 if (e.key === 'Escape') {
-                    bootstrap.Modal.getInstance(activeModal).hide();
+                    const modalInstance = bootstrap.Modal.getInstance(activeModal);
+                    if (modalInstance) {
+                        modalInstance.hide();
+                    }
                 }
-                if (e.key === 'ArrowLeft') {
-                    // Navigate to previous image
-                    console.log('Previous image');
-                }
-                if (e.key === 'ArrowRight') {
-                    // Navigate to next image
-                    console.log('Next image');
+                
+                // Navigate between photos using arrow keys
+                if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    const currentModalId = activeModal.id;
+                    const currentId = parseInt(currentModalId.replace('imageModal', ''));
+                    const fotoIds = <?php echo json_encode(array_column($all_fotos, 'id')); ?>;
+                    const currentIndex = fotoIds.indexOf(currentId);
+                    
+                    let nextIndex;
+                    if (e.key === 'ArrowLeft') {
+                        nextIndex = currentIndex > 0 ? currentIndex - 1 : fotoIds.length - 1;
+                    } else {
+                        nextIndex = currentIndex < fotoIds.length - 1 ? currentIndex + 1 : 0;
+                    }
+                    
+                    // Close current modal and open next one
+                    const currentModalInstance = bootstrap.Modal.getInstance(activeModal);
+                    if (currentModalInstance) {
+                        currentModalInstance.hide();
+                    }
+                    
+                    setTimeout(() => {
+                        const nextModalId = 'imageModal' + fotoIds[nextIndex];
+                        const nextModalElement = document.getElementById(nextModalId);
+                        if (nextModalElement) {
+                            const nextModal = new bootstrap.Modal(nextModalElement);
+                            nextModal.show();
+                        }
+                    }, 300);
                 }
             }
+        });
+        
+        // Handle image loading errors
+        const images = document.querySelectorAll('.gallery-item img, .modal-body img');
+        images.forEach(img => {
+            img.addEventListener('error', function() {
+                // Cek parent element untuk menentukan jenis
+                const parent = this.closest('.gallery-item');
+                const isAlbum = parent ? parent.querySelector('.item-badge.album') : false;
+                
+                if (this.classList.contains('img-fluid')) {
+                    // Modal image error
+                    this.src = 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80';
+                } else {
+                    // Thumbnail image error
+                    this.src = isAlbum ? 
+                        'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80' :
+                        'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80';
+                }
+            });
         });
     });
 </script>
 
-<?php include 'footer.php'; ?>
+<?php 
+// Tutup koneksi database
+mysqli_close($koneksi);
+include 'footer.php'; 
+?>
