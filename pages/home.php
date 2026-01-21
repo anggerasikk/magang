@@ -93,9 +93,6 @@
             // Tambahan untuk himpunan
             include "himpunan.php";
             break;
-        default:
-            include "beranda.php"; // Default ke beranda.php
-            break;
         case 'artikel-hukum':
             include "artikel-hukum.php";
             break;
@@ -111,7 +108,13 @@
         case 'kegiatan':
             include "kegiatan-jdih.php";
             break;
-        case 'infografis':
+        case 'detail-kegiatan-jdih':
+case 'detail-kegiatan':  // Tambahkan alias
+    include 'detail-kegiatan.php';
+    break;
+
+        break;
+            case 'infografis':
             include "infografis.php";
             break;
         case 'penghargaan':
@@ -131,10 +134,26 @@
             break;
         // Di index.php, tambahkan:
         case 'detail-monografi':
-    include 'detail-monografi.php';
-    break;
+        include 'detail-monografi.php';
+        break;
+
+        case 'detail-yurisprudensi':
+        include 'detail-yurisprudensi.php';
+        break;
+
+        case 'detail-buku':
+        include 'detail-buku.php';  
+        break;
+
+        case 'detail-artikel-kegiatan':
+        include 'detail-artikel.php';
+        break;
+
+        default:
+            include "beranda.php"; // Default ke beranda.php
+            break;
     }
-            
+       
     ?>
     
     <!-- JS Files jika ada -->

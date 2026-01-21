@@ -556,7 +556,6 @@ while ($row = mysqli_fetch_assoc($result)):
             <i class="bi bi-<?= $file_found ? 'check-circle' : 'x-circle' ?>"></i>
             <?= $file_found ? 'File PDF tersedia' : 'File PDF tidak tersedia' ?>
             <?php if ($file_found): ?>
-                <br><small><?= htmlspecialchars(basename($actual_file_path)) ?></small>
             <?php endif; ?>
         </div>
 

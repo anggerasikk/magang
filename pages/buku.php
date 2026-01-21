@@ -1,7 +1,65 @@
 <?php
 // buku.php
+require_once 'a_db.php'; // Include koneksi database
+
 $pageTitle = 'Koleksi Buku - JDIH DPRD Kota Surakarta';
 include 'header.php';
+
+// Query untuk mengambil data buku
+$query = "SELECT * FROM buku_perpustakaan ORDER BY created_at DESC LIMIT 12";
+$result = $koneksi->query($query);
+
+// Handle search
+$search_query = "";
+if (isset($_GET['search']) && !empty($_GET['search'])) {
+    $search = $koneksi->real_escape_string($_GET['search']);
+    $search_query = " WHERE judul LIKE '%$search%' OR pengarang LIKE '%$search%' OR subjek_topik LIKE '%$search%'";
+}
+
+// Handle filters
+$filter_conditions = [];
+if (isset($_GET['bidang_hukum']) && !empty($_GET['bidang_hukum'])) {
+    $bidang_hukum = $koneksi->real_escape_string($_GET['bidang_hukum']);
+    $filter_conditions[] = "bidang_hukum = '$bidang_hukum'";
+}
+
+if (isset($_GET['tahun']) && !empty($_GET['tahun'])) {
+    $tahun = $koneksi->real_escape_string($_GET['tahun']);
+    $filter_conditions[] = "tahun_terbit = '$tahun'";
+}
+
+if (isset($_GET['status']) && !empty($_GET['status'])) {
+    $status = $koneksi->real_escape_string($_GET['status']);
+    if ($status == 'tersedia') {
+        $filter_conditions[] = "status_ketersediaan = 'tersedia' AND jumlah_tersedia > 0";
+    } elseif ($status == 'dipinjam') {
+        $filter_conditions[] = "status_ketersediaan = 'dipinjam' OR jumlah_tersedia = 0";
+    }
+}
+
+// Build final query
+$where_clause = "";
+if (!empty($search_query)) {
+    $where_clause = $search_query;
+}
+
+if (!empty($filter_conditions)) {
+    if (empty($where_clause)) {
+        $where_clause = " WHERE " . implode(" AND ", $filter_conditions);
+    } else {
+        $where_clause .= " AND " . implode(" AND ", $filter_conditions);
+    }
+}
+
+$final_query = "SELECT * FROM buku_perpustakaan" . $where_clause . " ORDER BY created_at DESC";
+$final_result = $koneksi->query($final_query);
+
+// Get unique years and bidang_hukum for filters
+$years_query = "SELECT DISTINCT tahun_terbit FROM buku_perpustakaan ORDER BY tahun_terbit DESC";
+$years_result = $koneksi->query($years_query);
+
+$bidang_query = "SELECT DISTINCT bidang_hukum FROM buku_perpustakaan WHERE bidang_hukum IS NOT NULL AND bidang_hukum != ''";
+$bidang_result = $koneksi->query($bidang_query);
 ?>
 
 <style>
@@ -96,6 +154,7 @@ include 'header.php';
         padding: 0 30px;
         font-weight: 600;
         transition: all 0.3s;
+        cursor: pointer;
     }
     
     .search-btn:hover {
@@ -325,6 +384,26 @@ include 'header.php';
             grid-template-columns: 1fr;
         }
     }
+    
+    /* Empty state */
+    .empty-state {
+        text-align: center;
+        padding: 50px 20px;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        color: #80d0c7;
+        margin-bottom: 20px;
+    }
+    
+    .empty-state h4 {
+        color: #13547a;
+        margin-bottom: 15px;
+    }
 </style>
 
 <!-- PAGE HEADER -->
@@ -347,12 +426,15 @@ include 'header.php';
         <!-- SEARCH SECTION -->
         <div class="search-section">
             <h4 class="mb-4" style="color: #13547a;">Cari Buku</h4>
-            <div class="search-box">
-                <input type="text" class="search-input" placeholder="Judul buku, penulis, atau kata kunci...">
-                <button class="search-btn">
+            <form method="GET" action="" class="search-box">
+                <input type="hidden" name="page" value="buku">
+                <input type="text" name="search" class="search-input" 
+                       placeholder="Judul buku, penulis, atau kata kunci..."
+                       value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>">
+                <button type="submit" class="search-btn">
                     <i class="bi bi-search me-2"></i>CARI
                 </button>
-            </div>
+            </form>
         </div>
         
         <div class="row">
@@ -360,77 +442,98 @@ include 'header.php';
             <div class="col-lg-3">
                 <div class="filter-sidebar">
                     <h5 class="filter-title">Filter Koleksi</h5>
-                    
-                    <div class="filter-category">
-                        <h6>Kategori Buku</h6>
-                        <div class="filter-option">
-                            <label>
-                                <input type="checkbox" checked> Hukum Tata Negara
-                            </label>
+                    <form method="GET" action="" id="filterForm">
+                        <input type="hidden" name="page" value="buku">
+                        <?php if(isset($_GET['search'])): ?>
+                            <input type="hidden" name="search" value="<?php echo htmlspecialchars($_GET['search']); ?>">
+                        <?php endif; ?>
+                        
+                        <div class="filter-category">
+                            <h6>Bidang Hukum</h6>
+                            <div class="filter-option">
+                                <label>
+                                    <input type="radio" name="bidang_hukum" value="" 
+                                           <?php echo !isset($_GET['bidang_hukum']) ? 'checked' : ''; ?>
+                                           onchange="document.getElementById('filterForm').submit()">
+                                    Semua Bidang
+                                </label>
+                            </div>
+                            <?php if($bidang_result && $bidang_result->num_rows > 0): ?>
+                                <?php while($bidang = $bidang_result->fetch_assoc()): ?>
+                                    <?php if(!empty($bidang['bidang_hukum'])): ?>
+                                        <div class="filter-option">
+                                            <label>
+                                                <input type="radio" name="bidang_hukum" value="<?php echo $bidang['bidang_hukum']; ?>"
+                                                       <?php echo (isset($_GET['bidang_hukum']) && $_GET['bidang_hukum'] == $bidang['bidang_hukum']) ? 'checked' : ''; ?>
+                                                       onchange="document.getElementById('filterForm').submit()">
+                                                <?php echo $bidang['bidang_hukum']; ?>
+                                            </label>
+                                        </div>
+                                    <?php endif; ?>
+                                <?php endwhile; ?>
+                                <?php $bidang_result->data_seek(0); ?>
+                            <?php endif; ?>
                         </div>
-                        <div class="filter-option">
-                            <label>
-                                <input type="checkbox"> Hukum Administrasi
-                            </label>
+                        
+                        <div class="filter-category">
+                            <h6>Tahun Terbit</h6>
+                            <div class="filter-option">
+                                <label>
+                                    <input type="radio" name="tahun" value="" 
+                                           <?php echo !isset($_GET['tahun']) ? 'checked' : ''; ?>
+                                           onchange="document.getElementById('filterForm').submit()">
+                                    Semua Tahun
+                                </label>
+                            </div>
+                            <?php if($years_result && $years_result->num_rows > 0): ?>
+                                <?php while($year = $years_result->fetch_assoc()): ?>
+                                    <?php if(!empty($year['tahun_terbit'])): ?>
+                                        <div class="filter-option">
+                                            <label>
+                                                <input type="radio" name="tahun" value="<?php echo $year['tahun_terbit']; ?>"
+                                                       <?php echo (isset($_GET['tahun']) && $_GET['tahun'] == $year['tahun_terbit']) ? 'checked' : ''; ?>
+                                                       onchange="document.getElementById('filterForm').submit()">
+                                                <?php echo $year['tahun_terbit']; ?>
+                                            </label>
+                                        </div>
+                                    <?php endif; ?>
+                                <?php endwhile; ?>
+                                <?php $years_result->data_seek(0); ?>
+                            <?php endif; ?>
                         </div>
-                        <div class="filter-option">
-                            <label>
-                                <input type="checkbox"> Hukum Pidana
-                            </label>
+                        
+                        <div class="filter-category">
+                            <h6>Status</h6>
+                            <div class="filter-option">
+                                <label>
+                                    <input type="radio" name="status" value="" 
+                                           <?php echo !isset($_GET['status']) ? 'checked' : ''; ?>
+                                           onchange="document.getElementById('filterForm').submit()">
+                                    Semua Status
+                                </label>
+                            </div>
+                            <div class="filter-option">
+                                <label>
+                                    <input type="radio" name="status" value="tersedia"
+                                           <?php echo (isset($_GET['status']) && $_GET['status'] == 'tersedia') ? 'checked' : ''; ?>
+                                           onchange="document.getElementById('filterForm').submit()">
+                                    Tersedia
+                                </label>
+                            </div>
+                            <div class="filter-option">
+                                <label>
+                                    <input type="radio" name="status" value="dipinjam"
+                                           <?php echo (isset($_GET['status']) && $_GET['status'] == 'dipinjam') ? 'checked' : ''; ?>
+                                           onchange="document.getElementById('filterForm').submit()">
+                                    Dipinjam
+                                </label>
+                            </div>
                         </div>
-                        <div class="filter-option">
-                            <label>
-                                <input type="checkbox"> Hukum Perdata
-                            </label>
-                        </div>
-                        <div class="filter-option">
-                            <label>
-                                <input type="checkbox"> Hukum Internasional
-                            </label>
-                        </div>
-                    </div>
-                    
-                    <div class="filter-category">
-                        <h6>Tahun Terbit</h6>
-                        <div class="filter-option">
-                            <label>
-                                <input type="checkbox"> 2020 - 2024
-                            </label>
-                        </div>
-                        <div class="filter-option">
-                            <label>
-                                <input type="checkbox"> 2015 - 2019
-                            </label>
-                        </div>
-                        <div class="filter-option">
-                            <label>
-                                <input type="checkbox"> 2010 - 2014
-                            </label>
-                        </div>
-                        <div class="filter-option">
-                            <label>
-                                <input type="checkbox"> Sebelum 2010
-                            </label>
-                        </div>
-                    </div>
-                    
-                    <div class="filter-category">
-                        <h6>Status</h6>
-                        <div class="filter-option">
-                            <label>
-                                <input type="checkbox" checked> Tersedia
-                            </label>
-                        </div>
-                        <div class="filter-option">
-                            <label>
-                                <input type="checkbox"> Dipinjam
-                            </label>
-                        </div>
-                    </div>
-                    
-                    <button class="btn btn-primary w-100 mt-3" style="background: linear-gradient(135deg, #13547a 0%, #80d0c7 100%); border: none;">
-                        Terapkan Filter
-                    </button>
+                        
+                        <button type="button" class="btn btn-secondary w-100 mt-3" onclick="resetFilters()">
+                            Reset Filter
+                        </button>
+                    </form>
                 </div>
                 
                 <!-- LIBRARY INFO -->
@@ -455,125 +558,82 @@ include 'header.php';
             <div class="col-lg-9">
                 <div class="row mb-4">
                     <div class="col-12">
-                        <h2 class="section-title">Koleksi Buku Terbaru</h2>
+                        <h2 class="section-title">Koleksi Buku 
+                            <?php if(isset($_GET['search'])): ?>
+                                <small class="text-muted">Hasil pencarian: "<?php echo htmlspecialchars($_GET['search']); ?>"</small>
+                            <?php endif; ?>
+                        </h2>
                     </div>
                 </div>
                 
-                <div class="book-grid">
-                    <!-- Book 1 -->
-                    <div class="book-card">
-                        <img src="https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" 
-                             alt="Hukum Tata Negara" class="book-cover">
-                        <div class="book-content">
-                            <span class="book-category">Hukum Tata Negara</span>
-                            <h4 class="book-title">Pengantar Ilmu Hukum Tata Negara Indonesia</h4>
-                            <p class="book-author">Prof. Dr. Jimly Asshiddiqie, SH.</p>
-                            <div class="book-meta">
-                                <span class="book-year">2023</span>
-                                <span class="book-status status-available">Tersedia</span>
+                <?php if($final_result && $final_result->num_rows > 0): ?>
+                    <div class="book-grid">
+                        <?php while($buku = $final_result->fetch_assoc()): ?>
+                            <?php
+                            // Tentukan status ketersediaan
+                            $status = ($buku['status_ketersediaan'] == 'tersedia' && $buku['jumlah_tersedia'] > 0) ? 'tersedia' : 'dipinjam';
+                            $status_class = ($status == 'tersedia') ? 'status-available' : 'status-borrowed';
+                            $status_text = ($status == 'tersedia') ? 'Tersedia' : 'Dipinjam';
+                            
+                            // Gambar sampul (gunakan default jika tidak ada)
+                            $cover_image = !empty($buku['sampul_path']) && file_exists($buku['sampul_path']) 
+                                ? $buku['sampul_path'] 
+                                : 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80';
+                            
+                            // Truncate judul jika terlalu panjang
+                            $judul = strlen($buku['judul']) > 60 ? substr($buku['judul'], 0, 60) . '...' : $buku['judul'];
+                            ?>
+                            
+                            <div class="book-card">
+                                <img src="<?php echo $cover_image; ?>" 
+                                     alt="<?php echo htmlspecialchars($buku['judul']); ?>" 
+                                     class="book-cover">
+                                <div class="book-content">
+                                    <?php if(!empty($buku['bidang_hukum'])): ?>
+                                        <span class="book-category"><?php echo $buku['bidang_hukum']; ?></span>
+                                    <?php endif; ?>
+                                    
+                                    <h4 class="book-title" title="<?php echo htmlspecialchars($buku['judul']); ?>">
+                                        <?php echo htmlspecialchars($judul); ?>
+                                    </h4>
+                                    
+                                    <?php if(!empty($buku['pengarang'])): ?>
+                                        <p class="book-author"><?php echo htmlspecialchars($buku['pengarang']); ?></p>
+                                    <?php endif; ?>
+                                    
+                                    <div class="book-meta">
+                                        <?php if(!empty($buku['tahun_terbit'])): ?>
+                                            <span class="book-year"><?php echo $buku['tahun_terbit']; ?></span>
+                                        <?php endif; ?>
+                                        <span class="book-status <?php echo $status_class; ?>">
+                                            <?php echo $status_text; ?>
+                                        </span>
+                                    </div>
+                                    
+                                    <div class="book-actions">
+                                        <a href="?page=detail-buku&id=<?php echo $buku['id_buku']; ?>" class="btn-detail">Detail</a>
+                                        
+                                        <?php if($status == 'tersedia'): ?>
+                                            <a href="?page=peminjaman&id=<?php echo $buku['id_buku']; ?>" class="btn-borrow">Pinjam</a>
+                                        <?php else: ?>
+                                            <button class="btn-borrow" disabled>Dipinjam</button>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="book-actions">
-                                <a href="?page=detail-buku&id=1" class="btn-detail">Detail</a>
-                                <a href="?page=peminjaman&id=1" class="btn-borrow">Pinjam</a>
-                            </div>
-                        </div>
+                        <?php endwhile; ?>
                     </div>
-                    
-                    <!-- Book 2 -->
-                    <div class="book-card">
-                        <img src="https://images.unsplash.com/photo-1531346688376-ab6275c4725e?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" 
-                             alt="Hukum Administrasi" class="book-cover">
-                        <div class="book-content">
-                            <span class="book-category">Hukum Administrasi</span>
-                            <h4 class="book-title">Hukum Administrasi Negara di Indonesia</h4>
-                            <p class="book-author">Dr. Indroharto, SH., M.Hum.</p>
-                            <div class="book-meta">
-                                <span class="book-year">2022</span>
-                                <span class="book-status status-borrowed">Dipinjam</span>
-                            </div>
-                            <div class="book-actions">
-                                <a href="?page=detail-buku&id=2" class="btn-detail">Detail</a>
-                                <button class="btn-borrow" disabled>Dipinjam</button>
-                            </div>
-                        </div>
+                <?php else: ?>
+                    <!-- Empty state -->
+                    <div class="empty-state">
+                        <i class="bi bi-book"></i>
+                        <h4>Buku Tidak Ditemukan</h4>
+                        <p>Tidak ada buku yang sesuai dengan kriteria pencarian/filter Anda.</p>
+                        <a href="?page=buku" class="btn btn-primary" style="background: linear-gradient(135deg, #13547a 0%, #80d0c7 100%); border: none;">
+                            Lihat Semua Buku
+                        </a>
                     </div>
-                    
-                    <!-- Book 3 -->
-                    <div class="book-card">
-                        <img src="https://images.unsplash.com/photo-1491841550275-ad7854e35ca6?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" 
-                             alt="Hukum Pidana" class="book-cover">
-                        <div class="book-content">
-                            <span class="book-category">Hukum Pidana</span>
-                            <h4 class="book-title">KUHAP dan Teori Penyidikan Modern</h4>
-                            <p class="book-author">Andi Hamzah, SH.</p>
-                            <div class="book-meta">
-                                <span class="book-year">2023</span>
-                                <span class="book-status status-available">Tersedia</span>
-                            </div>
-                            <div class="book-actions">
-                                <a href="?page=detail-buku&id=3" class="btn-detail">Detail</a>
-                                <a href="?page=peminjaman&id=3" class="btn-borrow">Pinjam</a>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Book 4 -->
-                    <div class="book-card">
-                        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" 
-                             alt="Hukum Perdata" class="book-cover">
-                        <div class="book-content">
-                            <span class="book-category">Hukum Perdata</span>
-                            <h4 class="book-title">Hukum Perdata Internasional</h4>
-                            <p class="book-author">Prof. Dr. Sudargo Gautama</p>
-                            <div class="book-meta">
-                                <span class="book-year">2021</span>
-                                <span class="book-status status-available">Tersedia</span>
-                            </div>
-                            <div class="book-actions">
-                                <a href="?page=detail-buku&id=4" class="btn-detail">Detail</a>
-                                <a href="?page=peminjaman&id=4" class="btn-borrow">Pinjam</a>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Book 5 -->
-                    <div class="book-card">
-                        <img src="https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" 
-                             alt="Hukum Internasional" class="book-cover">
-                        <div class="book-content">
-                            <span class="book-category">Hukum Internasional</span>
-                            <h4 class="book-title">Hukum Internasional Publik</h4>
-                            <p class="book-author">Prof. Dr. Hikmahanto Juwana, S.H., LL.M.</p>
-                            <div class="book-meta">
-                                <span class="book-year">2023</span>
-                                <span class="book-status status-available">Tersedia</span>
-                            </div>
-                            <div class="book-actions">
-                                <a href="?page=detail-buku&id=5" class="btn-detail">Detail</a>
-                                <a href="?page=peminjaman&id=5" class="btn-borrow">Pinjam</a>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Book 6 -->
-                    <div class="book-card">
-                        <img src="https://images.unsplash.com/photo-1481627834876-b7833e8f5570?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" 
-                             alt="Hukum Lingkungan" class="book-cover">
-                        <div class="book-content">
-                            <span class="book-category">Hukum Lingkungan</span>
-                            <h4 class="book-title">Hukum Lingkungan dan Pengelolaan Sumber Daya Alam</h4>
-                            <p class="book-author">Dr. Takdir Rahmadi, SH., LL.M.</p>
-                            <div class="book-meta">
-                                <span class="book-year">2022</span>
-                                <span class="book-status status-borrowed">Dipinjam</span>
-                            </div>
-                            <div class="book-actions">
-                                <a href="?page=detail-buku&id=6" class="btn-detail">Detail</a>
-                                <button class="btn-borrow" disabled>Dipinjam</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <?php endif; ?>
                 
                 <!-- PAGINATION -->
                 <nav aria-label="Page navigation">
@@ -618,23 +678,12 @@ include 'header.php';
             
             function performSearch() {
                 const query = searchInput.value.trim();
-                if (query) {
-                    alert('Mencari buku: ' + query);
-                    // Implement actual search logic here
-                    // window.location.href = '?page=search-buku&q=' + encodeURIComponent(query);
-                } else {
+                if (!query) {
                     alert('Silakan masukkan kata kunci pencarian');
+                    return false;
                 }
+                return true;
             }
-        }
-        
-        // Filter functionality
-        const filterBtn = document.querySelector('.filter-sidebar .btn-primary');
-        if (filterBtn) {
-            filterBtn.addEventListener('click', function() {
-                alert('Filter diterapkan!');
-                // Implement filter logic here
-            });
         }
         
         // Book card hover effect
@@ -648,7 +697,18 @@ include 'header.php';
                 this.style.transform = 'translateY(0)';
             });
         });
+        
+        // Reset filters function
+        window.resetFilters = function() {
+            window.location.href = '?page=buku';
+        }
     });
 </script>
 
-<?php include 'footer.php'; ?>
+<?php 
+// Tutup koneksi database
+if(isset($koneksi)) {
+    $koneksi->close();
+}
+include 'footer.php'; 
+?>

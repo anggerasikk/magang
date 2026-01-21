@@ -19,17 +19,18 @@ if (!$koneksi) {
 mysqli_set_charset($koneksi, "utf8");
 
 // ============================================
-// KONFIGURASI PATH
+// KONFIGURASI PATH (DIPERBAIKI)
 // ============================================
 $base_upload_path = "C:/xampp/htdocs/jdihcilacap_pasang/wb_admin/uploads/";
-$artikel_pdf_path = "C:/xampp/htdocs/jdihcilacap_pasang/wb_admin/uploads/artikel/pdf/";
-$artikel_images_path = "C:/xampp/htdocs/jdihcilacap_pasang/wb_admin/uploads/artikel/images/";
+// PERBAIKAN PATH SESUAI DENGAN INFORMASI ANDA:
+$artikel_pdf_path = "C:/xampp/htdocs/jdihcilacap_pasang/wb_admin/uploads/artikel_hukum/pdf/";  // PDF
+$artikel_images_path = "C:/xampp/htdocs/jdihcilacap_pasang/wb_admin/uploads/artikel_hukum/images/";  // Images
 
-$web_artikel_pdf_path = "/jdihcilacap_pasang/wb_admin/uploads/artikel/pdf/";
-$web_artikel_images_path = "/jdihcilacap_pasang/wb_admin/uploads/artikel/images/";
+$web_artikel_pdf_path = "/jdihcilacap_pasang/wb_admin/uploads/artikel_hukum/pdf/";
+$web_artikel_images_path = "/jdihcilacap_pasang/wb_admin/uploads/artikel_hukum/images/";
 
 // ============================================
-// FUNGSI BANTU UNTUK FILE
+// FUNGSI BANTU UNTUK FILE (DIPERBAIKI)
 // ============================================
 
 // Fungsi untuk menemukan file PDF di server
@@ -46,13 +47,14 @@ function findArtikelPDFFile($filename, $id = null) {
     $possible_locations = [
         $artikel_pdf_path . $clean_filename,
         str_replace('/', '\\', $artikel_pdf_path) . $clean_filename,
-        $_SERVER['DOCUMENT_ROOT'] . '/jdihcilacap_pasang/wb_admin/uploads/artikel/pdf/' . $clean_filename,
+        $_SERVER['DOCUMENT_ROOT'] . '/jdihcilacap_pasang/wb_admin/uploads/artikel_hukum/pdf/' . $clean_filename,
     ];
     
     if ($id) {
         $possible_locations[] = $artikel_pdf_path . $id . '.pdf';
         $possible_locations[] = $artikel_pdf_path . $id . '.PDF';
         $possible_locations[] = $artikel_pdf_path . 'artikel_' . $id . '.pdf';
+        $possible_locations[] = $artikel_pdf_path . 'artikel_hukum_' . $id . '.pdf';
     }
     
     foreach ($possible_locations as $location) {
@@ -75,7 +77,7 @@ function findArtikelImageFile($filename, $id = null) {
     global $artikel_images_path;
     
     if (empty($filename) && $id) {
-        $image_extensions = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+        $image_extensions = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'JPG', 'JPEG', 'PNG'];
         foreach ($image_extensions as $ext) {
             $test_filename = $id . '.' . $ext;
             $test_path = $artikel_images_path . $test_filename;
@@ -90,6 +92,13 @@ function findArtikelImageFile($filename, $id = null) {
             if (file_exists($test_path2)) {
                 return $test_path2;
             }
+            
+            $test_filename3 = 'artikel_hukum_' . $id . '.' . $ext;
+            $test_path3 = $artikel_images_path . $test_filename3;
+            
+            if (file_exists($test_path3)) {
+                return $test_path3;
+            }
         }
         return null;
     }
@@ -103,7 +112,7 @@ function findArtikelImageFile($filename, $id = null) {
     $possible_locations = [
         $artikel_images_path . $filename,
         str_replace('/', '\\', $artikel_images_path) . $filename,
-        $_SERVER['DOCUMENT_ROOT'] . '/jdihcilacap_pasang/wb_admin/uploads/artikel/images/' . $filename,
+        $_SERVER['DOCUMENT_ROOT'] . '/jdihcilacap_pasang/wb_admin/uploads/artikel_hukum/images/' . $filename,
     ];
     
     foreach ($possible_locations as $location) {
@@ -222,6 +231,47 @@ include "header.php";
 ================================ -->
 <style>
 <?php include "style-keputusan-dprd.css"; ?>
+
+/* Tambahan style untuk tombol detail */
+.btn-view {
+    background-color: #0d6efd;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: background-color 0.3s;
+    font-size: 0.9rem;
+}
+
+.btn-view:hover {
+    background-color: #0b5ed7;
+    color: white;
+    text-decoration: none;
+}
+
+/* Jika menggunakan tag a */
+a.card-btn.btn-view {
+    text-decoration: none;
+    color: white;
+}
+
+a.card-btn.btn-view:hover {
+    text-decoration: none;
+    color: white;
+}
+
+.detail-link {
+    text-decoration: none;
+    color: inherit;
+}
+
+.detail-link:hover .card-title {
+    color: #0d6efd;
+    text-decoration: underline;
+}
 </style>
 
 <!-- ===============================
@@ -311,7 +361,8 @@ include "header.php";
                     $jenis_artikel = $row['jenis_artikel'] ?? 'Artikel';
                     $singkatan = substr($jenis_artikel, 0, 3);
                     
-                    $detail = "detail-artikel.php?id=" . $row['id_artikel'];
+                    // URL untuk halaman detail
+                    $detail_url = "index.php?page=detail-artikel-kegiatan&id=" . urlencode($row['id_artikel']);
                 ?>
                 
                 <div class="document-card" data-tahun="<?= $row['tahun_terbit']; ?>" data-id="<?= $row['id_artikel']; ?>">
@@ -340,7 +391,13 @@ include "header.php";
 
                     <div class="card-content">
                         <div class="card-number"><?= htmlspecialchars($row['tahun_terbit']) ?> - <?= htmlspecialchars($row['bidang_hukum']) ?></div>
-                        <h3 class="card-title"><?= htmlspecialchars($row['judul']) ?></h3>
+                        
+                        <!-- Judul artikel sebagai link ke halaman detail -->
+                        <h3 class="card-title">
+                            <a href="<?= htmlspecialchars($detail_url) ?>" class="detail-link">
+                                <?= htmlspecialchars($row['judul']) ?>
+                            </a>
+                        </h3>
 
                         <div class="card-meta">
                             <div class="card-date">
@@ -353,17 +410,26 @@ include "header.php";
                             <i class="bi bi-person"></i> <?= htmlspecialchars($row['penulis']) ?>
                         </p>
 
+                        <!-- Abstrak singkat -->
+                        <?php if (!empty($row['abstrak'])): ?>
+                        <div class="abstrak-singkat mb-3">
+                            <p class="text-muted" style="font-size: 0.85rem;">
+                                <?= nl2br(htmlspecialchars(substr($row['abstrak'], 0, 150))) ?>...
+                            </p>
+                        </div>
+                        <?php endif; ?>
+
                         <div class="download-status <?= $file_found ? 'available' : 'unavailable' ?>">
                             <i class="bi bi-<?= $file_found ? 'check-circle' : 'x-circle' ?>"></i>
                             <?= $file_found ? 'File PDF tersedia' : 'File PDF tidak tersedia' ?>
                         </div>
 
                         <div class="card-actions">
-                            <button class="card-btn btn-view"
-        onclick="window.location.href='<?= $detail ?>'">
-    <i class="bi bi-eye"></i> Lihat Detail
-</button>
-
+                            <!-- TOMBOL LIHAT DETAIL -->
+                            <a href="<?= htmlspecialchars($detail_url) ?>" 
+                               class="card-btn btn-view">
+                                <i class="bi bi-eye"></i> Lihat Detail
+                            </a>
                             
                             <!-- TOMBOL DOWNLOAD -->
                             <?php if ($file_found): ?>
@@ -477,9 +543,10 @@ include "header.php";
                     <?php 
                     mysqli_data_seek($popular_result, 0);
                     while ($pop = mysqli_fetch_assoc($popular_result)): 
+                        $pop_detail_url = "detail-artikel.php?id=" . urlencode($pop['id_artikel']);
                     ?>
                         <li>
-                            <a href="detail-artikel.php?id=<?= $pop['id_artikel'] ?>">
+                            <a href="<?= htmlspecialchars($pop_detail_url) ?>">
                                 <i class="bi bi-file-text"></i> <?= htmlspecialchars(substr($pop['judul'], 0, 40)) ?>...
                             </a>
                             <small class="text-muted d-block">Tahun: <?= htmlspecialchars($pop['tahun_terbit']) ?></small>
@@ -494,7 +561,7 @@ include "header.php";
                     <h4><i class="bi bi-search"></i> Cari Artikel</h4>
                     <form method="GET" class="mb-3">
                         <div class="input-group">
-                            <input type="text" class="form-control" name="search" placeholder="Kata kunci...">
+                            <input type="text" class="form-control" name="search" placeholder="Kata kunci..." id="searchInput">
                             <button class="btn btn-outline-primary" type="submit">
                                 <i class="bi bi-search"></i>
                             </button>
@@ -513,35 +580,36 @@ include "header.php";
 // ============================================
 // FILTER BERDASARKAN TAHUN
 // ============================================
-document.querySelectorAll(".year-btn").forEach(btn => {
-    btn.addEventListener('click', () => {
-        document.querySelectorAll(".year-btn").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        const selectedYear = btn.dataset.year;
-        
-        document.querySelectorAll(".document-card").forEach(card => {
-            if (selectedYear === "semua" || card.dataset.tahun === selectedYear) {
-                card.style.display = "flex";
-            } else {
-                card.style.display = "none";
-            }
+document.addEventListener('DOMContentLoaded', function() {
+    // Filter tahun - tombol utama
+    document.querySelectorAll(".year-btn").forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll(".year-btn").forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+            const selectedYear = btn.dataset.year;
+            
+            document.querySelectorAll(".document-card").forEach(card => {
+                if (selectedYear === "semua" || card.dataset.tahun === selectedYear) {
+                    card.style.display = "flex";
+                } else {
+                    card.style.display = "none";
+                }
+            });
         });
     });
-});
-
-// ============================================
-// FILTER BERDASARKAN TAHUN (SIDEBAR)
-// ============================================
-document.querySelectorAll(".year-filter-sidebar").forEach(btn => {
-    btn.addEventListener('click', () => {
-        document.querySelectorAll(".year-filter-sidebar").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        const selectedYear = btn.dataset.year;
-        
-        document.querySelectorAll(".year-btn").forEach(b => {
-            if (b.dataset.year === selectedYear) {
-                b.click();
-            }
+    
+    // Filter tahun - sidebar
+    document.querySelectorAll(".year-filter-sidebar").forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll(".year-filter-sidebar").forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+            const selectedYear = btn.dataset.year;
+            
+            document.querySelectorAll(".year-btn").forEach(b => {
+                if (b.dataset.year === selectedYear) {
+                    b.click();
+                }
+            });
         });
     });
 });
@@ -604,7 +672,7 @@ document.addEventListener('DOMContentLoaded', function() {
         btn.addEventListener('click', function(e) {
             e.preventDefault();
             const card = this.closest('.document-card');
-            const judul = card.querySelector('.card-title').textContent;
+            const judul = card.querySelector('.card-title a').textContent.trim();
             showFileNotFoundAlert(judul);
         });
     });
@@ -631,12 +699,10 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
-});
-
-// ============================================
-// PENCARIAN ARTIKEL
-// ============================================
-document.addEventListener('DOMContentLoaded', function() {
+    
+    // ============================================
+    // PENCARIAN ARTIKEL
+    // ============================================
     const searchForms = document.querySelectorAll('form[method="GET"]');
     
     searchForms.forEach(form => {
@@ -644,18 +710,19 @@ document.addEventListener('DOMContentLoaded', function() {
             const searchInput = this.querySelector('input[name="search"]');
             if (searchInput && !searchInput.value.trim()) {
                 e.preventDefault();
-                alert('Masukkan kata kunci pencarian!');
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Peringatan',
+                        text: 'Masukkan kata kunci pencarian!'
+                    });
+                } else {
+                    alert('Masukkan kata kunci pencarian!');
+                }
             }
         });
     });
 });
-
-// ============================================
-// FILTER KATEGORI
-// ============================================
-function filterByCategory(category) {
-    window.location.href = '?kategori=' + encodeURIComponent(category);
-}
 </script>
 
 <?php 
