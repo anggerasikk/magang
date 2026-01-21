@@ -1,8 +1,31 @@
+<?php
+// kegiatan.php
+require_once 'a_db.php'; // Include koneksi database
+
+// Tambahkan base URL di atas
+$base_url = "http://localhost/jdihcilacap_pasang";
+$pageTitle = 'Kegiatan JDIH - JDIH DPRD Kota Surakarta';
+include 'header.php';
+
+// Query untuk mengambil data artikel kegiatan
+$status = 'publik'; // Hanya ambil artikel yang sudah dipublish
+$query = "SELECT * FROM artikel_kegiatan WHERE status = '$status' ORDER BY tanggal_publikasi DESC LIMIT 6";
+$result = $koneksi->query($query);
+
+// Handle filter berdasarkan kategori (ambil dari kata kunci atau judul)
+$current_filter = isset($_GET['filter']) ? $_GET['filter'] : 'all';
+if ($current_filter != 'all') {
+    $filter_query = " AND (meta_keywords LIKE '%$current_filter%' OR judul LIKE '%$current_filter%')";
+    $query = "SELECT * FROM artikel_kegiatan WHERE status = '$status' $filter_query ORDER BY tanggal_publikasi DESC";
+    $result = $koneksi->query($query);
+}
+?>
+
 <!doctype html>
 <html lang="id">
 <head>
     <meta charset="utf-8">
-    <title>Kegiatan JDIH - JDIH DPRD Kota Surakarta</title>
+    <title><?php echo $pageTitle; ?></title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     
     <!-- CSS FILES -->
@@ -106,6 +129,8 @@
             transition: all 0.3s ease;
             cursor: pointer;
             font-size: 0.95rem;
+            text-decoration: none;
+            display: inline-block;
         }
         
         .filter-btn:hover {
@@ -113,6 +138,8 @@
             border-color: #13547a;
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            text-decoration: none;
+            color: #13547a;
         }
         
         .filter-btn.active {
@@ -295,6 +322,26 @@
             border-color: #e0e0e0;
         }
         
+        /* EMPTY STATE */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+        
+        .empty-state i {
+            font-size: 4rem;
+            color: #80d0c7;
+            margin-bottom: 20px;
+        }
+        
+        .empty-state h4 {
+            color: #13547a;
+            margin-bottom: 15px;
+        }
+        
         /* RESPONSIVE */
         @media (max-width: 992px) {
             .activity-cards-wrapper {
@@ -376,8 +423,6 @@
 
 <body id="top">
 
-    <?php include 'header.php'; ?>
-
     <!-- PAGE HEADER -->
     <section class="page-header">
         <div class="container">
@@ -400,193 +445,120 @@
             <div class="activity-filter">
                 <h4 class="filter-title"><i class="bi bi-funnel me-2"></i>Filter Kegiatan</h4>
                 <div class="filter-tags">
-                    <button class="filter-btn active" data-filter="all">Semua Kegiatan</button>
-                    <button class="filter-btn" data-filter="sosialisasi">Sosialisasi</button>
-                    <button class="filter-btn" data-filter="pelatihan">Pelatihan</button>
-                    <button class="filter-btn" data-filter="seminar">Seminar</button>
-                    <button class="filter-btn" data-filter="workshop">Workshop</button>
-                    <button class="filter-btn" data-filter="lainnya">Lainnya</button>
+                    <a href="?page=kegiatan" class="filter-btn <?php echo ($current_filter == 'all') ? 'active' : ''; ?>">
+                        Semua Kegiatan
+                    </a>
+                    <a href="?page=kegiatan&filter=sosialisasi" class="filter-btn <?php echo ($current_filter == 'sosialisasi') ? 'active' : ''; ?>">
+                        Sosialisasi
+                    </a>
+                    <a href="?page=kegiatan&filter=pelatihan" class="filter-btn <?php echo ($current_filter == 'pelatihan') ? 'active' : ''; ?>">
+                        Pelatihan
+                    </a>
+                    <a href="?page=kegiatan&filter=seminar" class="filter-btn <?php echo ($current_filter == 'seminar') ? 'active' : ''; ?>">
+                        Seminar
+                    </a>
+                    <a href="?page=kegiatan&filter=workshop" class="filter-btn <?php echo ($current_filter == 'workshop') ? 'active' : ''; ?>">
+                        Workshop
+                    </a>
+                    <a href="?page=kegiatan&filter=lainnya" class="filter-btn <?php echo ($current_filter == 'lainnya') ? 'active' : ''; ?>">
+                        Lainnya
+                    </a>
                 </div>
             </div>
             
             <!-- SECTION TITLE -->
-            <h2 class="section-title"><i class="bi bi-calendar-event me-2"></i>Kegiatan Terbaru</h2>
+            <h2 class="section-title"><i class="bi bi-calendar-event me-2"></i>
+                <?php 
+                if ($current_filter == 'all') {
+                    echo 'Kegiatan Terbaru';
+                } else {
+                    echo 'Kegiatan ' . ucfirst($current_filter);
+                }
+                ?>
+            </h2>
             
             <!-- ACTIVITY CARDS -->
-            <div class="activity-cards-wrapper">
-                <!-- Activity 1 -->
-                <div class="activity-card" data-category="sosialisasi">
-                    <img src="https://images.unsplash.com/photo-1589829545856-d10d557cf95f?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" 
-                         alt="Sosialisasi JDIH" class="activity-image">
-                    <div class="activity-content">
-                        <div class="activity-meta">
-                            <span class="activity-date">
-                                <i class="bi bi-calendar3"></i> 25 Nov 2024
-                            </span>
-                            <span class="activity-category">Sosialisasi</span>
+            <?php if ($result && $result->num_rows > 0): ?>
+                <div class="activity-cards-wrapper">
+                    <?php while ($artikel = $result->fetch_assoc()): ?>
+                        <?php
+                        // Ekstrak kategori dari meta_keywords atau judul
+                        $categories = ['sosialisasi', 'pelatihan', 'seminar', 'workshop'];
+                        $article_category = 'lainnya';
+                        
+                        if (!empty($artikel['meta_keywords'])) {
+                            $keywords = strtolower($artikel['meta_keywords']);
+                            foreach ($categories as $cat) {
+                                if (strpos($keywords, $cat) !== false) {
+                                    $article_category = $cat;
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        // Format tanggal
+                        $tanggal = date('d M Y', strtotime($artikel['tanggal_publikasi']));
+                        
+                        // Ambil excerpt dari konten
+                        $excerpt = strip_tags($artikel['konten_artikel']);
+                        if (strlen($excerpt) > 150) {
+                            $excerpt = substr($excerpt, 0, 150) . '...';
+                        }
+                        
+                        // Thumbnail image
+                        $thumbnail = !empty($artikel['thumbnail_path']) && file_exists($artikel['thumbnail_path'])
+                            ? $artikel['thumbnail_path']
+                            : 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80';
+                        
+                        // Penulis
+                        $penulis = !empty($artikel['nama_penulis']) ? $artikel['nama_penulis'] : 'Admin JDIH';
+                        ?>
+                        
+                        <div class="activity-card" data-category="<?php echo $article_category; ?>">
+                            <img src="<?php echo $thumbnail; ?>" 
+                                 alt="<?php echo htmlspecialchars($artikel['judul']); ?>" 
+                                 class="activity-image">
+                            <div class="activity-content">
+                                <div class="activity-meta">
+                                    <span class="activity-date">
+                                        <i class="bi bi-calendar3"></i> <?php echo $tanggal; ?>
+                                    </span>
+                                    <span class="activity-category">
+                                        <?php echo ucfirst($article_category); ?>
+                                    </span>
+                                </div>
+                                <h3 class="activity-title" title="<?php echo htmlspecialchars($artikel['judul']); ?>">
+                                    <?php echo htmlspecialchars($artikel['judul']); ?>
+                                </h3>
+                                <p class="activity-excerpt">
+                                    <?php echo htmlspecialchars($excerpt); ?>
+                                </p>
+                                <div class="activity-stats">
+                                    <span title="Dilihat"><i class="bi bi-eye-fill"></i> <?php echo $artikel['views']; ?></span>
+                                    <span title="Penulis"><i class="bi bi-person-fill"></i> <?php echo htmlspecialchars($penulis); ?></span>
+                                </div>
+                                <!-- PERBAIKAN: Link mengarah ke detail-kegiatan sesuai routing -->
+                                <a href="index.php?page=detail-kegiatan&id=<?php echo $artikel['id_artikel']; ?>" class="read-more-btn">
+                                    Baca Selengkapnya
+                                </a>
+                            </div>
                         </div>
-                        <h3 class="activity-title">Sosialisasi JDIH Setwan Kota Surakarta Meriahkan CFD</h3>
-                        <p class="activity-excerpt">
-                            Kegiatan sosialisasi JDIH dalam rangka Car Free Day dengan berbagai aktivitas 
-                            menarik termasuk senam zumba dan edukasi hukum untuk masyarakat.
-                        </p>
-                        <div class="activity-stats">
-                            <span><i class="bi bi-eye-fill"></i> 613</span>
-                            <span><i class="bi bi-heart-fill"></i> 45</span>
-                            <span><i class="bi bi-chat-fill"></i> 12</span>
-                        </div>
-                        <a href="?page=detail-kegiatan&id=1" class="read-more-btn">Baca Selengkapnya</a>
-                    </div>
+                    <?php endwhile; ?>
                 </div>
-                
-                <!-- Activity 2 -->
-                <div class="activity-card" data-category="pelatihan">
-                    <img src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" 
-                         alt="Pelatihan Digital" class="activity-image">
-                    <div class="activity-content">
-                        <div class="activity-meta">
-                            <span class="activity-date">
-                                <i class="bi bi-calendar3"></i> 10 Jan 2021
-                            </span>
-                            <span class="activity-category">Pelatihan</span>
-                        </div>
-                        <h3 class="activity-title">Perkuat Infrastruktur Digital, Biro Hukum Gelar Pelatihan</h3>
-                        <p class="activity-excerpt">
-                            Pelatihan intensif untuk meningkatkan kompetensi staf dalam mengelola 
-                            infrastruktur digital JDIH secara efektif dan efisien.
-                        </p>
-                        <div class="activity-stats">
-                            <span><i class="bi bi-eye-fill"></i> 450</span>
-                            <span><i class="bi bi-heart-fill"></i> 32</span>
-                            <span><i class="bi bi-chat-fill"></i> 8</span>
-                        </div>
-                        <a href="?page=detail-kegiatan&id=2" class="read-more-btn">Baca Selengkapnya</a>
-                    </div>
+            <?php else: ?>
+                <!-- Empty state -->
+                <div class="empty-state">
+                    <i class="bi bi-calendar-x"></i>
+                    <h4>Tidak Ada Kegiatan</h4>
+                    <p>Belum ada kegiatan yang tersedia untuk kategori ini.</p>
+                    <a href="?page=kegiatan" class="btn btn-primary mt-3" style="background: linear-gradient(135deg, #13547a 0%, #80d0c7 100%); border: none;">
+                        Lihat Semua Kegiatan
+                    </a>
                 </div>
-                
-                <!-- Activity 3 -->
-                <div class="activity-card" data-category="seminar">
-                    <img src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" 
-                         alt="Public Hearing" class="activity-image">
-                    <div class="activity-content">
-                        <div class="activity-meta">
-                            <span class="activity-date">
-                                <i class="bi bi-calendar3"></i> 10 Jan 2021
-                            </span>
-                            <span class="activity-category">Seminar</span>
-                        </div>
-                        <h3 class="activity-title">Pansus Gelar Public Hearing terkait Perencanaan Pembangunan</h3>
-                        <p class="activity-excerpt">
-                            Public hearing yang membahas rencana pembangunan dan pengembangan 
-                            sistem informasi hukum yang terintegrasi.
-                        </p>
-                        <div class="activity-stats">
-                            <span><i class="bi bi-eye-fill"></i> 890</span>
-                            <span><i class="bi bi-heart-fill"></i> 67</span>
-                            <span><i class="bi bi-chat-fill"></i> 23</span>
-                        </div>
-                        <a href="?page=detail-kegiatan&id=3" class="read-more-btn">Baca Selengkapnya</a>
-                    </div>
-                </div>
-                
-                <!-- Activity 4 -->
-                <div class="activity-card" data-category="workshop">
-                    <img src="https://images.unsplash.com/photo-1545235617-9465d2a55698?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" 
-                         alt="Workshop Hukum" class="activity-image">
-                    <div class="activity-content">
-                        <div class="activity-meta">
-                            <span class="activity-date">
-                                <i class="bi bi-calendar3"></i> 8 Jan 2021
-                            </span>
-                            <span class="activity-category">Workshop</span>
-                        </div>
-                        <h3 class="activity-title">Workshop Penyusunan Produk Hukum Digital</h3>
-                        <p class="activity-excerpt">
-                            Workshop intensif mengenai teknik penyusunan dan publikasi produk hukum 
-                            dalam format digital yang mudah diakses masyarakat.
-                        </p>
-                        <div class="activity-stats">
-                            <span><i class="bi bi-eye-fill"></i> 320</span>
-                            <span><i class="bi bi-heart-fill"></i> 28</span>
-                            <span><i class="bi bi-chat-fill"></i> 5</span>
-                        </div>
-                        <a href="?page=detail-kegiatan&id=4" class="read-more-btn">Baca Selengkapnya</a>
-                    </div>
-                </div>
-                
-                <!-- Activity 5 -->
-                <div class="activity-card" data-category="sosialisasi">
-                    <img src="https://images.unsplash.com/photo-1507679799987-c73779587ccf?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" 
-                         alt="Edukasi Masyarakat" class="activity-image">
-                    <div class="activity-content">
-                        <div class="activity-meta">
-                            <span class="activity-date">
-                                <i class="bi bi-calendar3"></i> 5 Jan 2021
-                            </span>
-                            <span class="activity-category">Sosialisasi</span>
-                        </div>
-                        <h3 class="activity-title">Edukasi Hukum untuk Masyarakat Umum</h3>
-                        <p class="activity-excerpt">
-                            Program edukasi hukum kepada masyarakat untuk meningkatkan pemahaman 
-                            tentang hak dan kewajiban berdasarkan peraturan yang berlaku.
-                        </p>
-                        <div class="activity-stats">
-                            <span><i class="bi bi-eye-fill"></i> 560</span>
-                            <span><i class="bi bi-heart-fill"></i> 41</span>
-                            <span><i class="bi bi-chat-fill"></i> 15</span>
-                        </div>
-                        <a href="?page=detail-kegiatan&id=5" class="read-more-btn">Baca Selengkapnya</a>
-                    </div>
-                </div>
-                
-                <!-- Activity 6 -->
-                <div class="activity-card" data-category="lainnya">
-                    <img src="https://images.unsplash.com/photo-1551135049-8a33b2fb2f61?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" 
-                         alt="Penandatanganan MOU" class="activity-image">
-                    <div class="activity-content">
-                        <div class="activity-meta">
-                            <span class="activity-date">
-                                <i class="bi bi-calendar3"></i> 2 Jan 2021
-                            </span>
-                            <span class="activity-category">Kerjasama</span>
-                        </div>
-                        <h3 class="activity-title">Penandatanganan MOU dengan Universitas Lokal</h3>
-                        <p class="activity-excerpt">
-                            Kerjasama strategis dengan universitas lokal untuk pengembangan 
-                            sistem JDIH dan peningkatan kapasitas sumber daya manusia.
-                        </p>
-                        <div class="activity-stats">
-                            <span><i class="bi bi-eye-fill"></i> 780</span>
-                            <span><i class="bi bi-heart-fill"></i> 58</span>
-                            <span><i class="bi bi-chat-fill"></i> 19</span>
-                        </div>
-                        <a href="?page=detail-kegiatan&id=6" class="read-more-btn">Baca Selengkapnya</a>
-                    </div>
-                </div>
-            </div>
+            <?php endif; ?>
             
-            <!-- PAGINATION -->
-            <nav aria-label="Page navigation">
-                <ul class="pagination">
-                    <li class="page-item disabled">
-                        <a class="page-link" href="#" aria-label="Previous">
-                            <span aria-hidden="true">&laquo;</span>
-                        </a>
-                    </li>
-                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                    <li class="page-item"><a class="page-link" href="#">2</a></li>
-                    <li class="page-item"><a class="page-link" href="#">3</a></li>
-                    <li class="page-item">
-                        <a class="page-link" href="#" aria-label="Next">
-                            <span aria-hidden="true">&raquo;</span>
-                        </a>
-                    </li>
-                </ul>
-            </nav>
         </div>
     </section>
-
-    <?php include 'footer.php'; ?>
 
     <!-- JAVASCRIPT FILES -->
     <script src="js/jquery.min.js"></script>
@@ -601,20 +573,18 @@
             const filterButtons = document.querySelectorAll('.filter-btn');
             const activityCards = document.querySelectorAll('[data-category]');
             
+            // Filter dengan JavaScript untuk UX yang lebih baik
             filterButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    // Remove active class from all buttons
-                    filterButtons.forEach(btn => btn.classList.remove('active'));
+                button.addEventListener('click', function(e) {
+                    // Hanya untuk JavaScript filtering (opsional)
+                    const filterValue = this.getAttribute('href').split('filter=')[1];
+                    const isAll = this.textContent.trim() === 'Semua Kegiatan';
                     
-                    // Add active class to clicked button
-                    this.classList.add('active');
+                    if (isAll) filterValue = 'all';
                     
-                    const filterValue = this.getAttribute('data-filter');
-                    
-                    // Show/hide activity cards based on filter
                     activityCards.forEach(card => {
                         const cardParent = card.closest('.activity-card');
-                        if (filterValue === 'all') {
+                        if (filterValue === 'all' || isAll) {
                             cardParent.style.display = 'flex';
                         } else {
                             const category = card.getAttribute('data-category');
@@ -627,8 +597,27 @@
                     });
                 });
             });
+            
+            // Hover effect untuk kartu kegiatan
+            const cards = document.querySelectorAll('.activity-card');
+            cards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-10px)';
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                });
+            });
         });
     </script>
 
 </body>
 </html>
+
+<?php 
+// Tutup koneksi database
+if (isset($koneksi)) {
+    $koneksi->close();
+}
+?>

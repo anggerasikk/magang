@@ -27,11 +27,11 @@ mysqli_set_charset($koneksi, "utf8");
 // KONFIGURASI PATH
 // ============================================
 $base_upload_path = "C:/xampp/htdocs/jdihcilacap_pasang/wb_admin/uploads/";
-$artikel_pdf_path = "C:/xampp/htdocs/jdihcilacap_pasang/wb_admin/uploads/artikel/pdf/";
-$artikel_images_path = "C:/xampp/htdocs/jdihcilacap_pasang/wb_admin/uploads/artikel/images/";
+$artikel_pdf_path = "C:/xampp/htdocs/jdihcilacap_pasang/wb_admin/uploads/artikel_hukum/pdf/";
+$artikel_images_path = "C:/xampp/htdocs/jdihcilacap_pasang/wb_admin/uploads/artikel_hukum/images/";
 
-$web_artikel_pdf_path = "/jdihcilacap_pasang/wb_admin/uploads/artikel/pdf/";
-$web_artikel_images_path = "/jdihcilacap_pasang/wb_admin/uploads/artikel/images/";
+$web_artikel_pdf_path = "/jdihcilacap_pasang/wb_admin/uploads/artikel_hukum/pdf/";
+$web_artikel_images_path = "/jdihcilacap_pasang/wb_admin/uploads/artikel_hukum/images/";
 
 /* ======================
    VALIDASI ID
