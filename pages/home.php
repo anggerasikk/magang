@@ -108,13 +108,10 @@
         case 'kegiatan':
             include "kegiatan-jdih.php";
             break;
-        case 'detail-kegiatan-jdih':
-case 'detail-kegiatan':  // Tambahkan alias
-    include 'detail-kegiatan.php';
-    break;
-
-        break;
-            case 'infografis':
+        case 'detail-jdih':  // Tambahkan alias
+            include 'detail-kegiatan.php';
+            break;
+        case 'infografis':
             include "infografis.php";
             break;
         case 'penghargaan':
