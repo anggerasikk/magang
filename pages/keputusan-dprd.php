@@ -491,24 +491,21 @@ include "header.php";
 <!-- ===== SIDEBAR ===== -->
 <div class="col-lg-4">
 
-<!-- Reset result pointer untuk sidebar -->
-<?php
-mysqli_data_seek($year_stats_result, 0);
-mysqli_data_seek($popular_result, 0);
-?>
-
+<!-- MENU PERUNDANGAN -->
 <div class="sidebar-menu">
-<h4><i class="bi bi-list"></i> Menu Perundangan</h4>
+<h4><i class="bi bi-list"></i> Legislation Menu</h4>
 <ul>
-<li><a href="index.php?page=perundangan"><i class="bi bi-grid"></i> Semua Kategori</a></li>
-<li class="active"><a href="#"><i class="bi bi-file-earmark-medical"></i> Keputusan DPRD</a></li>
-<li><a href="keputusan-sekretariat.php"><i class="bi bi-file-earmark-text"></i> Keputusan Sekretaris DPRD</a></li>
-<li><a href="index.php?page=keputusan-pimpinan"><i class="bi bi-file-earmark-ruled"></i> Keputusan Pimpinan DPRD</a></li>
-<li><a href="index.php?page=peraturan-dprd"><i class="bi bi-journal-text"></i> Peraturan DPRD</a></li>
-<li><a href="index.php?page=perda"><i class="bi bi-journal-bookmark"></i> Peraturan Daerah</a></li>
-<li><a href="index.php?page=english-legal"><i class="bi bi-translate"></i> English Legal Products</a></li>
+<li><a href="?page=perundangan"><i class="bi bi-grid"></i> Semua Kategori</a></li>
+
+<li><a href="?page=keputusan-sekretariat"><i class="bi bi-file-earmark-text"></i> Keputusan Sekretaris</a></li>
+<li><a href="?page=keputusan-pimpinan"><i class="bi bi-file-earmark-ruled"></i> Keputusan Pimpinan</a></li>
+<li class="active"><a href="#"><i class="bi bi-translate"></i> Keputusan DPRD</a></li>
+<li><a href="?page=peraturan-dprd"><i class="bi bi-journal-text"></i> Peraturan DPRD</a></li>
+<li><a href="?page=perda"><i class="bi bi-journal-bookmark"></i> Peraturan Daerah</a></li>
+<li><a href="?page=english-legal"><i class="bi bi-file-earmark-medical"></i> English Legal Product</a></li>
 </ul>
 </div>
+
 
 <div class="sidebar-menu">
 <h4><i class="bi bi-bar-chart"></i> Statistik</h4>

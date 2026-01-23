@@ -1,12 +1,10 @@
-<?php
-/**
  * DETAIL BUKU PERPUSTAKAAN
  * File: detail-buku.php
  * Fungsi: Menampilkan detail buku perpustakaan
  */
 
-session_start();
-
+<?php session_start();
+include "header.php"; 
 // ============================================
 // KONEKSI DATABASE
 // ============================================

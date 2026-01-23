@@ -150,12 +150,12 @@ include 'header.php';
 <div class="sidebar-menu">
 <h4><i class="bi bi-list"></i> Legislation Menu</h4>
 <ul>
-<li><a href="?page=perundangan"><i class="bi bi-grid"></i> All Categories</a></li>
-<li><a href="?page=keputusan-dprd"><i class="bi bi-file-earmark-medical"></i> DPRD Decisions</a></li>
-<li><a href="?page=keputusan-sekretaris"><i class="bi bi-file-earmark-text"></i> Secretary Decisions</a></li>
-<li><a href="?page=keputusan-pimpinan"><i class="bi bi-file-earmark-ruled"></i> Leadership Decisions</a></li>
-<li><a href="?page=peraturan-dprd"><i class="bi bi-journal-text"></i> DPRD Regulations</a></li>
-<li><a href="?page=perda"><i class="bi bi-journal-bookmark"></i> Regional Regulations</a></li>
+<li><a href="?page=perundangan"><i class="bi bi-grid"></i> Semua Kategori</a></li>
+<li><a href="?page=keputusan-dprd"><i class="bi bi-file-earmark-medical"></i> Keputusan DPRD</a></li>
+<li><a href="?page=keputusan-sekretariat"><i class="bi bi-file-earmark-text"></i> Keputusan Sekretaris</a></li>
+<li><a href="?page=keputusan-pimpinan"><i class="bi bi-file-earmark-ruled"></i> Keputusan Pimpinan</a></li>
+<li><a href="?page=peraturan-dprd"><i class="bi bi-journal-text"></i> Peraturan DPRD</a></li>
+<li><a href="?page=perda"><i class="bi bi-journal-bookmark"></i> Peraturan Daerah</a></li>
 <li class="active"><a href="#"><i class="bi bi-translate"></i> English Legal Products</a></li>
 </ul>
 </div>

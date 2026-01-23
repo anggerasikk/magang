@@ -389,13 +389,13 @@ mysqli_data_seek($popular_result, 0);
 <div class="sidebar-menu">
 <h4><i class="bi bi-list"></i> Menu Perundangan</h4>
 <ul>
-<li><a href="index.php?page=perundangan"><i class="bi bi-grid"></i> Semua Kategori</a></li>
-<li><a href="keputusan-dprd.php"><i class="bi bi-file-earmark-medical"></i> Keputusan DPRD</a></li>
-<li><a href="keputusan-pimpinan.php"><i class="bi bi-file-earmark-ruled"></i> Keputusan Pimpinan DPRD</a></li>
-<li><a href="keputusan-sekretariat.php"><i class="bi bi-file-earmark-text"></i> Keputusan Sekretaris DPRD</a></li>
-<li><a href="peraturan-dprd.php"><i class="bi bi-journal-text"></i> Peraturan DPRD</a></li>
-<li class="active"><a href="#"><i class="bi bi-journal-bookmark"></i> Peraturan Daerah</a></li>
-<li><a href="index.php?page=english-legal"><i class="bi bi-translate"></i> English Legal Products</a></li>
+<li><a href="?page=perundangan"><i class="bi bi-grid"></i> Semua Kategori</a></li>
+<li><a href="?page=keputusan-pimpinan"><i class="bi bi-file-earmark-text"></i> Keputusan Pimpinan DPRD</a></li>
+<li><a href="?page=keputusan-sekretariat"><i class="bi bi-file-earmark-text"></i> Keputusan Sekretaris</a></li>
+<li><a href="?page=keputusan-DPRD"><i class="bi bi-file-earmark-ruled"></i> Keputusan DPRD</a></li>
+<li><a href="?page=peraturan-dprd"><i class="bi bi-journal-text"></i> Peraturan DPRD</a></li>
+<li class="active"><a href="#"><i class="bi bi-translate"></i> Peraturan Daerah</a></li>
+<li><a href="?page=english-legal"><i class="bi bi-file-earmark-medical"></i> English Legal Product</a></li>
 </ul>
 </div>
 
@@ -414,7 +414,7 @@ mysqli_data_seek($popular_result, 0);
 <ul>
 <?php while ($pop = mysqli_fetch_assoc($popular_result)): ?>
 <li>
-<a href="index.php?page=detail-keputusan&id=<?= $pop['idData'] ?>">
+<a href="index.php?page=detail-perundangan&id=<?= $pop['idData'] ?>">
 <i class="bi bi-file-text"></i> <?= htmlspecialchars($pop['noPeraturan']) ?>
 </a>
 <small class="text-muted d-block"><?= htmlspecialchars($pop['judul']) ?></small>

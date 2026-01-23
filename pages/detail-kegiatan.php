@@ -7,7 +7,7 @@ $id_artikel = isset($_GET['id']) ? intval($_GET['id']) : 0;
 $slug = isset($_GET['slug']) ? $_GET['slug'] : '';
 
 // Query untuk mengambil data artikel berdasarkan ID
-$query = "SELECT * FROM artikel_kegiatan WHERE id_artikel = $id_artikel AND status = 'publish'";
+$query = "SELECT * FROM artikel_kegiatan WHERE id_artikel = $id_artikel AND status = 'publik'";
 $result = $koneksi->query($query);
 
 // Jika artikel tidak ditemukan
@@ -28,7 +28,7 @@ $kategori = $artikel['meta_keywords'];
 $related_query = "SELECT id_artikel, judul, slug, thumbnail_path, tanggal_publikasi, views 
                   FROM artikel_kegiatan 
                   WHERE id_artikel != $id_artikel 
-                  AND status = 'publish'
+                  AND status = 'publik'
                   AND (meta_keywords LIKE '%$kategori%' OR judul LIKE '%$kategori%')
                   ORDER BY tanggal_publikasi DESC 
                   LIMIT 3";

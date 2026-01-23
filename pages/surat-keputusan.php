@@ -1,11 +1,102 @@
 <?php
 // surat-keputusan.php
+$pageTitle = 'Surat Keputusan Pengelola JDIH - JDIH DPRD Kota Surakarta';
+include 'header.php';
+
+// Data surat keputusan dengan URL Google Drive
+$decrees = [
+    [
+        'id' => 1,
+        'number' => '001/SK-SETWAN/JDIH/DPRD-SKA/2025',
+        'title' => 'Surat Keputusan Tim Teknis Pengelola JDIH Sekretariat Dewan DPRD Surakarta Tahun 2025',
+        'description' => 'Dokumen resmi penetapan Tim Teknis Pengelola JDIH untuk periode tahun 2025 yang ditandatangani oleh Sekretaris DPRD Kota Surakarta.',
+        'date' => '2 Januari 2025',
+        'year' => 2025,
+        'size' => '1.59 MB',
+        'downloads' => 245,
+        'file_id' => '1VBbs_13pSz0pn4_2FSz_Zescf8h5V2ie'
+    ],
+    [
+        'id' => 2,
+        'number' => '045/SK-SETWAN/JDIH/DPRD-SKA/2024',
+        'title' => 'Surat Keputusan Penunjukan Koordinator Teknis Pengelola JDIH Sekretariat DPRD Kota Surakarta',
+        'description' => 'Penunjukan resmi koordinator teknis untuk pengelolaan JDIH tahun 2024.',
+        'date' => '15 Desember 2024',
+        'year' => 2024,
+        'size' => '892 KB',
+        'downloads' => 187,
+        'file_id' => '1VBbs_13pSz0pn4_2FSz_Zescf8h5V2ie'
+    ],
+    [
+        'id' => 3,
+        'number' => '028/SK-SETWAN/JDIH/DPRD-SKA/2023',
+        'title' => 'Surat Keputusan Pembentukan Tim Implementasi Sistem JDIH Digital Sekretariat DPRD Kota Surakarta',
+        'description' => 'Pembentukan tim khusus untuk implementasi sistem JDIH digital.',
+        'date' => '3 Juli 2023',
+        'year' => 2023,
+        'size' => '1.24 MB',
+        'downloads' => 156,
+        'file_id' => '1VBbs_13pSz0pn4_2FSz_Zescf8h5V2ie'
+    ],
+    [
+        'id' => 4,
+        'number' => '012/SK-SETWAN/JDIH/DPRD-SKA/2022',
+        'title' => 'Surat Keputusan Pengangkatan Anggota Pengelola JDIH Sekretariat DPRD Kota Surakarta Periode 2022-2024',
+        'description' => 'Pengangkatan anggota pengelola JDIH untuk periode 2022-2024.',
+        'date' => '10 Maret 2022',
+        'year' => 2022,
+        'size' => '756 KB',
+        'downloads' => 132,
+        'file_id' => '1VBbs_13pSz0pn4_2FSz_Zescf8h5V2ie'
+    ]
+];
+
+// Fungsi untuk mendapatkan URL download dari Google Drive
+function getDownloadUrl($fileId) {
+    return "https://drive.google.com/uc?export=download&id=" . $fileId;
+}
+
+// Fungsi untuk mendapatkan URL preview dari Google Drive
+function getPreviewUrl($fileId) {
+    return "https://drive.google.com/file/d/" . $fileId . "/preview";
+}
+
+// Proses pencarian
+$searchResults = $decrees;
+$searchQuery = isset($_GET['search']) ? trim($_GET['search']) : '';
+
+if ($searchQuery) {
+    $searchResults = array_filter($decrees, function($decree) use ($searchQuery) {
+        $search = strtolower($searchQuery);
+        $title = strtolower($decree['title']);
+        $number = strtolower($decree['number']);
+        $year = (string)$decree['year'];
+        
+        return strpos($title, $search) !== false || 
+               strpos($number, $search) !== false || 
+               strpos($year, $search) !== false;
+    });
+}
+
+// Filter berdasarkan tahun
+$selectedYears = [];
+if (isset($_GET['year2025'])) $selectedYears[] = 2025;
+if (isset($_GET['year2024'])) $selectedYears[] = 2024;
+if (isset($_GET['year2023'])) $selectedYears[] = 2023;
+if (isset($_GET['year2022'])) $selectedYears[] = 2022;
+
+if (!empty($selectedYears)) {
+    $searchResults = array_filter($searchResults, function($decree) use ($selectedYears) {
+        return in_array($decree['year'], $selectedYears);
+    });
+}
 ?>
+
 <!doctype html>
 <html lang="id">
 <head>
     <meta charset="utf-8">
-    <title>Surat Keputusan - JDIH DPRD Kota Surakarta</title>
+    <title><?php echo $pageTitle; ?></title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     
     <!-- CSS FILES -->
@@ -13,16 +104,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Open+Sans&display=swap" rel="stylesheet">
                         
-    <link href="css/bootstrap.min.css" rel="stylesheet">
-    <link href="css/bootstrap-icons.css" rel="stylesheet">
-    <link href="css/templatemo-topic-listing.css" rel="stylesheet">
+    
     
     <style>
-        /* OVERRIDE UNTUK HALAMAN INI SAJA */
-        body {
-            padding-top: 80px;
-        }
-        
+        /* STYLES UNTUK HALAMAN INI SAJA */
         /* HEADER SECTION */
         .page-header {
             background: linear-gradient(15deg, #13547a 0%, #80d0c7 100%);
@@ -63,13 +148,7 @@
             z-index: 2;
         }
         
-        .page-header .breadcrumb {
-            background: transparent;
-            padding: 0;
-            margin: 0;
-            position: relative;
-            z-index: 2;
-        }
+
         
         .page-header .breadcrumb-item a {
             color: rgba(255, 255, 255, 0.8);
@@ -209,6 +288,36 @@
             box-shadow: 0 10px 25px rgba(19, 84, 122, 0.3);
             color: white;
         }
+        
+        .btn-action-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        
+        .btn-preview-primary {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 35px;
+            border-radius: var(--border-radius-medium);
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+            font-size: 1.1rem;
+        }
+        
+        .btn-preview-primary:hover {
+            background: #218838;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(40, 167, 69, 0.3);
+            color: white;
+        }
 
         /* DECREE LIST */
         .decree-list {
@@ -309,6 +418,36 @@
         .btn-preview:hover {
             background: #13547a;
             color: white;
+        }
+        
+        /* SEARCH HIGHLIGHT */
+        .search-highlight {
+            background-color: #fff3cd;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        
+        /* RESULTS INFO */
+        .results-info {
+            background: #e3f2fd;
+            border-radius: 8px;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-left: 4px solid #13547a;
+        }
+        
+        .results-info p {
+            margin: 0;
+            color: #13547a;
+            font-weight: 500;
+        }
+        
+        .results-info .highlight {
+            background: #fff3cd;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
         }
 
         /* TEAM SECTION */
@@ -626,6 +765,28 @@
             background: #0d3a58;
             border-color: #0d3a58;
         }
+        
+        /* PREVIEW MODAL */
+        .preview-modal .modal-dialog {
+            max-width: 90%;
+            height: 90vh;
+            margin: 5vh auto;
+        }
+        
+        .preview-modal .modal-content {
+            height: 100%;
+        }
+        
+        .preview-modal .modal-body {
+            padding: 0;
+            flex: 1;
+        }
+        
+        .preview-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
 
         /* RESPONSIVE */
         @media (max-width: 992px) {
@@ -643,10 +804,6 @@
         }
         
         @media (max-width: 768px) {
-            body {
-                padding-top: 70px;
-            }
-            
             .page-header {
                 padding: 30px 0 20px 0;
             }
@@ -682,6 +839,16 @@
                 gap: 10px;
                 align-items: center;
             }
+            
+            .btn-action-group {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn-download-primary, .btn-preview-primary {
+                width: 100%;
+                justify-content: center;
+            }
         }
         
         @media (max-width: 576px) {
@@ -697,7 +864,7 @@
                 font-size: 1.3rem;
             }
             
-            .btn-download-primary {
+            .btn-download-primary, .btn-preview-primary {
                 padding: 10px 25px;
                 font-size: 1rem;
             }
@@ -706,118 +873,6 @@
 </head>
 
 <body id="top">
-
-    <!-- NAVBAR -->
-    <nav class="navbar navbar-expand-lg fixed-top navbar-custom">
-        <div class="container">
-            <!-- BRAND -->
-            <a class="navbar-brand d-flex align-items-center" href="index.php">
-                <span class="fw-bold">JDIH DPRD</span>
-            </a>
-
-            <!-- TOGGLER -->
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                data-bs-target="#navbarNav" aria-controls="navbarNav"
-                aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <!-- MENU -->
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav mx-auto mb-2 mb-lg-0 gap-lg-2">
-                    <li class="nav-item">
-                        <a class="nav-link" href="index.php">Beranda</a>
-                    </li>
-
-                    <li class="nav-item dropdown active">
-                        <a class="nav-link dropdown-toggle" href="#" id="dropdownTentangKami"
-                            role="button" data-bs-toggle="dropdown">
-                            Tentang Kami
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="?page=profil-jdih">Profil JDIH</a></li>
-                            <li><a class="dropdown-item" href="?page=struktur-organisasi">Struktur Organisasi</a></li>
-                            <li><a class="dropdown-item" href="?page=alur-pengelolaan">Alur Pengelolaan Produk Hukum</a></li>
-                            <li><a class="dropdown-item" href="?page=sop-pengelola">SOP Pengelola JDIH DPRD Kota Surakarta</a></li>
-                            <li><a class="dropdown-item" href="?page=dasar-hukum">Dasar Hukum JDIH Sekretariat DPRD Kota Surakarta</a></li>
-                            <li class="active"><a class="dropdown-item" href="?page=surat-keputusan">Surat Keputusan Pengelola JDIH Sekretariat DPRD Kota Surakarta</a></li>
-                            <li><a class="dropdown-item" href="?page=visi-misi">Visi & Misi</a></li>
-                            <li><a class="dropdown-item" href="?page=video-profil">Video Profil JDIH</a></li>
-                        </ul>
-                    </li>
-
-                    <!-- PERUNDANGAN -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="dropdownPerundangan"
-                            role="button" data-bs-toggle="dropdown">
-                            Perundang-undangan
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="?page=keputusan-dprd">Keputusan DPRD</a></li>
-                            <li><a class="dropdown-item" href="?page=keputusan-pimpinan">Keputusan Pimpinan DPRD</a></li>
-                            <li><a class="dropdown-item" href="?page=keputusan-sekretaris">Keputusan Sekretaris DPRD</a></li>
-                            <li><a class="dropdown-item" href="?page=peraturan-dprd">Peraturan DPRD</a></li>
-                            <li><a class="dropdown-item" href="?page=perda">Peraturan Daerah</a></li>
-                            <li><a class="dropdown-item" href="?page=english-legal">English Legal Product</a></li>
-                        </ul>
-                    </li>
-
-                    <!-- MONOGRAFI -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="dropdownMonografi"
-                            role="button" data-bs-toggle="dropdown">
-                            Monografi Hukum
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="?page=kajian-raperda">Kajian Raperda</a></li>
-                            <li><a class="dropdown-item" href="?page=naskah-akademik">Naskah Akademik</a></li>
-                            <li><a class="dropdown-item" href="?page=dokumen-langka">Dokumen Langka</a></li>
-                            <li><a class="dropdown-item" href="?page=risalah">Risalah</a></li>
-                            <li><a class="dropdown-item" href="?page=fasilitasi">Hasil Fasilitasi Raperda</a></li>
-                            <li><a class="dropdown-item" href="?page=karya-ilmiah">Penulisan Karya Ilmiah</a></li>
-                            <li><a class="dropdown-item" href="?page=himpunan">Himpunan Peraturan</a></li>
-                        </ul>
-                    </li>
-
-                    <!-- ARTIKEL HUKUM -->
-                    <li class="nav-item">
-                        <a class="nav-link" href="?page=artikel">Artikel Hukum</a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="?page=yurisprudensi">Yurisprudensi</a>
-                    </li>
-
-                    <!-- INFORMASI -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="dropdownInformasi"
-                            role="button" data-bs-toggle="dropdown">
-                            Informasi
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="?page=kegiatan">Kegiatan JDIH</a></li>
-                            <li><a class="dropdown-item" href="?page=infografis">Infografis & Videografis</a></li>
-                            <li><a class="dropdown-item" href="?page=galeri">Galeri Foto</a></li>
-                            <li><a class="dropdown-item" href="?page=penghargaan">Penghargaan</a></li>
-                            <li><a class="dropdown-item" href="?page=buku">Koleksi Buku</a></li>
-                        </ul>
-                    </li>
-
-                    <!-- KONTAK -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="dropdownKontak"
-                            role="button" data-bs-toggle="dropdown">
-                            Kontak & Saran
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="?page=kontak">Form Kontak</a></li>
-                            <li><a class="dropdown-item" href="?page=saran">Saran & Masukan</a></li>
-                        </ul>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
 
     <!-- HEADER SECTION -->
     <section class="page-header">
@@ -831,7 +886,7 @@
                             <li class="breadcrumb-item"><a href="index.php">Beranda</a></li>
                             <li class="breadcrumb-item"><a href="#">Tentang Kami</a></li>
                             <li class="breadcrumb-item active" aria-current="page">Surat Keputusan</li>
-                        </ol>
+                             </ol>
                     </nav>
                 </div>
             </div>
@@ -849,35 +904,69 @@
                     <!-- SEARCH BOX -->
                     <div class="search-box">
                         <h4>Cari Surat Keputusan</h4>
-                        <form class="search-form">
+                        <form method="GET" class="search-form">
                             <div class="input-group">
-                                <input type="text" class="form-control" placeholder="Cari berdasarkan nomor, tahun, atau judul SK...">
+                                <input type="text" name="search" class="form-control" 
+                                       placeholder="Cari berdasarkan nomor, tahun, atau judul SK..."
+                                       value="<?php echo htmlspecialchars($searchQuery); ?>">
                                 <button class="btn btn-search" type="submit">
                                     <i class="bi bi-search"></i>
                                 </button>
                             </div>
                             <div class="d-flex flex-wrap gap-3 mt-3">
+                                <?php if ($searchQuery || !empty($selectedYears)): ?>
+                                <a href="surat-keputusan.php" class="btn btn-sm btn-outline-secondary">
+                                    <i class="bi bi-x-circle"></i> Reset
+                                </a>
+                                <?php endif; ?>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="year2025">
+                                    <input class="form-check-input" type="checkbox" name="year2025" id="year2025" 
+                                           <?php echo in_array(2025, $selectedYears) ? 'checked' : ''; ?>>
                                     <label class="form-check-label" for="year2025">
                                         Tahun 2025
                                     </label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="year2024">
+                                    <input class="form-check-input" type="checkbox" name="year2024" id="year2024"
+                                           <?php echo in_array(2024, $selectedYears) ? 'checked' : ''; ?>>
                                     <label class="form-check-label" for="year2024">
                                         Tahun 2024
                                     </label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="year2023">
+                                    <input class="form-check-input" type="checkbox" name="year2023" id="year2023"
+                                           <?php echo in_array(2023, $selectedYears) ? 'checked' : ''; ?>>
                                     <label class="form-check-label" for="year2023">
                                         Tahun 2023
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="year2022" id="year2022"
+                                           <?php echo in_array(2022, $selectedYears) ? 'checked' : ''; ?>>
+                                    <label class="form-check-label" for="year2022">
+                                        Tahun 2022
                                     </label>
                                 </div>
                             </div>
                         </form>
                     </div>
+                    
+                    <!-- RESULTS INFO -->
+                    <?php if ($searchQuery || !empty($selectedYears)): ?>
+                    <div class="results-info">
+                        <p>
+                            <i class="bi bi-info-circle me-2"></i>
+                            Menampilkan <span class="highlight"><?php echo count($searchResults); ?></span> dari <?php echo count($decrees); ?> surat keputusan
+                            <?php if ($searchQuery): ?>
+                                untuk pencarian "<span class="highlight"><?php echo htmlspecialchars($searchQuery); ?></span>"
+                            <?php endif; ?>
+                            <?php if (!empty($selectedYears)): ?>
+                                <?php echo $searchQuery ? 'dan' : 'untuk'; ?> tahun 
+                                <span class="highlight"><?php echo implode(', ', $selectedYears); ?></span>
+                            <?php endif; ?>
+                        </p>
+                    </div>
+                    <?php endif; ?>
                     
                     <!-- CONTENT CARD -->
                     <div class="content-card">
@@ -888,135 +977,125 @@
                         </div>
                         
                         <!-- MAIN DECREE DOCUMENT -->
-                        <div class="decree-document">
-                            <div class="document-icon">
-                                <i class="bi bi-file-earmark-medical"></i>
-                            </div>
-                            <h3 class="document-title">Surat Keputusan Tim Teknis Pengelola JDIH Sekretariat Dewan DPRD Surakarta Tahun 2025</h3>
-                            
-                            <div class="document-meta">
-                                <div class="meta-item">
-                                    <i class="bi bi-hash"></i>
-                                    <span>Nomor: 001/SK-SETWAN/JDIH/DPRD-SKA/2025</span>
+                        <?php if (count($searchResults) > 0): ?>
+                            <?php $mainDecree = $searchResults[array_key_first($searchResults)]; ?>
+                            <div class="decree-document">
+                                <div class="document-icon">
+                                    <i class="bi bi-file-earmark-medical"></i>
                                 </div>
-                                <div class="meta-item">
-                                    <i class="bi bi-calendar"></i>
-                                    <span>Tanggal: 2 Januari 2025</span>
-                                </div>
-                                <div class="meta-item">
-                                    <i class="bi bi-file-earmark"></i>
-                                    <span>Ukuran: 1.59 MB</span>
-                                </div>
-                            </div>
-                            
-                            <p class="mb-4">Dokumen resmi penetapan Tim Teknis Pengelola JDIH untuk periode tahun 2025 yang ditandatangani oleh Sekretaris DPRD Kota Surakarta.</p>
-                            
-                            <a href="#" class="btn-download-primary">
-                                <i class="bi bi-download"></i>
-                                DOWNLOAD
-                            </a>
-                        </div>
-                        
-                        <!-- DECREE LIST -->
-                        <div class="decree-list">
-                            <h3 class="section-title">Daftar Surat Keputusan Lainnya</h3>
-                            
-                            <!-- SK 1 -->
-                            <div class="decree-item">
-                                <div class="decree-info">
-                                    <div class="decree-number">SK No. 045/SK-SETWAN/JDIH/DPRD-SKA/2024</div>
-                                    <p class="decree-description">Surat Keputusan Penunjukan Koordinator Teknis Pengelola JDIH Sekretariat DPRD Kota Surakarta</p>
-                                    <div class="decree-details">
-                                        <div class="detail-item">
-                                            <i class="bi bi-calendar"></i>
-                                            <span>15 Desember 2024</span>
-                                        </div>
-                                        <div class="detail-item">
-                                            <i class="bi bi-file-earmark"></i>
-                                            <span>892 KB</span>
-                                        </div>
-                                        <div class="detail-item">
-                                            <i class="bi bi-eye"></i>
-                                            <span>156x diunduh</span>
-                                        </div>
+                                <h3 class="document-title">
+                                    <?php 
+                                    $displayTitle = htmlspecialchars($mainDecree['title']);
+                                    if ($searchQuery) {
+                                        $pattern = '/(' . preg_quote($searchQuery, '/') . ')/i';
+                                        $displayTitle = preg_replace($pattern, '<span class="search-highlight">$1</span>', $displayTitle);
+                                    }
+                                    echo $displayTitle;
+                                    ?>
+                                </h3>
+                                
+                                <div class="document-meta">
+                                    <div class="meta-item">
+                                        <i class="bi bi-hash"></i>
+                                        <span>Nomor: <?php echo htmlspecialchars($mainDecree['number']); ?></span>
+                                    </div>
+                                    <div class="meta-item">
+                                        <i class="bi bi-calendar"></i>
+                                        <span>Tanggal: <?php echo htmlspecialchars($mainDecree['date']); ?></span>
+                                    </div>
+                                    <div class="meta-item">
+                                        <i class="bi bi-file-earmark"></i>
+                                        <span>Ukuran: <?php echo $mainDecree['size']; ?></span>
                                     </div>
                                 </div>
-                                <div class="decree-actions">
-                                    <a href="#" class="btn-preview">
-                                        <i class="bi bi-eye"></i>
-                                        Preview
-                                    </a>
-                                    <a href="#" class="btn-download-secondary">
+                                
+                                <p class="mb-4"><?php echo htmlspecialchars($mainDecree['description']); ?></p>
+                                
+                                <div class="btn-action-group">
+                                    <a href="<?php echo getDownloadUrl($mainDecree['file_id']); ?>" 
+                                       class="btn-download-primary" target="_blank"
+                                       onclick="trackDownload(<?php echo $mainDecree['id']; ?>)">
                                         <i class="bi bi-download"></i>
-                                        Download
+                                        DOWNLOAD
                                     </a>
+                                    <button type="button" 
+                                            class="btn-preview-primary"
+                                            onclick="openPreview('<?php echo getPreviewUrl($mainDecree['file_id']); ?>', '<?php echo htmlspecialchars(addslashes($mainDecree['title'])); ?>')">
+                                        <i class="bi bi-eye"></i>
+                                        PREVIEW
+                                    </button>
                                 </div>
                             </div>
                             
-                            <!-- SK 2 -->
-                            <div class="decree-item">
-                                <div class="decree-info">
-                                    <div class="decree-number">SK No. 028/SK-SETWAN/JDIH/DPRD-SKA/2023</div>
-                                    <p class="decree-description">Surat Keputusan Pembentukan Tim Implementasi Sistem JDIH Digital Sekretariat DPRD Kota Surakarta</p>
-                                    <div class="decree-details">
-                                        <div class="detail-item">
-                                            <i class="bi bi-calendar"></i>
-                                            <span>3 Juli 2023</span>
+                            <!-- DECREE LIST -->
+                            <?php if (count($searchResults) > 1): ?>
+                            <div class="decree-list">
+                                <h3 class="section-title">Daftar Surat Keputusan Lainnya</h3>
+                                
+                                <?php foreach (array_slice($searchResults, 1) as $decree): ?>
+                                <?php
+                                $displayTitle = htmlspecialchars($decree['title']);
+                                if ($searchQuery) {
+                                    $pattern = '/(' . preg_quote($searchQuery, '/') . ')/i';
+                                    $displayTitle = preg_replace($pattern, '<span class="search-highlight">$1</span>', $displayTitle);
+                                }
+                                ?>
+                                <div class="decree-item">
+                                    <div class="decree-info">
+                                        <div class="decree-number">
+                                            <?php 
+                                            $displayNumber = htmlspecialchars($decree['number']);
+                                            if ($searchQuery) {
+                                                $displayNumber = preg_replace($pattern, '<span class="search-highlight">$1</span>', $displayNumber);
+                                            }
+                                            echo $displayNumber;
+                                            ?>
                                         </div>
-                                        <div class="detail-item">
-                                            <i class="bi bi-file-earmark"></i>
-                                            <span>1.24 MB</span>
-                                        </div>
-                                        <div class="detail-item">
-                                            <i class="bi bi-eye"></i>
-                                            <span>98x diunduh</span>
+                                        <p class="decree-description"><?php echo $displayTitle; ?></p>
+                                        <div class="decree-details">
+                                            <div class="detail-item">
+                                                <i class="bi bi-calendar"></i>
+                                                <span><?php echo htmlspecialchars($decree['date']); ?></span>
+                                            </div>
+                                            <div class="detail-item">
+                                                <i class="bi bi-file-earmark"></i>
+                                                <span><?php echo $decree['size']; ?></span>
+                                            </div>
+                                            <div class="detail-item">
+                                                <i class="bi bi-eye"></i>
+                                                <span><?php echo $decree['downloads']; ?>x diunduh</span>
+                                            </div>
                                         </div>
                                     </div>
+                                    <div class="decree-actions">
+                                        <button type="button" 
+                                                class="btn-preview"
+                                                onclick="openPreview('<?php echo getPreviewUrl($decree['file_id']); ?>', '<?php echo htmlspecialchars(addslashes($decree['title'])); ?>')">
+                                            <i class="bi bi-eye"></i>
+                                            Preview
+                                        </button>
+                                        <a href="<?php echo getDownloadUrl($decree['file_id']); ?>" 
+                                           class="btn-download-secondary" target="_blank"
+                                           onclick="trackDownload(<?php echo $decree['id']; ?>)">
+                                            <i class="bi bi-download"></i>
+                                            Download
+                                        </a>
+                                    </div>
                                 </div>
-                                <div class="decree-actions">
-                                    <a href="#" class="btn-preview">
-                                        <i class="bi bi-eye"></i>
-                                        Preview
-                                    </a>
-                                    <a href="#" class="btn-download-secondary">
-                                        <i class="bi bi-download"></i>
-                                        Download
-                                    </a>
-                                </div>
+                                <?php endforeach; ?>
                             </div>
+                            <?php endif; ?>
                             
-                            <!-- SK 3 -->
-                            <div class="decree-item">
-                                <div class="decree-info">
-                                    <div class="decree-number">SK No. 012/SK-SETWAN/JDIH/DPRD-SKA/2022</div>
-                                    <p class="decree-description">Surat Keputusan Pengangkatan Anggota Pengelola JDIH Sekretariat DPRD Kota Surakarta Periode 2022-2024</p>
-                                    <div class="decree-details">
-                                        <div class="detail-item">
-                                            <i class="bi bi-calendar"></i>
-                                            <span>10 Maret 2022</span>
-                                        </div>
-                                        <div class="detail-item">
-                                            <i class="bi bi-file-earmark"></i>
-                                            <span>756 KB</span>
-                                        </div>
-                                        <div class="detail-item">
-                                            <i class="bi bi-eye"></i>
-                                            <span>87x diunduh</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="decree-actions">
-                                    <a href="#" class="btn-preview">
-                                        <i class="bi bi-eye"></i>
-                                        Preview
-                                    </a>
-                                    <a href="#" class="btn-download-secondary">
-                                        <i class="bi bi-download"></i>
-                                        Download
-                                    </a>
-                                </div>
+                        <?php else: ?>
+                            <div class="text-center py-5">
+                                <i class="bi bi-file-earmark-x" style="font-size: 4rem; color: #ccc;"></i>
+                                <h4 class="mt-3">Tidak ada surat keputusan ditemukan</h4>
+                                <p class="text-muted">Coba gunakan kata kunci pencarian yang berbeda atau pilih filter tahun lain</p>
+                                <a href="surat-keputusan.php" class="btn btn-primary mt-3">
+                                    <i class="bi bi-arrow-clockwise"></i> Tampilkan Semua
+                                </a>
                             </div>
-                        </div>
+                        <?php endif; ?>
                         
                         <!-- TEAM SECTION -->
                         <div class="team-section">
@@ -1097,9 +1176,9 @@
                     <!-- STATS CARD -->
                     <div class="stats-card">
                         <h4><i class="bi bi-file-earmark-medical me-2"></i> Statistik Surat Keputusan</h4>
-                        <div class="stat-number">15</div>
+                        <div class="stat-number"><?php echo count($decrees); ?></div>
                         <div class="stat-label">Total SK Aktif</div>
-                        <div class="stat-number">2025</div>
+                        <div class="stat-number"><?php echo max(array_column($decrees, 'year')); ?></div>
                         <div class="stat-label">SK Terbaru</div>
                     </div>
                     
@@ -1107,13 +1186,13 @@
                     <div class="sidebar-menu">
                         <h4><i class="bi bi-link-45deg"></i> Menu Terkait</h4>
                         <ul class="quick-links">
-                            <li><a href="?page=profil-jdih"><i class="bi bi-house-door"></i> Profil JDIH</a></li>
-                            <li><a href="?page=struktur-organisasi"><i class="bi bi-diagram-3"></i> Struktur Organisasi</a></li>
-                            <li><a href="?page=dasar-hukum"><i class="bi bi-file-earmark-text"></i> Dasar Hukum</a></li>
-                            <li class="active"><a href="?page=surat-keputusan"><i class="bi bi-file-earmark-medical"></i> Surat Keputusan</a></li>
-                            <li><a href="?page=sop-pengelola"><i class="bi bi-list-check"></i> SOP Pengelola</a></li>
-                            <li><a href="?page=alur-pengelolaan"><i class="bi bi-arrow-repeat"></i> Alur Pengelolaan</a></li>
-                            <li><a href="?page=visi-misi"><i class="bi bi-bullseye"></i> Visi & Misi</a></li>
+                            <li><a href="profil-jdih.php"><i class="bi bi-house-door"></i> Profil JDIH</a></li>
+                            <li><a href="struktur-organisasi.php"><i class="bi bi-diagram-3"></i> Struktur Organisasi</a></li>
+                            <li><a href="dasar-hukum.php"><i class="bi bi-file-earmark-text"></i> Dasar Hukum</a></li>
+                            <li class="active"><a href="surat-keputusan.php"><i class="bi bi-file-earmark-medical"></i> Surat Keputusan</a></li>
+                            <li><a href="sop-pengelola.php"><i class="bi bi-list-check"></i> SOP Pengelola</a></li>
+                            <li><a href="alur-pengelolaan.php"><i class="bi bi-arrow-repeat"></i> Alur Pengelolaan</a></li>
+                            <li><a href="visi-misi.php"><i class="bi bi-bullseye"></i> Visi & Misi</a></li>
                         </ul>
                     </div>
                     
@@ -1121,42 +1200,27 @@
                     <div class="sidebar-menu">
                         <h4><i class="bi bi-download"></i> Paling Sering Diunduh</h4>
                         <ul class="quick-links">
+                            <?php 
+                            // Sort by downloads descending
+                            usort($decrees, function($a, $b) {
+                                return $b['downloads'] - $a['downloads'];
+                            });
+                            
+                            // Take top 4
+                            $topDownloads = array_slice($decrees, 0, 4);
+                            foreach ($topDownloads as $decree): 
+                            ?>
                             <li>
-                                <a href="#">
+                                <a href="<?php echo getDownloadUrl($decree['file_id']); ?>" target="_blank" 
+                                   onclick="trackDownload(<?php echo $decree['id']; ?>)">
                                     <i class="bi bi-file-earmark-pdf"></i>
                                     <div>
-                                        <div>SK Tim Teknis 2025</div>
-                                        <small class="text-muted">Diunduh 245 kali</small>
+                                        <div><?php echo htmlspecialchars(substr($decree['title'], 0, 40)); ?>...</div>
+                                        <small class="text-muted">Diunduh <?php echo $decree['downloads']; ?> kali</small>
                                     </div>
                                 </a>
                             </li>
-                            <li>
-                                <a href="#">
-                                    <i class="bi bi-file-earmark-pdf"></i>
-                                    <div>
-                                        <div>SK Koordinator 2024</div>
-                                        <small class="text-muted">Diunduh 187 kali</small>
-                                    </div>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="#">
-                                    <i class="bi bi-file-earmark-pdf"></i>
-                                    <div>
-                                        <div>SK Implementasi Digital 2023</div>
-                                        <small class="text-muted">Diunduh 156 kali</small>
-                                    </div>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="#">
-                                    <i class="bi bi-file-earmark-pdf"></i>
-                                    <div>
-                                        <div>SK Anggota 2022</div>
-                                        <small class="text-muted">Diunduh 132 kali</small>
-                                    </div>
-                                </a>
-                            </li>
+                            <?php endforeach; ?>
                         </ul>
                     </div>
                     
@@ -1212,70 +1276,26 @@
         </div>
     </section>
 
-    <!-- FOOTER -->
-    <footer class="site-footer">
-        <div class="container">
-            <div class="row">
-                
-                <!-- LOGO DAN DESKRIPSI -->
-                <div class="col-lg-4 col-md-6 col-12 mb-4">
-                    <div class="site-footer-logo">
-                        <a href="index.php">
-                            <img src="images/logo-footer.png" alt="logo" class="img-fluid">
-                        </a>
-                    </div>
-                    <p class="text-white">
-                        Jaringan Dokumentasi dan Informasi Hukum (JDIH) DPRD Kota Surakarta 
-                        merupakan sistem informasi hukum yang menyediakan akses terhadap 
-                        produk hukum dan dokumentasi legislasi daerah.
-                    </p>
+    <!-- PREVIEW MODAL -->
+    <div class="modal fade preview-modal" id="previewModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="previewModalLabel">Preview Surat Keputusan</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-
-                <!-- LINK CEPAT -->
-                <div class="col-lg-2 col-md-6 col-12 mx-auto mb-4">
-                    <h6 class="site-footer-title">Menu Cepat</h6>
-                    <ul class="footer-menu">
-                        <li><a href="index.php" class="site-footer-link">Beranda</a></li>
-                        <li><a href="?page=profil-jdih" class="site-footer-link">Profil JDIH</a></li>
-                        <li><a href="?page=perda" class="site-footer-link">Peraturan Daerah</a></li>
-                        <li><a href="?page=artikel" class="site-footer-link">Artikel Hukum</a></li>
-                        <li><a href="?page=kontak" class="site-footer-link">Kontak Kami</a></li>
-                    </ul>
+                <div class="modal-body">
+                    <iframe class="preview-iframe" id="previewIframe" src=""></iframe>
                 </div>
-
-                <!-- KONTAK -->
-                <div class="col-lg-3 col-md-6 col-12 mb-4">
-                    <h6 class="site-footer-title">Kontak Kami</h6>
-                    <p class="text-white d-flex mb-2">
-                        <i class="bi-geo-alt me-2"></i>
-                        Jl. Jend. Sudirman No. 2, Kec. Banjarsari, Kota Surakarta, Jawa Tengah 57113
-                    </p>
-                    <p class="text-white d-flex mb-2">
-                        <i class="bi-telephone me-2"></i>
-                        <a href="tel:+62271234567" class="site-footer-link">(0271) 234567</a>
-                    </p>
-                    <p class="text-white d-flex">
-                        <i class="bi-envelope me-2"></i>
-                        <a href="mailto:jdih@dprd-surakarta.go.id" class="site-footer-link">jdih@dprd-surakarta.go.id</a>
-                    </p>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                    <a href="#" id="downloadPreviewBtn" class="btn btn-primary" target="_blank">
+                        <i class="bi bi-download"></i> Download
+                    </a>
                 </div>
-
-                <!-- MEDIA SOSIAL -->
-                <div class="col-lg-3 col-md-6 col-12">
-                    <h6 class="site-footer-title">Media Sosial</h6>
-                    <ul class="social-icon">
-                        <li><a href="#" class="social-icon-link bi-facebook"></a></li>
-                        <li><a href="#" class="social-icon-link bi-twitter"></a></li>
-                        <li><a href="#" class="social-icon-link bi-instagram"></a></li>
-                        <li><a href="#" class="social-icon-link bi-youtube"></a></li>
-                        <li><a href="#" class="social-icon-link bi-whatsapp"></a></li>
-                    </ul>
-                    <p class="copyright-text mt-3">Copyright © 2024 JDIH DPRD Kota Surakarta</p>
-                </div>
-
             </div>
         </div>
-    </footer>
+    </div>
 
     <!-- JAVASCRIPT FILES -->
     <script src="js/jquery.min.js"></script>
@@ -1285,81 +1305,96 @@
     <script src="js/custom.js"></script>
     
     <script>
-        // Fungsi untuk download utama
-        document.querySelector('.btn-download-primary').addEventListener('click', function(e) {
-            if (this.getAttribute('href') === '#') {
-                e.preventDefault();
-                const docTitle = document.querySelector('.document-title').textContent;
-                const docSize = '1.59 MB';
-                
-                if (confirm(`Unduh dokumen: ${docTitle}\n\nUkuran file: ${docSize}\n\nKlik OK untuk melanjutkan.`)) {
-                    alert('Download akan dimulai...\n\nDalam implementasi nyata, file PDF akan didownload ke perangkat Anda.');
-                }
-            }
-        });
-        
-        // Fungsi untuk download secondary
-        document.querySelectorAll('.btn-download-secondary').forEach(button => {
-            button.addEventListener('click', function(e) {
-                if (this.getAttribute('href') === '#') {
-                    e.preventDefault();
-                    const docTitle = this.closest('.decree-item').querySelector('.decree-number').textContent;
-                    const docSize = this.closest('.decree-item').querySelector('.decree-details .detail-item:nth-child(2) span').textContent;
-                    
-                    if (confirm(`Unduh dokumen: ${docTitle}\n\nUkuran file: ${docSize}\n\nKlik OK untuk melanjutkan.`)) {
-                        alert('Download akan dimulai...\n\nDalam implementasi nyata, file PDF akan didownload ke perangkat Anda.');
-                    }
-                }
-            });
-        });
-        
-        // Fungsi untuk preview
-        document.querySelectorAll('.btn-preview').forEach(button => {
-            button.addEventListener('click', function(e) {
-                e.preventDefault();
-                const docTitle = this.closest('.decree-item').querySelector('.decree-number').textContent;
-                
-                alert(`Membuka preview dokumen: ${docTitle}\n\nDalam implementasi nyata, ini akan membuka preview PDF di jendela baru.`);
-            });
-        });
-        
-        // Fungsi untuk pencarian
-        document.querySelector('.search-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const searchQuery = this.querySelector('input[type="text"]').value;
-            const yearFilters = Array.from(this.querySelectorAll('input[type="checkbox"]:checked'))
-                .map(cb => cb.nextElementSibling.textContent.trim())
-                .join(', ');
+        // Fungsi untuk membuka preview
+        function openPreview(url, title) {
+            const modal = new bootstrap.Modal(document.getElementById('previewModal'));
+            const iframe = document.getElementById('previewIframe');
+            const modalTitle = document.getElementById('previewModalLabel');
+            const downloadBtn = document.getElementById('downloadPreviewBtn');
             
-            if (!searchQuery.trim() && !yearFilters) {
-                alert('Masukkan kata kunci pencarian atau pilih filter tahun!');
-                return;
-            }
+            iframe.src = url;
+            modalTitle.textContent = title;
             
-            alert(`Mencari Surat Keputusan dengan:\nKata kunci: "${searchQuery}"\nFilter tahun: ${yearFilters || 'Tidak ada'}\n\nDalam implementasi nyata, ini akan melakukan filter pada daftar dokumen.`);
-        });
+            // Set download link (konversi dari preview URL ke download URL)
+            const downloadUrl = url.replace('/preview', '').replace('/file/d/', '/uc?export=download&id=');
+            downloadBtn.href = downloadUrl;
+            
+            modal.show();
+        }
         
-        // Fungsi untuk menu dropdown aktif
+        // Fungsi untuk tracking download
+        function trackDownload(docId) {
+            // Simulasi tracking download
+            console.log('Download tracked for document ID:', docId);
+            
+            // Dalam implementasi nyata, ini akan mengirim data ke server
+            // fetch('track-download.php?doc_id=' + docId);
+            
+            // Tampilkan notifikasi
+            showNotification('Download surat keputusan dimulai...');
+        }
+        
+        // Fungsi untuk menampilkan notifikasi
+        function showNotification(message) {
+            // Buat elemen notifikasi
+            const notification = document.createElement('div');
+            notification.className = 'notification alert alert-success alert-dismissible fade show';
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 9999;
+                min-width: 300px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            `;
+            notification.innerHTML = `
+                <i class="bi bi-check-circle me-2"></i>${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Hapus notifikasi setelah 3 detik
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+        
+        // Highlight pencarian di hasil
         document.addEventListener('DOMContentLoaded', function() {
-            const tentangKamiDropdown = document.querySelector('#dropdownTentangKami');
-            if (tentangKamiDropdown) {
-                tentangKamiDropdown.classList.add('active');
+            const searchQuery = "<?php echo addslashes($searchQuery); ?>";
+            if (searchQuery && searchQuery.trim() !== '') {
+                // Tambahkan animasi untuk hasil yang di-highlight
+                const highlights = document.querySelectorAll('.search-highlight');
+                highlights.forEach(highlight => {
+                    highlight.style.animation = 'pulse 2s infinite';
+                });
+                
+                // Tambahkan style untuk animasi
+                const style = document.createElement('style');
+                style.textContent = `
+                    @keyframes pulse {
+                        0% { background-color: #fff3cd; }
+                        50% { background-color: #ffeaa7; }
+                        100% { background-color: #fff3cd; }
+                    }
+                `;
+                document.head.appendChild(style);
             }
-        });
-        
-        // Fungsi untuk kontak email
-        document.querySelectorAll('a[href^="mailto:"]').forEach(link => {
-            link.addEventListener('click', function() {
-                const email = this.getAttribute('href').replace('mailto:', '');
-                console.log(`Membuka email ke: ${email}`);
+            
+            // Reset preview iframe saat modal ditutup
+            document.getElementById('previewModal').addEventListener('hidden.bs.modal', function () {
+                document.getElementById('previewIframe').src = '';
             });
-        });
-        
-        // Fungsi untuk kontak telepon
-        document.querySelectorAll('a[href^="tel:"]').forEach(link => {
-            link.addEventListener('click', function() {
-                const phone = this.getAttribute('href').replace('tel:', '');
-                console.log(`Menghubungi: ${phone}`);
+            
+            // Auto-submit checkbox filter saat dicentang
+            document.querySelectorAll('.search-form input[type="checkbox"]').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    // Submit form dengan delay kecil
+                    setTimeout(() => {
+                        this.closest('form').submit();
+                    }, 300);
+                });
             });
         });
     </script>

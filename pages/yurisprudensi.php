@@ -21,9 +21,11 @@ mysqli_set_charset($koneksi, "utf8");
 // ============================================
 // KONFIGURASI PATH
 // ============================================
-$base_upload_path = "C:/xampp/htdocs/jdihcilacap_pasang/wb_admin/uploads/";
+$base_upload_path = "C:/xampp/htdocs/jdihcilacap_pasang/wb_admin/uploads/yurisprudensi/";
 $yurisprudensi_pdf_path = "wb_admin/uploads/yurisprudensi/";
-$yurisprudensi_images_path = "wb_admin/uploads/yurisprudensi/";
+$yurisprudensi_images_path = $_SERVER['DOCUMENT_ROOT'] . "/jdihcilacap_pasang/wb_admin/uploads/yurisprudensi/";
+$web_yurisprudensi_images_path = "/jdihcilacap_pasang/wb_admin/uploads/yurisprudensi/";
+
 
 $web_yurisprudensi_pdf_path = "/jdihcilacap_pasang/wb_admin/uploads/yurisprudensi/";
 $web_yurisprudensi_images_path = "/jdihcilacap_pasang/wb_admin/uploads/yurisprudensi/";
@@ -73,55 +75,35 @@ function findYurisprudensiPDFFile($filename, $id = null) {
 // Fungsi untuk menemukan gambar cover
 function findYurisprudensiImageFile($filename, $id = null) {
     global $yurisprudensi_images_path;
-    
-    if (empty($filename) && $id) {
-        $image_extensions = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
-        foreach ($image_extensions as $ext) {
-            $test_filename = $id . '.' . $ext;
-            $test_path = $yurisprudensi_images_path . $test_filename;
-            
-            if (file_exists($test_path)) {
-                return $test_path;
-            }
-            
-            $test_filename2 = 'yurisprudensi_' . $id . '.' . $ext;
-            $test_path2 = $yurisprudensi_images_path . $test_filename2;
-            
-            if (file_exists($test_path2)) {
-                return $test_path2;
-            }
-            
-            $test_filename3 = 'cover_' . $id . '.' . $ext;
-            $test_path3 = $yurisprudensi_images_path . $test_filename3;
-            
-            if (file_exists($test_path3)) {
-                return $test_path3;
-            }
-        }
-        return null;
-    }
-    
-    if (empty($filename)) {
-        return null;
-    }
-    
-    $filename = basename($filename);
-    
-    $possible_locations = [
-        $yurisprudensi_images_path . $filename,
-        str_replace('/', '\\', $yurisprudensi_images_path) . $filename,
-        $_SERVER['DOCUMENT_ROOT'] . '/jdihcilacap_pasang/wb_admin/uploads/yurisprudensi/
-        ' . $filename,
-    ];
-    
-    foreach ($possible_locations as $location) {
-        if (file_exists($location) && is_file($location) && is_readable($location)) {
-            return $location;
+
+    $exts = ['jpg','jpeg','png','webp','gif'];
+
+    if (!empty($filename)) {
+        $filename = basename($filename);
+        if (file_exists($yurisprudensi_images_path . $filename)) {
+            return $filename;
         }
     }
-    
+
+    if ($id) {
+        foreach ($exts as $ext) {
+            $variants = [
+                $id . '.' . $ext,
+                'cover_' . $id . '.' . $ext,
+                'yurisprudensi_' . $id . '.' . $ext,
+            ];
+
+            foreach ($variants as $file) {
+                if (file_exists($yurisprudensi_images_path . $file)) {
+                    return $file;
+                }
+            }
+        }
+    }
+
     return null;
 }
+
 
 // ============================================
 // VARIABEL PENCARIAN DAN FILTER
@@ -306,7 +288,7 @@ include "header.php";
         <div class="row">
             <div class="col-12">
                 <h1 class="text-white">YURISPRUDENSI</h1>
-                <p class="subtitle">Kumpulan Putusan Pengadilan Kota Surakarta</p>
+
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb">
                         <li class="breadcrumb-item"><a href="index.php">Beranda</a></li>
@@ -474,8 +456,16 @@ include "header.php";
                             $actual_file_path = findYurisprudensiPDFFile($file_from_db, $row['id_yurisprudensi']);
                             if ($actual_file_path) {
                                 $file_found = true;
-                                $relative_path = str_replace($_SERVER['DOCUMENT_ROOT'], '', $actual_file_path);
-                                $download_url = $relative_path . '?t=' . time();
+                                $image_found = false;
+$image_url = '';
+
+$cover_file = findYurisprudensiImageFile($row['cover_path'], $row['id_yurisprudensi']);
+
+if ($cover_file) {
+    $image_found = true;
+    $image_url = $web_yurisprudensi_images_path . $cover_file;
+}
+
                             }
                         }
                         
@@ -487,15 +477,31 @@ include "header.php";
                             $actual_image_path = findYurisprudensiImageFile($row['cover_path'], $row['id_yurisprudensi']);
                             if ($actual_image_path) {
                                 $image_found = true;
-                                $relative_image_path = str_replace($_SERVER['DOCUMENT_ROOT'], '', $actual_image_path);
-                                $image_url = $relative_image_path;
+                                $image_found = false;
+$image_url = '';
+
+$cover_file = findYurisprudensiImageFile($row['cover_path'], $row['id_yurisprudensi']);
+
+if ($cover_file) {
+    $image_found = true;
+    $image_url = $web_yurisprudensi_images_path . $cover_file;
+}
+
                             }
                         } else {
                             $actual_image_path = findYurisprudensiImageFile(null, $row['id_yurisprudensi']);
                             if ($actual_image_path) {
                                 $image_found = true;
-                                $relative_image_path = str_replace($_SERVER['DOCUMENT_ROOT'], '', $actual_image_path);
-                                $image_url = $relative_image_path;
+                                $image_found = false;
+$image_url = '';
+
+$cover_file = findYurisprudensiImageFile($row['cover_path'], $row['id_yurisprudensi']);
+
+if ($cover_file) {
+    $image_found = true;
+    $image_url = $web_yurisprudensi_images_path . $cover_file;
+}
+
                             }
                         }
                         
@@ -690,17 +696,7 @@ include "header.php";
                 
                 <!-- MENU MONOGRAFI -->
                 <div class="sidebar-menu">
-                    <h4><i class="bi bi-collection"></i> Menu Monografi Hukum</h4>
-                    <ul>
-                        <li><a href="pokok-pikiran-dprd.php"><i class="bi bi-lightbulb"></i> Pokok Pikiran DPRD</a></li>
-                        <li><a href="kajian-raperda.php"><i class="bi bi-search"></i> Kajian Raperda</a></li>
-                        <li><a href="naskah-akademik.php"><i class="bi bi-journal-text"></i> Naskah Akademik</a></li>
-                        <li><a href="hasil-fasilitasi.php"><i class="bi bi-gear"></i> Hasil Fasilitasi Raperda</a></li>
-                        <li><a href="hasil-harmonisasi.php"><i class="bi bi-shuffle"></i> Hasil Harmonisasi Raperda</a></li>
-                        <li><a href="karya-ilmiah.php"><i class="bi bi-pencil"></i> Penulisan Karya Ilmiah</a></li>
-                        <li><a href="himpunan.php"><i class="bi bi-folder"></i> Himpunan Peraturan</a></li>
-                        <li class="active"><a href="yurisprudensi.php"><i class="bi bi-gavel"></i> Yurisprudensi</a></li>
-                    </ul>
+                    
                 </div>
                 
                 <!-- FILTER JENIS PERADILAN -->

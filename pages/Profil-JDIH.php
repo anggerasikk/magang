@@ -1171,19 +1171,7 @@ include('header.php');
                     </div>
                 </div>
                 
-                <!-- DOWNLOAD -->
-                <div class="sidebar-menu">
-                    <h4><i class="bi bi-download"></i> Download</h4>
-                    <p class="mb-3">Download dokumen profil JDIH:</p>
-                    <a href="downloads/profil-jdih.pdf" download class="btn custom-btn w-100 mb-2">
-                        <i class="bi bi-file-earmark-pdf"></i>
-                        Profil JDIH (PDF)
-                    </a>
-                    <a href="downloads/brosur-jdih.pdf" download class="btn custom-border-btn w-100">
-                        <i class="bi bi-file-earmark-text"></i>
-                        Brosur JDIH
-                    </a>
-                </div>
+                
 
             </div>
 

@@ -2,375 +2,190 @@
 // dasar-hukum.php
 $pageTitle = 'Dasar Hukum JDIH - JDIH DPRD Kota Surakarta';
 include 'header.php';
+
+// Data dokumen dengan URL Google Drive
+$documents = [
+    [
+        'id' => 1,
+        'title' => 'Peraturan Wali Kota Surakarta Nomor 4 Tahun 2024 tentang Jaringan Dokumentasi dan Informasi Hukum Kota Surakarta',
+        'source' => 'Pemerintah Kota Surakarta',
+        'year' => 2024,
+        'type' => 'perwali',
+        'file_url' => 'https://drive.google.com/uc?export=download&id=1VBbs_13pSz0pn4_2FSz_Zescf8h5V2ie',
+        'preview_url' => 'https://drive.google.com/file/d/1VBbs_13pSz0pn4_2FSz_Zescf8h5V2ie/preview'
+    ],
+    [
+        'id' => 2,
+        'title' => 'Peraturan Menteri Dalam Negeri Republik Indonesia Nomor 2 Tahun 2014 Tentang Pengelolaan Jaringan Dokumentasi Dan Informasi Hukum Kementerian Dalam Negeri Dan Pemerintah Daerah',
+        'source' => 'Kementerian Dalam Negeri RI',
+        'year' => 2014,
+        'type' => 'permendagri',
+        'file_url' => 'https://drive.google.com/uc?export=download&id=1VBbs_13pSz0pn4_2FSz_Zescf8h5V2ie',
+        'preview_url' => 'https://drive.google.com/file/d/1VBbs_13pSz0pn4_2FSz_Zescf8h5V2ie/preview'
+    ],
+    [
+        'id' => 3,
+        'title' => 'Peraturan Menteri Hukum Dan Hak Asasi Manusia Republik Indonesia Nomor 8 Tahun 2019 Tentang Standar Pengelolaan Dokumen Dan Informasi Hukum',
+        'source' => 'Kementerian Hukum dan HAM RI',
+        'year' => 2019,
+        'type' => 'permenkumham',
+        'file_url' => 'https://drive.google.com/uc?export=download&id=1VBbs_13pSz0pn4_2FSz_Zescf8h5V2ie',
+        'preview_url' => 'https://drive.google.com/file/d/1VBbs_13pSz0pn4_2FSz_Zescf8h5V2ie/preview'
+    ],
+    [
+        'id' => 4,
+        'title' => 'Undang-Undang Nomor 12 Tahun 2011 tentang Pembentukan Peraturan Perundang-undangan',
+        'source' => 'Pemerintah Republik Indonesia',
+        'year' => 2011,
+        'type' => 'uu',
+        'file_url' => 'https://drive.google.com/uc?export=download&id=1VBbs_13pSz0pn4_2FSz_Zescf8h5V2ie',
+        'preview_url' => 'https://drive.google.com/file/d/1VBbs_13pSz0pn4_2FSz_Zescf8h5V2ie/preview'
+    ],
+    [
+        'id' => 5,
+        'title' => 'Peraturan Sekretaris Jenderal DPRD Kota Surakarta Nomor 1 Tahun 2023 tentang Pengelolaan JDIH',
+        'source' => 'Sekretariat DPRD Kota Surakarta',
+        'year' => 2023,
+        'type' => 'peraturan',
+        'file_url' => 'https://drive.google.com/uc?export=download&id=1VBbs_13pSz0pn4_2FSz_Zescf8h5V2ie',
+        'preview_url' => 'https://drive.google.com/file/d/1VBbs_13pSz0pn4_2FSz_Zescf8h5V2ie/preview'
+    ],
+    [
+        'id' => 6,
+        'title' => 'Peraturan Daerah Kota Surakarta Nomor 5 Tahun 2022 tentang Organisasi dan Tata Kerja DPRD Kota Surakarta',
+        'source' => 'DPRD Kota Surakarta',
+        'year' => 2022,
+        'type' => 'perda',
+        'file_url' => 'https://drive.google.com/uc?export=download&id=1VBbs_13pSz0pn4_2FSz_Zescf8h5V2ie',
+        'preview_url' => 'https://drive.google.com/file/d/1VBbs_13pSz0pn4_2FSz_Zescf8h5V2ie/preview'
+    ]
+];
+
+// Proses pencarian
+$searchResults = $documents;
+$searchQuery = isset($_GET['search']) ? trim($_GET['search']) : '';
+
+if ($searchQuery) {
+    $searchResults = array_filter($documents, function($doc) use ($searchQuery) {
+        $searchTerms = explode(' ', strtolower($searchQuery));
+        $title = strtolower($doc['title']);
+        $source = strtolower($doc['source']);
+        $year = (string)$doc['year'];
+        
+        foreach ($searchTerms as $term) {
+            if (strpos($title, $term) !== false || 
+                strpos($source, $term) !== false || 
+                strpos($year, $term) !== false) {
+                return true;
+            }
+        }
+        return false;
+    });
+}
+
+// Filter berdasarkan jenis
+if (isset($_GET['type']) && $_GET['type'] !== 'all') {
+    $filterType = $_GET['type'];
+    $searchResults = array_filter($searchResults, function($doc) use ($filterType) {
+        return $doc['type'] === $filterType;
+    });
+}
+
+// Filter berdasarkan tahun
+if (isset($_GET['year']) && $_GET['year'] !== 'all') {
+    $filterYear = $_GET['year'];
+    $searchResults = array_filter($searchResults, function($doc) use ($filterYear) {
+        return $doc['year'] == $filterYear;
+    });
+}
 ?>
 
 <style>
-    /* CSS KHUSUS UNTUK HALAMAN DASAR HUKUM */
-    /* HEADER SECTION */
+    /* CSS UTAMA */
     .page-header {
-        background: linear-gradient(15deg, #13547a 0%, #80d0c7 100%);
-        padding: 40px 0 30px 0;
-        margin-top: 0;
+        background: linear-gradient(135deg, #13547a 0%, #80d0c7 100%);
+        padding: 60px 0 40px;
         color: white;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .page-header::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org2000/svg" viewBox="0 0 1440 320"><path fill="%23ffffff" fill-opacity="0.1" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,112C672,96,768,96,864,112C960,128,1056,160,1152,160C1248,160,1344,128,1392,112L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>');
-        background-size: cover;
-        background-position: bottom;
-        opacity: 0.1;
+        text-align: center;
     }
     
     .page-header h1 {
-        font-family: 'Montserrat', sans-serif;
-        font-weight: 700;
         font-size: 2.5rem;
         margin-bottom: 10px;
-        position: relative;
-        z-index: 2;
+        font-weight: 700;
     }
     
     .page-header .subtitle {
         font-size: 1.1rem;
         opacity: 0.9;
-        margin-bottom: 20px;
-        position: relative;
-        z-index: 2;
+        max-width: 700px;
+        margin: 0 auto;
     }
     
-    .page-header .breadcrumb {
-        background: transparent;
-        padding: 0;
-        margin: 0;
-        position: relative;
-        z-index: 2;
-    }
-    
-    .page-header .breadcrumb-item a {
-        color: rgba(255, 255, 255, 0.8);
-        text-decoration: none;
-    }
-    
-    .page-header .breadcrumb-item.active {
-        color: white;
-    }
-    
-    .page-header .breadcrumb-item+.breadcrumb-item::before {
-        color: rgba(255, 255, 255, 0.8);
-    }
-
-    /* MAIN CONTENT */
     .main-content {
-        padding: 50px 0 60px 0;
+        padding: 40px 0;
         background: #f8f9fa;
+        min-height: 600px;
     }
     
-    .section-title {
-        font-family: 'Montserrat', sans-serif;
-        font-weight: 600;
-        color: #13547a;
-        margin-bottom: 30px;
-        position: relative;
-        padding-bottom: 15px;
-    }
-    
-    .section-title::after {
-        content: '';
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        width: 100px;
-        height: 3px;
-        background: linear-gradient(to right, #13547a, #80d0c7);
-    }
-    
-    .section-title.no-line::after {
-        display: none;
-    }
-
-    /* CONTENT CARD */
     .content-card {
         background: white;
         border-radius: 10px;
         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-        padding: 40px;
-        margin-bottom: 40px;
-    }
-    
-    .legal-basis-header {
-        text-align: center;
-        margin-bottom: 40px;
-        padding-bottom: 30px;
-        border-bottom: 2px solid #f0f0f0;
-    }
-    
-    .legal-basis-title {
-        color: #13547a;
-        font-family: 'Montserrat', sans-serif;
-        font-weight: 700;
-        font-size: 2.2rem;
-        margin-bottom: 20px;
-    }
-    
-    .legal-basis-subtitle {
-        color: #666;
-        font-size: 1.2rem;
-        margin-bottom: 15px;
-    }
-
-    /* LEGAL DOCUMENTS TABLE */
-    .legal-documents-table {
-        width: 100%;
-        margin-bottom: 30px;
-        border-collapse: collapse;
-    }
-    
-    .legal-documents-table thead {
-        background: #13547a;
-        color: white;
-    }
-    
-    .legal-documents-table th {
-        padding: 15px;
-        font-weight: 600;
-        text-align: left;
-        font-family: 'Montserrat', sans-serif;
-    }
-    
-    .legal-documents-table tbody tr {
-        border-bottom: 1px solid #e0e0e0;
-        transition: background-color 0.3s;
-    }
-    
-    .legal-documents-table tbody tr:hover {
-        background-color: #f0f8ff;
-    }
-    
-    .legal-documents-table td {
-        padding: 20px 15px;
-        vertical-align: middle;
-    }
-    
-    .document-checkbox {
-        width: 50px;
-        text-align: center;
-    }
-    
-    .document-checkbox input[type="checkbox"] {
-        width: 20px;
-        height: 20px;
-        cursor: pointer;
-    }
-    
-    .document-title {
-        font-weight: 600;
-        color: #13547a;
-        margin-bottom: 5px;
-        font-size: 1.1rem;
-    }
-    
-    .document-details {
-        color: #666;
-        font-size: 0.9rem;
-        margin-bottom: 5px;
-    }
-    
-    .document-size {
-        color: #888;
-        font-size: 0.85rem;
-        font-style: italic;
-    }
-    
-    .download-column {
-        width: 150px;
-        text-align: center;
-    }
-    
-    .btn-download-doc {
-        background: linear-gradient(135deg, #13547a 0%, #80d0c7 100%);
-        color: white;
-        border: none;
-        padding: 8px 20px;
-        border-radius: 5px;
-        font-weight: 600;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        transition: all 0.3s;
-        font-size: 0.9rem;
-    }
-    
-    .btn-download-doc:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(19, 84, 122, 0.2);
-        color: white;
-    }
-    
-    .btn-download-doc i {
-        font-size: 1.1rem;
-    }
-
-    /* BULK ACTIONS */
-    .bulk-actions {
-        background: #f0f8ff;
-        border-radius: 10px;
-        padding: 20px;
-        margin-bottom: 30px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 15px;
-    }
-    
-    .bulk-checkbox {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        font-weight: 500;
-        color: #13547a;
-    }
-    
-    .bulk-checkbox input[type="checkbox"] {
-        width: 18px;
-        height: 18px;
-    }
-    
-    .bulk-buttons {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-    }
-    
-    .btn-bulk {
-        padding: 8px 20px;
-        border-radius: 5px;
-        font-weight: 600;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        transition: all 0.3s;
-        font-size: 0.9rem;
-        border: 2px solid transparent;
-    }
-    
-    .btn-bulk-download {
-        background: #13547a;
-        color: white;
-    }
-    
-    .btn-bulk-download:hover {
-        background: #0d3a58;
-        color: white;
-    }
-    
-    .btn-bulk-print {
-        background: transparent;
-        color: #13547a;
-        border-color: #13547a;
-    }
-    
-    .btn-bulk-print:hover {
-        background: #13547a;
-        color: white;
-    }
-
-    /* INFO BOX */
-    .info-box {
-        background: linear-gradient(135deg, #13547a 0%, #80d0c7 100%);
-        border-radius: 10px;
         padding: 30px;
-        margin: 40px 0;
-        color: white;
+        margin-bottom: 30px;
     }
     
-    .info-box h3 {
-        color: white;
-        margin-bottom: 15px;
-        font-size: 1.5rem;
-    }
-    
-    .info-box p {
-        color: rgba(255, 255, 255, 0.9);
-        margin-bottom: 15px;
-        line-height: 1.6;
-    }
-    
-    .info-box ul {
-        padding-left: 20px;
-        margin-bottom: 0;
-    }
-    
-    .info-box li {
-        color: rgba(255, 255, 255, 0.9);
-        margin-bottom: 8px;
-    }
-    
-    .info-box li:last-child {
-        margin-bottom: 0;
-    }
-
-    /* SEARCH AND FILTER */
-    .search-filter-container {
+    /* SEARCH BAR */
+    .search-container {
         background: white;
         border-radius: 10px;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
         padding: 25px;
         margin-bottom: 30px;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
     }
     
     .search-form {
         display: flex;
-        gap: 15px;
+        gap: 10px;
         margin-bottom: 20px;
-        flex-wrap: wrap;
     }
     
     .search-input {
         flex: 1;
-        min-width: 250px;
     }
     
-    .search-input .form-control {
+    .search-input input {
+        height: 50px;
         border: 2px solid #e0e0e0;
-        padding: 10px 15px;
-        border-radius: 5px;
+        border-radius: 8px;
+        padding: 0 20px;
+        font-size: 1rem;
+        transition: all 0.3s;
     }
     
-    .search-input .form-control:focus {
+    .search-input input:focus {
         border-color: #80d0c7;
-        box-shadow: none;
+        box-shadow: 0 0 0 3px rgba(128, 208, 199, 0.1);
     }
     
     .btn-search {
+        height: 50px;
+        padding: 0 30px;
         background: #13547a;
         color: white;
         border: none;
-        padding: 10px 25px;
-        border-radius: 5px;
+        border-radius: 8px;
         font-weight: 600;
-        display: flex;
-        align-items: center;
-        gap: 8px;
         transition: all 0.3s;
     }
     
     .btn-search:hover {
         background: #0d3a58;
-        color: white;
+        transform: translateY(-2px);
     }
     
-    .filter-options {
+    .filter-container {
         display: flex;
         gap: 20px;
         flex-wrap: wrap;
@@ -385,40 +200,176 @@ include 'header.php';
     .filter-group label {
         font-weight: 500;
         color: #13547a;
-        margin-bottom: 0;
+        margin: 0;
+        white-space: nowrap;
     }
     
     .filter-group select {
         border: 2px solid #e0e0e0;
-        border-radius: 5px;
+        border-radius: 6px;
         padding: 8px 15px;
-        color: #333;
-    }
-
-    /* SIDEBAR */
-    .sidebar-menu {
+        min-width: 150px;
         background: white;
-        border-radius: 10px;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-        padding: 25px;
-        margin-bottom: 30px;
     }
     
-    .sidebar-menu h4 {
-        color: #13547a;
-        font-family: 'Montserrat', sans-serif;
+    /* TABLE STYLES */
+    .documents-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 25px 0;
+    }
+    
+    .documents-table thead {
+        background: #13547a;
+        color: white;
+    }
+    
+    .documents-table th {
+        padding: 15px;
+        text-align: left;
         font-weight: 600;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .documents-table tbody tr {
+        border-bottom: 1px solid #e0e0e0;
+        transition: all 0.3s;
+    }
+    
+    .documents-table tbody tr:hover {
+        background: #f8fdff;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(19, 84, 122, 0.1);
+    }
+    
+    .documents-table td {
+        padding: 20px 15px;
+        vertical-align: top;
+    }
+    
+    .document-title {
+        font-weight: 600;
+        color: #13547a;
+        margin-bottom: 8px;
+        font-size: 1.05rem;
+        line-height: 1.4;
+    }
+    
+    .document-meta {
+        color: #666;
+        font-size: 0.9rem;
+        margin-bottom: 5px;
+    }
+    
+    .document-type {
+        display: inline-block;
+        padding: 3px 10px;
+        background: #e3f2fd;
+        color: #13547a;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        margin-right: 10px;
+    }
+    
+    .document-year {
+        display: inline-block;
+        padding: 3px 10px;
+        background: #e8f5e9;
+        color: #2e7d32;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    
+    .btn-action {
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-weight: 500;
+        font-size: 0.9rem;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.3s;
+        border: none;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+    
+    .btn-download {
+        background: #13547a;
+        color: white;
+    }
+    
+    .btn-download:hover {
+        background: #0d3a58;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(19, 84, 122, 0.2);
+    }
+    
+    .btn-preview {
+        background: #28a745;
+        color: white;
+    }
+    
+    .btn-preview:hover {
+        background: #218838;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(40, 167, 69, 0.2);
+    }
+    
+    /* RESULTS INFO */
+    .results-info {
+        background: #e3f2fd;
+        border-radius: 8px;
+        padding: 15px 20px;
+        margin: 20px 0;
+        border-left: 4px solid #13547a;
+    }
+    
+    .results-info p {
+        margin: 0;
+        color: #13547a;
+        font-weight: 500;
+    }
+    
+    .results-info .highlight {
+        background: #fff3cd;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-weight: 600;
+    }
+    
+    /* SIDEBAR */
+    .sidebar-card {
+        background: white;
+        border-radius: 10px;
+        padding: 25px;
+        margin-bottom: 25px;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+    }
+    
+    .sidebar-title {
+        color: #13547a;
         font-size: 1.2rem;
+        font-weight: 600;
         margin-bottom: 20px;
         padding-bottom: 10px;
         border-bottom: 2px solid #f0f0f0;
         display: flex;
         align-items: center;
-    }
-    
-    .sidebar-menu h4 i {
-        color: #80d0c7;
-        margin-right: 10px;
+        gap: 10px;
     }
     
     .quick-links {
@@ -428,29 +379,18 @@ include 'header.php';
     }
     
     .quick-links li {
-        margin-bottom: 12px;
-    }
-    
-    .quick-links li:last-child {
-        margin-bottom: 0;
+        margin-bottom: 10px;
     }
     
     .quick-links a {
-        color: #555;
-        text-decoration: none;
-        padding: 12px 15px;
-        border-radius: 5px;
         display: flex;
         align-items: center;
-        gap: 10px;
+        padding: 12px 15px;
+        color: #555;
+        text-decoration: none;
+        border-radius: 6px;
         transition: all 0.3s;
-        font-weight: 500;
-    }
-    
-    .quick-links li.active a {
-        background: #f0f8ff;
-        color: #13547a;
-        font-weight: 600;
+        gap: 10px;
     }
     
     .quick-links a:hover {
@@ -461,196 +401,129 @@ include 'header.php';
     
     .quick-links a i {
         color: #80d0c7;
-        font-size: 0.9rem;
-    }
-
-    /* STATS CARD */
-    .stats-card {
-        background: linear-gradient(135deg, #13547a 0%, #80d0c7 100%);
-        color: white;
-        border-radius: 10px;
-        padding: 25px;
-        margin-bottom: 30px;
-        text-align: center;
+        font-size: 1.1rem;
+        width: 20px;
     }
     
-    .stats-card h4 {
-        color: white;
-        font-size: 1.3rem;
-        margin-bottom: 20px;
+    /* STATS CARD */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-top: 20px;
+    }
+    
+    .stat-item {
+        text-align: center;
+        padding: 15px;
+        background: #f0f8ff;
+        border-radius: 8px;
     }
     
     .stat-number {
-        font-size: 2.5rem;
+        font-size: 1.8rem;
         font-weight: 700;
-        margin-bottom: 10px;
-        font-family: 'Montserrat', sans-serif;
+        color: #13547a;
+        line-height: 1;
+        margin-bottom: 5px;
     }
     
     .stat-label {
-        font-size: 1rem;
-        opacity: 0.9;
-        margin-bottom: 20px;
-    }
-
-    /* CONTACT INFO */
-    .contact-card {
-        background: white;
-        border-radius: 10px;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-        padding: 25px;
-        margin-bottom: 30px;
-    }
-    
-    .contact-card h4 {
-        color: #13547a;
-        margin-bottom: 20px;
-        font-size: 1.3rem;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-    
-    .contact-card h4 i {
-        color: #80d0c7;
-    }
-    
-    .contact-item {
-        display: flex;
-        align-items: flex-start;
-        gap: 15px;
-        margin-bottom: 20px;
-    }
-    
-    .contact-item:last-child {
-        margin-bottom: 0;
-    }
-    
-    .contact-icon {
-        width: 40px;
-        height: 40px;
-        background: #f0f8ff;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #13547a;
-        flex-shrink: 0;
-    }
-    
-    .contact-details h5 {
-        color: #13547a;
-        margin-bottom: 5px;
-        font-size: 1rem;
-    }
-    
-    .contact-details p {
+        font-size: 0.85rem;
         color: #666;
-        margin: 0;
     }
     
-    .contact-details a {
-        color: #13547a;
-        text-decoration: none;
-        transition: color 0.3s;
+    /* NO RESULTS */
+    .no-results {
+        text-align: center;
+        padding: 60px 20px;
     }
     
-    .contact-details a:hover {
-        color: #80d0c7;
+    .no-results i {
+        font-size: 4rem;
+        color: #ddd;
+        margin-bottom: 20px;
     }
-
+    
+    .no-results h4 {
+        color: #666;
+        margin-bottom: 10px;
+    }
+    
+    .no-results p {
+        color: #888;
+        max-width: 500px;
+        margin: 0 auto 20px;
+    }
+    
+    /* MODAL */
+    .preview-modal .modal-dialog {
+        max-width: 90%;
+        height: 90vh;
+        margin: 5vh auto;
+    }
+    
+    .preview-modal .modal-content {
+        height: 100%;
+    }
+    
+    .preview-modal .modal-body {
+        padding: 0;
+        flex: 1;
+    }
+    
+    .preview-iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
+    
     /* RESPONSIVE */
-    @media (max-width: 992px) {
-        .legal-basis-title {
-            font-size: 1.8rem;
-        }
-        
-        .content-card {
-            padding: 30px;
-        }
-        
-        .legal-documents-table {
-            display: block;
-            overflow-x: auto;
-        }
-    }
-    
     @media (max-width: 768px) {
-        .page-header {
-            padding: 30px 0 20px 0;
-        }
-        
-        .page-header h1 {
-            font-size: 2rem;
-        }
-        
-        .main-content {
-            padding: 30px 0 40px 0;
-        }
-        
-        .legal-documents-table td {
-            padding: 15px 10px;
-        }
-        
-        .bulk-actions {
-            flex-direction: column;
-            align-items: flex-start;
-        }
-        
-        .bulk-buttons {
-            width: 100%;
-            justify-content: flex-start;
-        }
-        
         .search-form {
             flex-direction: column;
         }
         
-        .search-input {
+        .btn-search {
             width: 100%;
         }
         
-        .btn-search {
+        .filter-container {
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .filter-group {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 5px;
+        }
+        
+        .filter-group select {
+            width: 100%;
+        }
+        
+        .documents-table {
+            display: block;
+            overflow-x: auto;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+        }
+        
+        .btn-action {
             width: 100%;
             justify-content: center;
         }
     }
-    
-    @media (max-width: 576px) {
-        .legal-basis-title {
-            font-size: 1.5rem;
-        }
-        
-        .content-card {
-            padding: 20px;
-        }
-        
-        .legal-documents-table th,
-        .legal-documents-table td {
-            padding: 10px 5px;
-            font-size: 0.9rem;
-        }
-        
-        .btn-download-doc {
-            padding: 6px 12px;
-            font-size: 0.8rem;
-        }
-        
-        .document-title {
-            font-size: 1rem;
-        }
-    }
 </style>
 
-<!-- HEADER SECTION -->
+<!-- HEADER -->
 <section class="page-header">
     <div class="container">
-        <div class="row">
-            <div class="col-12">
-                <h1 class="text-white">DASAR HUKUM JDIH</h1>
-                <p class="subtitle">Dokumen Hukum Pendukung Jaringan Dokumentasi dan Informasi Hukum Sekretariat DPRD Kota Surakarta</p>
-            </div>
-        </div>
+        <h1>DASAR HUKUM JDIH</h1>
+        <p class="subtitle">Dokumen Hukum Pendukung Jaringan Dokumentasi dan Informasi Hukum Sekretariat DPRD Kota Surakarta</p>
     </div>
 </section>
 
@@ -658,263 +531,178 @@ include 'header.php';
 <section class="main-content">
     <div class="container">
         <div class="row">
-            
-            <!-- KONTEN UTAMA -->
-            <div class="col-lg-8 mb-4 mb-lg-0">
+            <!-- MAIN CONTENT -->
+            <div class="col-lg-8 mb-4">
                 
-                <!-- SEARCH AND FILTER -->
-                <div class="search-filter-container">
-                    <h3 class="section-title no-line">Cari Dasar Hukum</h3>
-                    <form class="search-form">
+                <!-- SEARCH SECTION -->
+                <div class="search-container">
+                    <form method="GET" class="search-form">
                         <div class="search-input">
-                            <input type="text" class="form-control" placeholder="Cari berdasarkan nomor, tahun, atau judul peraturan...">
+                            <input type="text" name="search" value="<?php echo htmlspecialchars($searchQuery); ?>" 
+                                   placeholder="Cari dokumen hukum..." class="form-control">
                         </div>
                         <button type="submit" class="btn-search">
-                            <i class="bi bi-search"></i>
-                            Cari
+                            <i class="bi bi-search"></i> Cari
                         </button>
+                        <?php if ($searchQuery): ?>
+                        <a href="dasar-hukum.php" class="btn btn-outline-secondary" style="height: 50px; padding: 0 20px;">
+                            <i class="bi bi-x-circle"></i> Reset
+                        </a>
+                        <?php endif; ?>
                     </form>
-                    <div class="filter-options">
+                    
+                    <div class="filter-container">
                         <div class="filter-group">
-                            <label for="filterYear">Tahun:</label>
-                            <select id="filterYear" class="form-select form-select-sm">
-                                <option selected>Semua Tahun</option>
-                                <option value="2024">2024</option>
-                                <option value="2023">2023</option>
-                                <option value="2022">2022</option>
-                                <option value="2021">2021</option>
-                                <option value="2020">2020</option>
-                                <option value="2019">2019</option>
-                                <option value="2018">2018</option>
+                            <label for="type">Jenis Dokumen:</label>
+                            <select id="type" name="type" class="form-select" onchange="this.form.submit()">
+                                <option value="all" <?php echo (!isset($_GET['type']) || $_GET['type'] == 'all') ? 'selected' : ''; ?>>Semua Jenis</option>
+                                <option value="perwali" <?php echo (isset($_GET['type']) && $_GET['type'] == 'perwali') ? 'selected' : ''; ?>>Peraturan Wali Kota</option>
+                                <option value="permendagri" <?php echo (isset($_GET['type']) && $_GET['type'] == 'permendagri') ? 'selected' : ''; ?>>Peraturan Menteri Dalam Negeri</option>
+                                <option value="permenkumham" <?php echo (isset($_GET['type']) && $_GET['type'] == 'permenkumham') ? 'selected' : ''; ?>>Peraturan Menteri Hukum dan HAM</option>
+                                <option value="perda" <?php echo (isset($_GET['type']) && $_GET['type'] == 'perda') ? 'selected' : ''; ?>>Peraturan Daerah</option>
+                                <option value="uu" <?php echo (isset($_GET['type']) && $_GET['type'] == 'uu') ? 'selected' : ''; ?>>Undang-Undang</option>
                             </select>
                         </div>
+                        
                         <div class="filter-group">
-                            <label for="filterType">Jenis:</label>
-                            <select id="filterType" class="form-select form-select-sm">
-                                <option selected>Semua Jenis</option>
-                                <option value="perwali">Peraturan Wali Kota</option>
-                                <option value="permendagri">Peraturan Menteri Dalam Negeri</option>
-                                <option value="permenkumham">Peraturan Menteri Hukum dan HAM</option>
-                                <option value="perda">Peraturan Daerah</option>
-                                <option value="keputusan">Keputusan</option>
+                            <label for="year">Tahun:</label>
+                            <select id="year" name="year" class="form-select" onchange="this.form.submit()">
+                                <option value="all" <?php echo (!isset($_GET['year']) || $_GET['year'] == 'all') ? 'selected' : ''; ?>>Semua Tahun</option>
+                                <?php
+                                $years = array_unique(array_column($documents, 'year'));
+                                rsort($years);
+                                foreach ($years as $year):
+                                ?>
+                                <option value="<?php echo $year; ?>" <?php echo (isset($_GET['year']) && $_GET['year'] == $year) ? 'selected' : ''; ?>>
+                                    <?php echo $year; ?>
+                                </option>
+                                <?php endforeach; ?>
                             </select>
                         </div>
                     </div>
                 </div>
                 
-                <!-- BULK ACTIONS -->
-                <div class="bulk-actions">
-                    <div class="bulk-checkbox">
-                        <input type="checkbox" id="selectAll">
-                        <label for="selectAll">Pilih Semua</label>
-                    </div>
-                    <div class="bulk-buttons">
-                        <a href="#" class="btn-bulk btn-bulk-download">
-                            <i class="bi bi-download"></i>
-                            Download Terpilih
-                        </a>
-                        <a href="#" class="btn-bulk btn-bulk-print">
-                            <i class="bi bi-printer"></i>
-                            Cetak Terpilih
-                        </a>
-                    </div>
+                <!-- RESULTS INFO -->
+                <?php if ($searchQuery || isset($_GET['type']) || isset($_GET['year'])): ?>
+                <div class="results-info">
+                    <p>
+                        <i class="bi bi-info-circle me-2"></i>
+                        Menampilkan <span class="highlight"><?php echo count($searchResults); ?></span> dokumen
+                        <?php if ($searchQuery): ?>
+                            untuk pencarian "<span class="highlight"><?php echo htmlspecialchars($searchQuery); ?></span>"
+                        <?php endif; ?>
+                        <?php if (isset($_GET['type']) && $_GET['type'] != 'all'): ?>
+                            dengan jenis <span class="highlight">
+                                <?php 
+                                $typeLabels = [
+                                    'perwali' => 'Peraturan Wali Kota',
+                                    'permendagri' => 'Peraturan Menteri Dalam Negeri',
+                                    'permenkumham' => 'Peraturan Menteri Hukum dan HAM',
+                                    'perda' => 'Peraturan Daerah',
+                                    'uu' => 'Undang-Undang'
+                                ];
+                                echo $typeLabels[$_GET['type']] ?? $_GET['type'];
+                                ?>
+                            </span>
+                        <?php endif; ?>
+                        <?php if (isset($_GET['year']) && $_GET['year'] != 'all'): ?>
+                            tahun <span class="highlight"><?php echo $_GET['year']; ?></span>
+                        <?php endif; ?>
+                    </p>
                 </div>
+                <?php endif; ?>
                 
-                <!-- CONTENT CARD -->
+                <!-- DOCUMENTS TABLE -->
                 <div class="content-card">
-                    <div class="legal-basis-header">
-                        <h1 class="legal-basis-title">Dasar Hukum JDIH</h1>
-                        <h2 class="legal-basis-subtitle">Sekretariat DPRD Kota Surakarta</h2>
-                        <p class="text-muted">Kumpulan peraturan perundang-undangan yang menjadi dasar hukum pengelolaan JDIH</p>
-                    </div>
+                    <h3 class="mb-4" style="color: #13547a;">
+                        <i class="bi bi-file-earmark-text me-2"></i> Daftar Dokumen Hukum
+                    </h3>
                     
-                    <!-- LEGAL DOCUMENTS TABLE -->
-                    <table class="legal-documents-table">
-                        <thead>
-                            <tr>
-                                <th class="document-checkbox"></th>
-                                <th>Dokumen Hukum</th>
-                                <th class="download-column">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Dokumen 1 -->
-                            <tr>
-                                <td class="document-checkbox">
-                                    <input type="checkbox" class="document-check">
-                                </td>
-                                <td>
-                                    <div class="document-title">
-                                        Peraturan Wali Kota Surakarta Nomor 4 Tahun 2024 tentang Jaringan Dokumentasi dan Informasi Hukum Kota Surakarta
-                                    </div>
-                                    <div class="document-details">
-                                        Sumber: Pemerintah Kota Surakarta
-                                    </div>
-                                    <div class="document-size">
-                                        Ukuran: 794.42 KB
-                                    </div>
-                                </td>
-                                <td class="download-column">
-                                    <a href="#" class="btn-download-doc">
-                                        <i class="bi bi-download"></i>
-                                        DOWNLOAD
-                                    </a>
-                                </td>
-                            </tr>
-                            
-                            <!-- Dokumen 2 -->
-                            <tr>
-                                <td class="document-checkbox">
-                                    <input type="checkbox" class="document-check">
-                                </td>
-                                <td>
-                                    <div class="document-title">
-                                        Peraturan Menteri Dalam Negeri Republik Indonesia Nomor 2 Tahun 2014 Tentang Pengelolaan Jaringan Dokumentasi Dan Informasi Hukum Kementerian Dalam Negeri Dan Pemerintah Daerah
-                                    </div>
-                                    <div class="document-details">
-                                        Sumber: Kementerian Dalam Negeri RI
-                                    </div>
-                                    <div class="document-size">
-                                        Ukuran: 42.36 KB
-                                    </div>
-                                </td>
-                                <td class="download-column">
-                                    <a href="#" class="btn-download-doc">
-                                        <i class="bi bi-download"></i>
-                                        DOWNLOAD
-                                    </a>
-                                </td>
-                            </tr>
-                            
-                            <!-- Dokumen 3 -->
-                            <tr>
-                                <td class="document-checkbox">
-                                    <input type="checkbox" class="document-check">
-                                </td>
-                                <td>
-                                    <div class="document-title">
-                                        Peraturan Menteri Hukum Dan Hak Asasi Manusia Republik Indonesia Nomor 8 Tahun 2019 Tentang Standar Pengelolaan Dokumen Dan Informasi Hukum
-                                    </div>
-                                    <div class="document-details">
-                                        Sumber: Kementerian Hukum dan HAM RI
-                                    </div>
-                                    <div class="document-size">
-                                        Ukuran: 794.42 KB
-                                    </div>
-                                </td>
-                                <td class="download-column">
-                                    <a href="#" class="btn-download-doc">
-                                        <i class="bi bi-download"></i>
-                                        DOWNLOAD
-                                    </a>
-                                </td>
-                            </tr>
-                            
-                            <!-- Dokumen Tambahan 4 -->
-                            <tr>
-                                <td class="document-checkbox">
-                                    <input type="checkbox" class="document-check">
-                                </td>
-                                <td>
-                                    <div class="document-title">
-                                        Undang-Undang Nomor 12 Tahun 2011 tentang Pembentukan Peraturan Perundang-undangan
-                                    </div>
-                                    <div class="document-details">
-                                        Sumber: Pemerintah Republik Indonesia
-                                    </div>
-                                    <div class="document-size">
-                                        Ukuran: 1.25 MB
-                                    </div>
-                                </td>
-                                <td class="download-column">
-                                    <a href="#" class="btn-download-doc">
-                                        <i class="bi bi-download"></i>
-                                        DOWNLOAD
-                                    </a>
-                                </td>
-                            </tr>
-                            
-                            <!-- Dokumen Tambahan 5 -->
-                            <tr>
-                                <td class="document-checkbox">
-                                    <input type="checkbox" class="document-check">
-                                </td>
-                                <td>
-                                    <div class="document-title">
-                                        Peraturan Sekretaris Jenderal DPRD Kota Surakarta Nomor 1 Tahun 2023 tentang Pengelolaan JDIH
-                                    </div>
-                                    <div class="document-details">
-                                        Sumber: Sekretariat DPRD Kota Surakarta
-                                    </div>
-                                    <div class="document-size">
-                                        Ukuran: 356.78 KB
-                                    </div>
-                                </td>
-                                <td class="download-column">
-                                    <a href="#" class="btn-download-doc">
-                                        <i class="bi bi-download"></i>
-                                        DOWNLOAD
-                                    </a>
-                                </td>
-                            </tr>
-                            
-                            <!-- Dokumen Tambahan 6 -->
-                            <tr>
-                                <td class="document-checkbox">
-                                    <input type="checkbox" class="document-check">
-                                </td>
-                                <td>
-                                    <div class="document-title">
-                                        Peraturan Daerah Kota Surakarta Nomor 5 Tahun 2022 tentang Organisasi dan Tata Kerja DPRD Kota Surakarta
-                                    </div>
-                                    <div class="document-details">
-                                        Sumber: DPRD Kota Surakarta
-                                    </div>
-                                    <div class="document-size">
-                                        Ukuran: 2.15 MB
-                                    </div>
-                                </td>
-                                <td class="download-column">
-                                    <a href="#" class="btn-download-doc">
-                                        <i class="bi bi-download"></i>
-                                        DOWNLOAD
-                                    </a>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    
-                    <!-- PAGINATION -->
-                    <nav aria-label="Page navigation">
-                        <ul class="pagination justify-content-center">
-                            <li class="page-item disabled">
-                                <a class="page-link" href="#" aria-label="Previous">
-                                    <span aria-hidden="true">&laquo;</span>
-                                </a>
-                            </li>
-                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                            <li class="page-item"><a class="page-link" href="#">2</a></li>
-                            <li class="page-item"><a class="page-link" href="#">3</a></li>
-                            <li class="page-item">
-                                <a class="page-link" href="#" aria-label="Next">
-                                    <span aria-hidden="true">&raquo;</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </nav>
+                    <?php if (count($searchResults) > 0): ?>
+                        <div class="table-responsive">
+                            <table class="documents-table">
+                                <thead>
+                                    <tr>
+                                        <th width="60%">Dokumen Hukum</th>
+                                        <th width="40%">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($searchResults as $doc): ?>
+                                    <tr>
+                                        <td>
+                                            <div class="document-title"><?php echo htmlspecialchars($doc['title']); ?></div>
+                                            <div class="document-meta">
+                                                <span class="document-type">
+                                                    <?php 
+                                                    switch($doc['type']) {
+                                                        case 'perwali': echo 'Peraturan Wali Kota'; break;
+                                                        case 'permendagri': echo 'Peraturan Menteri Dalam Negeri'; break;
+                                                        case 'permenkumham': echo 'Peraturan Menteri Hukum dan HAM'; break;
+                                                        case 'perda': echo 'Peraturan Daerah'; break;
+                                                        case 'uu': echo 'Undang-Undang'; break;
+                                                        default: echo 'Peraturan';
+                                                    }
+                                                    ?>
+                                                </span>
+                                                <span class="document-year">Tahun <?php echo $doc['year']; ?></span>
+                                            </div>
+                                            <div class="document-meta">
+                                                <i class="bi bi-building me-1"></i> <?php echo $doc['source']; ?>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="action-buttons">
+                                                <a href="<?php echo $doc['file_url']; ?>" 
+                                                   class="btn-action btn-download"
+                                                   target="_blank"
+                                                   onclick="trackDownload(<?php echo $doc['id']; ?>)">
+                                                    <i class="bi bi-download"></i> Download
+                                                </a>
+                                                <button type="button" 
+                                                        class="btn-action btn-preview"
+                                                        onclick="openPreview('<?php echo $doc['preview_url']; ?>', '<?php echo htmlspecialchars(addslashes($doc['title'])); ?>')">
+                                                    <i class="bi bi-eye"></i> Preview
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php else: ?>
+                        <div class="no-results">
+                            <i class="bi bi-file-earmark-x"></i>
+                            <h4>Tidak ada dokumen ditemukan</h4>
+                            <p>Maaf, tidak ada dokumen yang sesuai dengan kriteria pencarian Anda.</p>
+                            <a href="dasar-hukum.php" class="btn btn-primary">
+                                <i class="bi bi-arrow-clockwise"></i> Tampilkan Semua Dokumen
+                            </a>
+                        </div>
+                    <?php endif; ?>
                 </div>
                 
                 <!-- INFO BOX -->
-                <div class="info-box">
-                    <h3><i class="bi bi-info-circle me-2"></i> Informasi Penting</h3>
-                    <p>Dasar hukum JDIH Sekretariat DPRD Kota Surakarta merupakan kumpulan peraturan perundang-undangan yang menjadi landasan hukum dalam pengelolaan sistem dokumentasi dan informasi hukum. Dokumen-dokumen ini penting untuk:</p>
-                    <ul>
-                        <li>Menjamin legalitas pengelolaan JDIH</li>
-                        <li>Menjadi acuan dalam penyusunan SOP dan pedoman teknis</li>
-                        <li>Memastikan kesesuaian dengan regulasi nasional</li>
-                        <li>Menjadi dasar dalam pengambilan keputusan operasional</li>
-                    </ul>
-                    <p class="mt-3">Dokumen dapat diunduh dalam format PDF yang siap digunakan untuk keperluan referensi dan implementasi.</p>
+                <div class="content-card" style="background: linear-gradient(135deg, #13547a 0%, #80d0c7 100%); color: white;">
+                    <h4><i class="bi bi-info-circle me-2"></i> Informasi Penting</h4>
+                    <p>Dokumen-dokumen ini merupakan dasar hukum resmi yang digunakan oleh JDIH Sekretariat DPRD Kota Surakarta. Semua dokumen dapat diunduh dan dilihat secara gratis untuk keperluan referensi hukum.</p>
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <ul class="mb-0">
+                                <li>Format dokumen: PDF</li>
+                                <li>Akses: Terbuka untuk umum</li>
+                                <li>Update: Real-time</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="mb-0">
+                                <li>Lisensi: Dokumen publik</li>
+                                <li>Bahasa: Bahasa Indonesia</li>
+                                <li>Status: Berlaku</li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
                 
             </div>
@@ -922,216 +710,179 @@ include 'header.php';
             <!-- SIDEBAR -->
             <div class="col-lg-4">
                 
-                <!-- STATS CARD -->
-                <div class="stats-card">
-                    <h4><i class="bi bi-file-earmark-text me-2"></i> Statistik Dokumen</h4>
-                    <div class="stat-number">24</div>
-                    <div class="stat-label">Total Dasar Hukum Tersedia</div>
-                    <div class="stat-number">2024</div>
-                    <div class="stat-label">Update Terbaru</div>
+                <!-- STATISTIK -->
+                <div class="sidebar-card">
+                    <h5 class="sidebar-title">
+                        <i class="bi bi-bar-chart"></i> Statistik
+                    </h5>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-number"><?php echo count($documents); ?></div>
+                            <div class="stat-label">Total Dokumen</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number"><?php echo max(array_column($documents, 'year')); ?></div>
+                            <div class="stat-label">Tahun Terbaru</div>
+                        </div>
+                    </div>
                 </div>
                 
-                <!-- QUICK LINKS -->
-                <div class="sidebar-menu">
-                    <h4><i class="bi bi-link-45deg"></i> Menu Cepat</h4>
+                <!-- MENU CEPAT -->
+                <div class="sidebar-card">
+                    <h5 class="sidebar-title">
+                        <i class="bi bi-link-45deg"></i> Menu Cepat
+                    </h5>
                     <ul class="quick-links">
-                        <li><a href="?page=profil-jdih"><i class="bi bi-house-door"></i> Profil JDIH</a></li>
-                        <li><a href="?page=struktur-organisasi"><i class="bi bi-diagram-3"></i> Struktur Organisasi</a></li>
-                        <li class="active"><a href="?page=dasar-hukum"><i class="bi bi-file-earmark-text"></i> Dasar Hukum</a></li>
-                        <li><a href="?page=sop-pengelola"><i class="bi bi-list-check"></i> SOP Pengelola</a></li>
-                        <li><a href="?page=alur-pengelolaan"><i class="bi bi-arrow-repeat"></i> Alur Pengelolaan</a></li>
-                        <li><a href="?page=surat-keputusan"><i class="bi bi-file-earmark-medical"></i> Surat Keputusan</a></li>
-                        <li><a href="?page=visi-misi"><i class="bi bi-bullseye"></i> Visi & Misi</a></li>
+                        <li><a href="profil-jdih.php"><i class="bi bi-house-door"></i> Profil JDIH</a></li>
+                        <li><a href="struktur-organisasi.php"><i class="bi bi-diagram-3"></i> Struktur Organisasi</a></li>
+                        <li><a href="dasar-hukum.php" style="background: #f0f8ff; color: #13547a;"><i class="bi bi-file-earmark-text"></i> Dasar Hukum</a></li>
+                        <li><a href="sop-pengelola.php"><i class="bi bi-list-check"></i> SOP Pengelola</a></li>
+                        <li><a href="alur-pengelolaan.php"><i class="bi bi-arrow-repeat"></i> Alur Pengelolaan</a></li>
+                        <li><a href="surat-keputusan.php"><i class="bi bi-file-earmark-medical"></i> Surat Keputusan</a></li>
+                        <li><a href="visi-misi.php"><i class="bi bi-bullseye"></i> Visi & Misi</a></li>
                     </ul>
                 </div>
                 
-                <!-- DOWNLOAD POPULAR -->
-                <div class="sidebar-menu">
-                    <h4><i class="bi bi-download"></i> Paling Sering Diunduh</h4>
+                <!-- DOKUMEN POPULER -->
+                <div class="sidebar-card">
+                    <h5 class="sidebar-title">
+                        <i class="bi bi-download"></i> Paling Sering Diunduh
+                    </h5>
                     <ul class="quick-links">
+                        <?php 
+                        $popularDocs = array_slice($documents, 0, 4);
+                        foreach ($popularDocs as $doc): 
+                        ?>
                         <li>
-                            <a href="#">
+                            <a href="<?php echo $doc['file_url']; ?>" target="_blank" onclick="trackDownload(<?php echo $doc['id']; ?>)">
                                 <i class="bi bi-file-earmark-pdf"></i>
                                 <div>
-                                    <div>Permendagri No. 2 Tahun 2014</div>
-                                    <small class="text-muted">Diunduh 245 kali</small>
+                                    <div><?php echo substr($doc['title'], 0, 50); ?>...</div>
+                                    <small style="color: #666; font-size: 0.8rem;">Download</small>
                                 </div>
                             </a>
                         </li>
-                        <li>
-                            <a href="#">
-                                <i class="bi bi-file-earmark-pdf"></i>
-                                <div>
-                                    <div>Permenkumham No. 8 Tahun 2019</div>
-                                    <small class="text-muted">Diunduh 187 kali</small>
-                                </div>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#">
-                                <i class="bi bi-file-earmark-pdf"></i>
-                                <div>
-                                    <div>Perwali Surakarta No. 4 Tahun 2024</div>
-                                    <small class="text-muted">Diunduh 156 kali</small>
-                                </div>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#">
-                                <i class="bi bi-file-earmark-pdf"></i>
-                                <div>
-                                    <div>UU No. 12 Tahun 2011</div>
-                                    <small class="text-muted">Diunduh 132 kali</small>
-                                </div>
-                            </a>
-                        </li>
+                        <?php endforeach; ?>
                     </ul>
                 </div>
                 
-                <!-- CONTACT INFO -->
-                <div class="contact-card">
-                    <h4><i class="bi bi-info-circle"></i> Informasi Kontak</h4>
-                    
-                    <div class="contact-item">
-                        <div class="contact-icon">
-                            <i class="bi bi-person"></i>
+                <!-- KONTAK -->
+                <div class="sidebar-card">
+                    <h5 class="sidebar-title">
+                        <i class="bi bi-telephone"></i> Kontak
+                    </h5>
+                    <div class="contact-info">
+                        <div class="mb-3">
+                            <div style="font-weight: 600; color: #13547a;">Koordinator JDIH</div>
+                            <div>Budi Santoso, SH., M.Hum.</div>
                         </div>
-                        <div class="contact-details">
-                            <h5>Koordinator JDIH</h5>
-                            <p>Budi Santoso, SH., M.Hum.</p>
+                        <div class="mb-3">
+                            <div style="font-weight: 600; color: #13547a;">Telepon</div>
+                            <div><a href="tel:+62271234567" style="color: #13547a;">(0271) 234567 ext. 123</a></div>
                         </div>
-                    </div>
-                    
-                    <div class="contact-item">
-                        <div class="contact-icon">
-                            <i class="bi bi-telephone"></i>
-                        </div>
-                        <div class="contact-details">
-                            <h5>Telepon</h5>
-                            <p><a href="tel:+62271234567">(0271) 234567</a> ext. 123</p>
-                        </div>
-                    </div>
-                    
-                    <div class="contact-item">
-                        <div class="contact-icon">
-                            <i class="bi bi-envelope"></i>
-                        </div>
-                        <div class="contact-details">
-                            <h5>Email</h5>
-                            <p><a href="mailto:jdih@dprd-surakarta.go.id">jdih@dprd-surakarta.go.id</a></p>
-                        </div>
-                    </div>
-                    
-                    <div class="contact-item">
-                        <div class="contact-icon">
-                            <i class="bi bi-clock"></i>
-                        </div>
-                        <div class="contact-details">
-                            <h5>Jam Konsultasi</h5>
-                            <p>Senin - Kamis: 09.00 - 15.00<br>
-                            Jumat: 09.00 - 11.30</p>
+                        <div class="mb-3">
+                            <div style="font-weight: 600; color: #13547a;">Email</div>
+                            <div><a href="mailto:jdih@dprd-surakarta.go.id" style="color: #13547a;">jdih@dprd-surakarta.go.id</a></div>
                         </div>
                     </div>
                 </div>
                 
             </div>
-            
         </div>
     </div>
 </section>
 
+<!-- PREVIEW MODAL -->
+<div class="modal fade preview-modal" id="previewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="previewModalLabel">Preview Dokumen</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <iframe class="preview-iframe" id="previewIframe" src=""></iframe>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                <a href="#" id="downloadPreviewBtn" class="btn btn-primary" target="_blank">
+                    <i class="bi bi-download"></i> Download
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
-    // JavaScript khusus untuk halaman dasar-hukum
+    // Fungsi untuk membuka preview
+    function openPreview(url, title) {
+        const modal = new bootstrap.Modal(document.getElementById('previewModal'));
+        document.getElementById('previewIframe').src = url;
+        document.getElementById('previewModalLabel').textContent = title;
+        
+        // Set download link
+        const downloadUrl = url.replace('/preview', '').replace('/file/d/', '/uc?export=download&id=');
+        document.getElementById('downloadPreviewBtn').href = downloadUrl;
+        
+        modal.show();
+    }
+    
+    // Fungsi untuk tracking download
+    function trackDownload(docId) {
+        // Simulasi tracking download
+        console.log('Download tracked for document ID:', docId);
+        
+        // Dalam implementasi nyata, ini akan mengirim data ke server
+        // fetch('track-download.php?doc_id=' + docId);
+    }
+    
+    // Auto-submit filter saat berubah (untuk form yang sudah ada di HTML)
     document.addEventListener('DOMContentLoaded', function() {
-        // Fungsi untuk select all checkbox
-        document.getElementById('selectAll').addEventListener('change', function() {
-            const checkboxes = document.querySelectorAll('.document-check');
-            checkboxes.forEach(checkbox => {
-                checkbox.checked = this.checked;
-            });
-        });
+        // Tambahkan hidden input untuk search query di form filter
+        const searchInput = document.querySelector('input[name="search"]');
+        const filterSelects = document.querySelectorAll('select[name="type"], select[name="year"]');
         
-        // Fungsi untuk bulk download
-        document.querySelector('.btn-bulk-download').addEventListener('click', function(e) {
-            e.preventDefault();
-            const selectedDocs = Array.from(document.querySelectorAll('.document-check:checked')).length;
-            
-            if (selectedDocs === 0) {
-                alert('Pilih setidaknya satu dokumen untuk diunduh.');
-                return;
-            }
-            
-            if (confirm(`Apakah Anda yakin ingin mengunduh ${selectedDocs} dokumen terpilih?`)) {
-                alert(`Sedang mempersiapkan ${selectedDocs} dokumen untuk diunduh...\n\nDalam implementasi nyata, sistem akan membuat file ZIP yang berisi dokumen terpilih.`);
-            }
-        });
-        
-        // Fungsi untuk bulk print
-        document.querySelector('.btn-bulk-print').addEventListener('click', function(e) {
-            e.preventDefault();
-            const selectedDocs = Array.from(document.querySelectorAll('.document-check:checked')).length;
-            
-            if (selectedDocs === 0) {
-                alert('Pilih setidaknya satu dokumen untuk dicetak.');
-                return;
-            }
-            
-            if (confirm(`Apakah Anda yakin ingin mencetak ${selectedDocs} dokumen terpilih?`)) {
-                window.print();
-            }
-        });
-        
-        // Fungsi untuk individual download
-        document.querySelectorAll('.btn-download-doc').forEach(button => {
-            button.addEventListener('click', function(e) {
-                if (this.getAttribute('href') === '#') {
-                    e.preventDefault();
-                    const docTitle = this.closest('tr').querySelector('.document-title').textContent;
-                    const docSize = this.closest('tr').querySelector('.document-size').textContent.replace('Ukuran: ', '');
-                    
-                    if (confirm(`Unduh dokumen: ${docTitle}\n\nUkuran file: ${docSize}\n\nKlik OK untuk melanjutkan.`)) {
-                        alert('Download akan dimulai...\n\nDalam implementasi nyata, file PDF akan didownload ke perangkat Anda.');
-                    }
-                }
-            });
-        });
-        
-        // Fungsi untuk pencarian
-        document.querySelector('.search-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const searchQuery = this.querySelector('input[type="text"]').value;
-            
-            if (!searchQuery.trim()) {
-                alert('Masukkan kata kunci pencarian!');
-                return;
-            }
-            
-            alert(`Mencari dasar hukum dengan kata kunci: "${searchQuery}"\n\nDalam implementasi nyata, ini akan melakukan filter pada tabel dokumen.`);
-        });
-        
-        // Fungsi untuk filter
-        document.querySelectorAll('#filterYear, #filterType').forEach(select => {
+        filterSelects.forEach(select => {
             select.addEventListener('change', function() {
-                const year = document.getElementById('filterYear').value;
-                const type = document.getElementById('filterType').value;
+                // Buat form baru
+                const form = document.createElement('form');
+                form.method = 'GET';
+                form.action = 'dasar-hukum.php';
                 
-                if (year !== 'Semua Tahun' || type !== 'Semua Jenis') {
-                    alert(`Menerapkan filter:\nTahun: ${year}\nJenis: ${type}\n\nDalam implementasi nyata, ini akan melakukan filter pada tabel dokumen.`);
+                // Tambahkan search query jika ada
+                if (searchInput && searchInput.value) {
+                    const searchField = document.createElement('input');
+                    searchField.type = 'hidden';
+                    searchField.name = 'search';
+                    searchField.value = searchInput.value;
+                    form.appendChild(searchField);
                 }
+                
+                // Tambahkan semua filter
+                filterSelects.forEach(s => {
+                    const field = document.createElement('input');
+                    field.type = 'hidden';
+                    field.name = s.name;
+                    field.value = s.value;
+                    form.appendChild(field);
+                });
+                
+                // Submit form
+                document.body.appendChild(form);
+                form.submit();
             });
         });
         
-        // Fungsi untuk animasi tabel row
-        const tableRows = document.querySelectorAll('.legal-documents-table tbody tr');
-        tableRows.forEach(row => {
-            row.addEventListener('mouseenter', function() {
-                this.style.backgroundColor = '#f0f8ff';
+        // Highlight pencarian di hasil
+        const searchQuery = "<?php echo addslashes($searchQuery); ?>";
+        if (searchQuery) {
+            const titles = document.querySelectorAll('.document-title');
+            titles.forEach(title => {
+                const text = title.textContent;
+                const regex = new RegExp(`(${searchQuery})`, 'gi');
+                title.innerHTML = text.replace(regex, '<mark class="highlight">$1</mark>');
             });
-            
-            row.addEventListener('mouseleave', function() {
-                this.style.backgroundColor = '';
-            });
-        });
+        }
     });
 </script>
 

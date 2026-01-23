@@ -1,6 +1,27 @@
 <?php
-// infografis.php
+// grafis.php
+
+require_once 'a_db.php'; // Pastikan file koneksi database ada
+include "header.php";
+// Query data dari database
+$sql = "SELECT * FROM grafis WHERE status = 'aktif' ORDER BY tanggal_dibuat DESC";
+$result = $koneksi->query($sql);
+
+// Pisahkan data berdasarkan tipe
+$videografis = [];
+$infografis = [];
+
+if ($result->num_rows > 0) {
+    while($row = $result->fetch_assoc()) {
+        if ($row['tipe'] == 'videografis') {
+            $videografis[] = $row;
+        } else {
+            $infografis[] = $row;
+        }
+    }
+}
 ?>
+
 <!doctype html>
 <html lang="id">
 <head>
@@ -13,12 +34,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Open+Sans&display=swap" rel="stylesheet">
                         
-    <link href="css/bootstrap.min.css" rel="stylesheet">
-    <link href="css/bootstrap-icons.css" rel="stylesheet">
-    <link href="css/templatemo-topic-listing.css" rel="stylesheet">
     
     <!-- NAVBAR CSS -->
-    <link href="css/navbar.css" rel="stylesheet">
 
     <style>
         /* OVERRIDE UNTUK HALAMAN INFOGRAFIS */
@@ -33,7 +50,7 @@
             color: white;
             padding: 80px 0 60px;
             text-align: center;
-            margin-bottom: 60px;
+            margin-bottom: px;
         }
         
         .page-title {
@@ -75,33 +92,7 @@
             background: #ff7e5f;
         }
         
-        /* TABS */
-        .nav-tabs {
-            border: none;
-            justify-content: center;
-            margin-bottom: 40px;
-        }
-        
-        .nav-tabs .nav-link {
-            border: 2px solid #e0e0e0;
-            color: #13547a;
-            padding: 12px 30px;
-            border-radius: 50px;
-            margin: 0 10px;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-        
-        .nav-tabs .nav-link:hover {
-            border-color: #13547a;
-            background: #f8f9fa;
-        }
-        
-        .nav-tabs .nav-link.active {
-            background: linear-gradient(135deg, #13547a 0%, #80d0c7 100%);
-            color: white;
-            border-color: transparent;
-        }
+
         
         /* INFOGRAFIS GRID */
         .infographic-card {
@@ -149,41 +140,23 @@
             line-height: 1.4;
         }
         
-        .infographic-stats {
-            display: flex;
-            align-items: center;
+        .infographic-description {
+            color: #666;
+            margin-bottom: 15px;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+        
+        .infographic-date {
             color: #888;
             font-size: 0.9rem;
-            margin-bottom: 20px;
-        }
-        
-        .infographic-stats i {
-            margin-right: 5px;
-        }
-        
-        .infographic-stats span {
-            margin-right: 20px;
-        }
-        
-        .download-btn {
-            background: transparent;
-            border: 2px solid #13547a;
-            color: #13547a;
-            padding: 8px 20px;
-            border-radius: 50px;
-            font-weight: 600;
-            transition: all 0.3s;
-            display: inline-flex;
+            margin-bottom: 15px;
+            display: flex;
             align-items: center;
-            text-decoration: none;
-            width: 100%;
-            justify-content: center;
         }
         
-        .download-btn:hover {
-            background: linear-gradient(135deg, #13547a 0%, #80d0c7 100%);
-            color: white;
-            border-color: transparent;
+        .infographic-date i {
+            margin-right: 8px;
         }
         
         /* VIDEO GALLERY */
@@ -194,6 +167,7 @@
             overflow: hidden;
             transition: all 0.3s ease;
             margin-bottom: 30px;
+            height: 100%;
         }
         
         .video-card:hover {
@@ -212,6 +186,11 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+            transition: transform 0.3s;
+        }
+        
+        .video-card:hover .video-thumbnail img {
+            transform: scale(1.05);
         }
         
         .video-play-btn {
@@ -229,6 +208,9 @@
             color: white;
             font-size: 24px;
             transition: all 0.3s;
+            cursor: pointer;
+            text-decoration: none;
+            z-index: 2;
         }
         
         .video-play-btn:hover {
@@ -246,14 +228,59 @@
             color: #13547a;
             margin-bottom: 10px;
             font-size: 1.1rem;
+            line-height: 1.4;
+        }
+        
+        .video-description {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+            line-height: 1.5;
         }
         
         .video-meta {
             color: #888;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
+        }
+        
+        /* MODAL STYLES */
+        .modal-video {
+            width: 100%;
+            height: 400px;
+            border: none;
+            border-radius: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .modal-video {
+                height: 300px;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .modal-video {
+                height: 200px;
+            }
+        }
+        
+        /* EMPTY STATE */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+        
+        .empty-state i {
+            font-size: 4rem;
+            color: #ddd;
+            margin-bottom: 20px;
+        }
+        
+        .empty-state h3 {
+            color: #888;
+            margin-bottom: 10px;
         }
         
         /* RESPONSIVE */
@@ -339,65 +366,48 @@
                     </div>
                     
                     <div class="row">
-                        <!-- Infografis 1 -->
-                        <div class="col-lg-4 col-md-6 mb-4">
-                            <div class="infographic-card">
-                                <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" 
-                                     alt="Proses Legislasi" class="infographic-image">
-                                <div class="infographic-content">
-                                    <span class="infographic-category">Proses Legislasi</span>
-                                    <h3 class="infographic-title">Alur Penyusunan Peraturan Daerah</h3>
-                                    <p>Visualisasi tahapan penyusunan Perda dari inisiasi hingga pengesahan</p>
-                                    <div class="infographic-stats">
-                                        <span><i class="bi bi-download"></i> 1.2K</span>
-                                        <span><i class="bi bi-eye"></i> 4.5K</span>
+                        <?php if (count($infografis) > 0): ?>
+                            <?php foreach ($infografis as $item): ?>
+                            <div class="col-lg-4 col-md-6 mb-4">
+                                <div class="infographic-card">
+                                    <?php if (!empty($item['thumbnail'])): ?>
+                                        <img src="<?php echo htmlspecialchars($item['thumbnail']); ?>" 
+                                             alt="<?php echo htmlspecialchars($item['judul']); ?>" 
+                                             class="infographic-image">
+                                    <?php else: ?>
+                                        <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" 
+                                             alt="Default Thumbnail" class="infographic-image">
+                                    <?php endif; ?>
+                                    <div class="infographic-content">
+                                        <span class="infographic-category">Infografis</span>
+                                        <h3 class="infographic-title"><?php echo htmlspecialchars($item['judul']); ?></h3>
+                                        <?php if (!empty($item['deskripsi'])): ?>
+                                            <p class="infographic-description"><?php echo htmlspecialchars($item['deskripsi']); ?></p>
+                                        <?php endif; ?>
+                                        <div class="infographic-date">
+                                            <i class="bi bi-calendar"></i>
+                                            <?php echo date('d F Y', strtotime($item['tanggal_dibuat'])); ?>
+                                        </div>
+                                        <?php if (!empty($item['sumber'])): ?>
+                                            <a href="<?php echo htmlspecialchars($item['sumber']); ?>" 
+                                               target="_blank" 
+                                               class="download-btn">
+                                                <i class="bi bi-download me-2"></i>Lihat Infografis
+                                            </a>
+                                        <?php endif; ?>
                                     </div>
-                                    <a href="#" class="download-btn">
-                                        <i class="bi bi-download me-2"></i>Download PDF
-                                    </a>
                                 </div>
                             </div>
-                        </div>
-                        
-                        <!-- Infografis 2 -->
-                        <div class="col-lg-4 col-md-6 mb-4">
-                            <div class="infographic-card">
-                                <img src="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" 
-                                     alt="Statistik Hukum" class="infographic-image">
-                                <div class="infographic-content">
-                                    <span class="infographic-category">Statistik</span>
-                                    <h3 class="infographic-title">Statistik Produk Hukum 2024</h3>
-                                    <p>Data perkembangan jumlah produk hukum DPRD Kota Surakarta</p>
-                                    <div class="infographic-stats">
-                                        <span><i class="bi bi-download"></i> 890</span>
-                                        <span><i class="bi bi-eye"></i> 3.2K</span>
-                                    </div>
-                                    <a href="#" class="download-btn">
-                                        <i class="bi bi-download me-2"></i>Download PDF
-                                    </a>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <div class="col-12">
+                                <div class="empty-state">
+                                    <i class="bi bi-bar-chart"></i>
+                                    <h3>Belum ada infografis tersedia</h3>
+                                    <p>Infografis akan segera ditambahkan</p>
                                 </div>
                             </div>
-                        </div>
-                        
-                        <!-- Infografis 3 -->
-                        <div class="col-lg-4 col-md-6 mb-4">
-                            <div class="infographic-card">
-                                <img src="https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" 
-                                     alt="Struktur DPRD" class="infographic-image">
-                                <div class="infographic-content">
-                                    <span class="infographic-category">Organisasi</span>
-                                    <h3 class="infographic-title">Struktur Organisasi DPRD</h3>
-                                    <p>Struktur lengkap organisasi Dewan Perwakilan Rakyat Daerah</p>
-                                    <div class="infographic-stats">
-                                        <span><i class="bi bi-download"></i> 1.5K</span>
-                                        <span><i class="bi bi-eye"></i> 5.1K</span>
-                                    </div>
-                                    <a href="#" class="download-btn">
-                                        <i class="bi bi-download me-2"></i>Download PDF
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
+                        <?php endif; ?>
                     </div>
                 </div>
                 
@@ -410,65 +420,46 @@
                     </div>
                     
                     <div class="row">
-                        <!-- Video 1 -->
-                        <div class="col-lg-4 col-md-6 mb-4">
-                            <div class="video-card">
-                                <div class="video-thumbnail">
-                                    <img src="https://images.unsplash.com/photo-1573164713714-d95e436ab2d6?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" 
-                                         alt="Video Profile JDIH">
-                                    <a href="#" class="video-play-btn" data-bs-toggle="modal" data-bs-target="#videoModal1">
-                                        <i class="bi bi-play-fill"></i>
-                                    </a>
-                                </div>
-                                <div class="video-content">
-                                    <h4 class="video-title">Video Profile JDIH DPRD Surakarta</h4>
-                                    <div class="video-meta">
-                                        <span><i class="bi bi-clock"></i> 5:30</span>
-                                        <span><i class="bi bi-eye"></i> 2.3K</span>
+                        <?php if (count($videografis) > 0): ?>
+                            <?php foreach ($videografis as $item): ?>
+                            <div class="col-lg-4 col-md-6 mb-4">
+                                <div class="video-card">
+                                    <div class="video-thumbnail">
+                                        <?php if (!empty($item['thumbnail'])): ?>
+                                            <img src="<?php echo htmlspecialchars($item['thumbnail']); ?>" 
+                                                 alt="<?php echo htmlspecialchars($item['judul']); ?>">
+                                        <?php else: ?>
+                                            <img src="https://images.unsplash.com/photo-1573164713714-d95e436ab2d6?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" 
+                                                 alt="Default Thumbnail">
+                                        <?php endif; ?>
+                                        <a href="#" class="video-play-btn" 
+                                           data-bs-toggle="modal" 
+                                           data-bs-target="#videoModal<?php echo $item['id']; ?>">
+                                            <i class="bi bi-play-fill"></i>
+                                        </a>
+                                    </div>
+                                    <div class="video-content">
+                                        <h4 class="video-title"><?php echo htmlspecialchars($item['judul']); ?></h4>
+                                        <?php if (!empty($item['deskripsi'])): ?>
+                                            <p class="video-description"><?php echo htmlspecialchars($item['deskripsi']); ?></p>
+                                        <?php endif; ?>
+                                        <div class="video-meta">
+                                            <span><i class="bi bi-calendar"></i> <?php echo date('d M Y', strtotime($item['tanggal_dibuat'])); ?></span>
+                                            <span>Videografis</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        
-                        <!-- Video 2 -->
-                        <div class="col-lg-4 col-md-6 mb-4">
-                            <div class="video-card">
-                                <div class="video-thumbnail">
-                                    <img src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" 
-                                         alt="Tutorial Penggunaan">
-                                    <a href="#" class="video-play-btn" data-bs-toggle="modal" data-bs-target="#videoModal2">
-                                        <i class="bi bi-play-fill"></i>
-                                    </a>
-                                </div>
-                                <div class="video-content">
-                                    <h4 class="video-title">Tutorial Penggunaan Website JDIH</h4>
-                                    <div class="video-meta">
-                                        <span><i class="bi bi-clock"></i> 8:15</span>
-                                        <span><i class="bi bi-eye"></i> 1.8K</span>
-                                    </div>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <div class="col-12">
+                                <div class="empty-state">
+                                    <i class="bi bi-camera-video"></i>
+                                    <h3>Belum ada videografis tersedia</h3>
+                                    <p>Video akan segera ditambahkan</p>
                                 </div>
                             </div>
-                        </div>
-                        
-                        <!-- Video 3 -->
-                        <div class="col-lg-4 col-md-6 mb-4">
-                            <div class="video-card">
-                                <div class="video-thumbnail">
-                                    <img src="https://images.unsplash.com/photo-1589903308904-1010c2294adc?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" 
-                                         alt="Proses Legislasi">
-                                    <a href="#" class="video-play-btn" data-bs-toggle="modal" data-bs-target="#videoModal3">
-                                        <i class="bi bi-play-fill"></i>
-                                    </a>
-                                </div>
-                                <div class="video-content">
-                                    <h4 class="video-title">Proses Legislasi di DPRD Surakarta</h4>
-                                    <div class="video-meta">
-                                        <span><i class="bi bi-clock"></i> 12:45</span>
-                                        <span><i class="bi bi-eye"></i> 3.1K</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -476,32 +467,59 @@
     </section>
 
     <!-- VIDEO MODALS -->
-    <div class="modal fade" id="videoModal1" tabindex="-1">
+    <?php foreach ($videografis as $item): ?>
+    <div class="modal fade" id="videoModal<?php echo $item['id']; ?>" tabindex="-1">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Video Profile JDIH DPRD Surakarta</h5>
+                    <h5 class="modal-title"><?php echo htmlspecialchars($item['judul']); ?></h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="ratio ratio-16x9">
-                        <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" 
-                                title="Video Profile" allowfullscreen></iframe>
+                        <?php
+                        // Extract YouTube video ID from URL
+                        $youtubeUrl = $item['sumber'];
+                        if (strpos($youtubeUrl, 'youtube.com') !== false || strpos($youtubeUrl, 'youtu.be') !== false) {
+                            // If it's already an embed URL, use it directly
+                            if (strpos($youtubeUrl, 'embed') !== false) {
+                                $embedUrl = $youtubeUrl;
+                            } else {
+                                // Convert regular YouTube URL to embed URL
+                                if (preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/', $youtubeUrl, $matches)) {
+                                    $videoId = $matches[1];
+                                    $embedUrl = "https://www.youtube.com/embed/{$videoId}";
+                                } else {
+                                    $embedUrl = $youtubeUrl;
+                                }
+                            }
+                        } else {
+                            $embedUrl = $youtubeUrl;
+                        }
+                        ?>
+                        <iframe src="<?php echo htmlspecialchars($embedUrl); ?>" 
+                                title="<?php echo htmlspecialchars($item['judul']); ?>" 
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                allowfullscreen
+                                class="modal-video"></iframe>
                     </div>
+                    <?php if (!empty($item['deskripsi'])): ?>
+                        <div class="mt-3">
+                            <p><strong>Deskripsi:</strong></p>
+                            <p><?php echo nl2br(htmlspecialchars($item['deskripsi'])); ?></p>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
     </div>
+    <?php endforeach; ?>
 
     <!-- FOOTER SAMA DENGAN BERANDA -->
     <!-- ... (salin footer dari beranda.php) ... -->
 
     <!-- JAVASCRIPT FILES -->
-    <script src="js/jquery.min.js"></script>
-    <script src="js/bootstrap.bundle.min.js"></script>
-    <script src="js/jquery.sticky.js"></script>
-    <script src="js/click-scroll.js"></script>
-    <script src="js/custom.js"></script>
+
     
     <script>
         // Tab functionality
@@ -518,15 +536,35 @@
             
             // Navbar scroll effect
             const navbar = document.querySelector('.navbar-custom');
-            window.addEventListener('scroll', function() {
-                if (window.scrollY > 50) {
-                    navbar.classList.add('scrolled');
-                } else {
-                    navbar.classList.remove('scrolled');
-                }
+            if (navbar) {
+                window.addEventListener('scroll', function() {
+                    if (window.scrollY > 50) {
+                        navbar.classList.add('scrolled');
+                    } else {
+                        navbar.classList.remove('scrolled');
+                    }
+                });
+            }
+            
+            // Close modal when clicking outside
+            const videoModals = document.querySelectorAll('.modal');
+            videoModals.forEach(function(modal) {
+                modal.addEventListener('show.bs.modal', function() {
+                    // Pause all videos when opening a new modal
+                    const iframes = document.querySelectorAll('.modal-video');
+                    iframes.forEach(function(iframe) {
+                        iframe.src = iframe.src; // Reload iframe to stop video
+                    });
+                });
             });
         });
     </script>
 
 </body>
 </html>
+
+<?php
+include "footer.php";
+// Tutup koneksi database
+$koneksi->close();
+?>

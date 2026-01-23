@@ -33,11 +33,6 @@ if ($current_filter != 'all') {
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Open+Sans&display=swap" rel="stylesheet">
                         
-    <link href="css/bootstrap.min.css" rel="stylesheet">
-    <link href="css/bootstrap-icons.css" rel="stylesheet">
-    <link href="css/templatemo-topic-listing.css" rel="stylesheet">
-    <link href="css/navbar.css" rel="stylesheet">
-
     <style>
         /* OVERRIDE UNTUK HALAMAN KEGIATAN */
         body {
@@ -537,8 +532,8 @@ if ($current_filter != 'all') {
                                     <span title="Dilihat"><i class="bi bi-eye-fill"></i> <?php echo $artikel['views']; ?></span>
                                     <span title="Penulis"><i class="bi bi-person-fill"></i> <?php echo htmlspecialchars($penulis); ?></span>
                                 </div>
-                                <!-- PERBAIKAN: Link mengarah ke detail-kegiatan sesuai routing -->
-                                <a href="index.php?page=detail-kegiatan&id=<?php echo $artikel['id_artikel']; ?>" class="read-more-btn">
+                                <!-- PERBAIKAN: Link mengarah ke detail-kegiatan.php dalam folder yang sama -->
+                                <a href="index.php?page=detail-kegiatan.php?id=<?php echo $artikel['id_artikel']; ?>" class="read-more-btn">
                                     Baca Selengkapnya
                                 </a>
                             </div>

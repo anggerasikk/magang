@@ -392,7 +392,7 @@ mysqli_data_seek($popular_result, 0);
 <h4><i class="bi bi-list"></i> Menu Perundangan</h4>
 <ul>
 <li><a href="index.php?page=perundangan"><i class="bi bi-grid"></i> Semua Kategori</a></li>
-<li><a href="keputusan-dprd.php"><i class="bi bi-file-earmark-medical"></i> Keputusan DPRD</a></li>
+<li><a href="?page=keputusan-dprd"><i class="bi bi-file-earmark-medical"></i> Keputusan DPRD</a></li>
 <li><a href="keputusan-pimpinan.php"><i class="bi bi-file-earmark-ruled"></i> Keputusan Pimpinan DPRD</a></li>
 <li class="active"><a href="#"><i class="bi bi-file-earmark-text"></i> Keputusan Sekretaris DPRD</a></li>
 <li><a href="index.php?page=peraturan-dprd"><i class="bi bi-journal-text"></i> Peraturan DPRD</a></li>

@@ -2,10 +2,366 @@
 // beranda.php
 $pageTitle = 'Beranda - JDIH DPRD Kota Surakarta';
 include 'header.php';
+
+// Include file koneksi database
+include 'a_db.php';
+
+// Query untuk statistik
+// Total Dokumen (tanpa kondisi display karena kolom tidak ada)
+$query_total = "SELECT COUNT(*) as total FROM uploads";
+$result_total = $koneksi->query($query_total);
+$row_total = $result_total->fetch_assoc();
+$total_dokumen = $row_total['total'];
+
+// Dokumen Tahun Ini (berdasarkan tahun_pengundangan)
+$current_year = date('Y');
+$query_tahun_ini = "SELECT COUNT(*) as total FROM uploads WHERE tahun_pengundangan = '$current_year'";
+$result_tahun_ini = $koneksi->query($query_tahun_ini);
+$row_tahun_ini = $result_tahun_ini->fetch_assoc();
+$dokumen_tahun_ini = $row_tahun_ini['total'];
+
+// Dokumen Bulan Ini (berdasarkan uploaded_at)
+$current_month = date('Y-m');
+$query_bulan_ini = "SELECT COUNT(*) as total FROM uploads WHERE DATE_FORMAT(uploaded_at, '%Y-%m') = '$current_month'";
+$result_bulan_ini = $koneksi->query($query_bulan_ini);
+$row_bulan_ini = $result_bulan_ini->fetch_assoc();
+$dokumen_bulan_ini = $row_bulan_ini['total'];
+
+// Distribusi Jenis Dokumen berdasarkan data di tabel uploads
+$query_jenis = "SELECT jenis, COUNT(*) as jumlah FROM uploads WHERE jenis IS NOT NULL AND jenis != '' GROUP BY jenis ORDER BY jumlah DESC";
+$result_jenis = $koneksi->query($query_jenis);
+
+$jenis_stats = [];
+$jenis_labels = [];
+$jenis_data = [];
+$jenis_total = 0;
+
+// Kategori dari gambar yang perlu di-mapping
+$kategori_mapping = [
+    'Keputusan_DPRD' => 'Keputusan DPRD',
+    'Keputusan_Sekretaris_DPRD' => 'Keputusan Sekretaris DPRD',
+    'Keputusan_Pimpinan_DPRD' => 'Keputusan Pimpinan DPRD',
+    'Peraturan_DPRD' => 'Peraturan DPRD',
+    'Peraturan_Daerah' => 'Peraturan Daerah'
+];
+
+// Kategori lainnya akan digabung sebagai "Lainnya"
+$kategori_lainnya = [];
+
+if ($result_jenis && $result_jenis->num_rows > 0) {
+    while ($row = $result_jenis->fetch_assoc()) {
+        $jenis_asli = $row['jenis'];
+        $jumlah = $row['jumlah'];
+        $jenis_total += $jumlah;
+        
+        // Mapping jenis berdasarkan data di database
+        if (isset($kategori_mapping[$jenis_asli])) {
+            $jenis_label = $kategori_mapping[$jenis_asli];
+            if (!isset($jenis_stats[$jenis_label])) {
+                $jenis_stats[$jenis_label] = 0;
+            }
+            $jenis_stats[$jenis_label] += $jumlah;
+        } else {
+            // Untuk jenis yang tidak ada di mapping, masukkan ke "Lainnya"
+            $kategori_lainnya[] = ['nama' => $jenis_asli, 'jumlah' => $jumlah];
+        }
+    }
+    
+    // Tambahkan "Lainnya" jika ada
+    if (!empty($kategori_lainnya)) {
+        $total_lainnya = 0;
+        foreach ($kategori_lainnya as $lainnya) {
+            $total_lainnya += $lainnya['jumlah'];
+        }
+        $jenis_stats['Lainnya'] = $total_lainnya;
+    }
+    
+    // Tambahkan English Legal Products (jika tidak ada di data, set 0)
+    if (!isset($jenis_stats['English Legal Products'])) {
+        $jenis_stats['English Legal Products'] = 0;
+    }
+    
+    // Konversi ke array untuk chart
+    foreach ($jenis_stats as $label => $jumlah) {
+        $jenis_labels[] = $label;
+        $jenis_data[] = $jumlah;
+    }
+}
+
+// Tren 10 Tahun Terakhir berdasarkan tahun_pengundangan
+$start_year = $current_year - 9;
+$trend_labels = [];
+$trend_data = [];
+
+// Query untuk mendapatkan data per tahun
+$query_trend = "SELECT tahun_pengundangan, COUNT(*) as jumlah 
+                FROM uploads 
+                WHERE tahun_pengundangan REGEXP '^[0-9]{4}$'
+                GROUP BY tahun_pengundangan 
+                HAVING tahun_pengundangan BETWEEN $start_year AND $current_year
+                ORDER BY tahun_pengundangan";
+$result_trend = $koneksi->query($query_trend);
+
+$trend_data_db = [];
+if ($result_trend && $result_trend->num_rows > 0) {
+    while ($row = $result_trend->fetch_assoc()) {
+        $trend_data_db[$row['tahun_pengundangan']] = $row['jumlah'];
+    }
+}
+
+// Isi data untuk semua tahun (termasuk yang kosong)
+for ($year = $start_year; $year <= $current_year; $year++) {
+    $trend_labels[] = $year;
+    $trend_data[] = isset($trend_data_db[$year]) ? $trend_data_db[$year] : 0;
+}
+
+// Status Dokumen
+$query_status = "SELECT status, COUNT(*) as jumlah FROM uploads WHERE status IS NOT NULL AND status != '' GROUP BY status ORDER BY jumlah DESC";
+$result_status = $koneksi->query($query_status);
+$status_data = [];
+if ($result_status && $result_status->num_rows > 0) {
+    while ($row = $result_status->fetch_assoc()) {
+        $status_data[] = $row;
+    }
+}
+
+// Bidang Hukum
+$query_bidang = "SELECT bidangHukum, COUNT(*) as jumlah FROM uploads WHERE bidangHukum IS NOT NULL AND bidangHukum != '' GROUP BY bidangHukum ORDER BY jumlah DESC LIMIT 5";
+$result_bidang = $koneksi->query($query_bidang);
+$bidang_data = [];
+if ($result_bidang && $result_bidang->num_rows > 0) {
+    while ($row = $result_bidang->fetch_assoc()) {
+        $bidang_data[] = $row;
+    }
+}
+
+// Tutup koneksi
+// $koneksi->close();
 ?>
 <style>
 <?php include "beranda.css"; ?>
+
+/* Statistics Section */
+.stats-section {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 80px 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.stats-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #5b5fdc, #2ecc71);
+}
+
+.stats-title h2 {
+    color: #2c3e50;
+    font-weight: 700;
+    margin-top: 10px;
+}
+
+.stats-title small {
+    color: #5b5fdc;
+    font-weight: 600;
+    letter-spacing: 2px;
+}
+
+.stats-card {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease;
+    height: 100%;
+    min-height: 350px;
+    display: flex;
+    flex-direction: column;
+}
+
+.stats-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+}
+
+.stats-card h5 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+    font-weight: 600;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 10px;
+}
+
+.stats-card small {
+    color: #666;
+    font-size: 0.85rem;
+    display: block;
+    margin-bottom: 15px;
+}
+
+.stats-card .chart-container {
+    flex: 1;
+    position: relative;
+    min-height: 250px;
+}
+
+.stats-card-small {
+    background: white;
+    border-radius: 12px;
+    padding: 25px 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    border-top: 4px solid #5b5fdc;
+}
+
+.stats-card-small:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    border-top-color: #2ecc71;
+}
+
+.stats-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #5b5fdc;
+    margin-bottom: 8px;
+    line-height: 1;
+}
+
+.stats-label {
+    color: #666;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.btn-stats {
+    background: linear-gradient(135deg, #5b5fdc 0%, #7f9cf5 100%);
+    color: white;
+    padding: 12px 30px;
+    border-radius: 25px;
+    font-weight: 600;
+    border: none;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-stats:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(91, 95, 220, 0.3);
+    color: white;
+}
+
+.stats-grid {
+    margin-bottom: 30px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .stats-card {
+        padding: 20px;
+        min-height: 300px;
+    }
+    
+    .stats-number {
+        font-size: 2rem;
+    }
+    
+    .stats-section {
+        padding: 60px 0;
+    }
+    
+    .stats-card .chart-container {
+        min-height: 200px;
+    }
+}
+
+/* Animation */
+@keyframes countUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.stats-card-small {
+    animation: countUp 0.6s ease-out;
+}
+
+/* Status and Field Lists */
+.status-list, .bidang-list {
+    margin-top: 15px;
+}
+
+.status-item, .bidang-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background-color 0.2s;
+}
+
+.status-item:hover, .bidang-item:hover {
+    background-color: #f9f9f9;
+    border-radius: 5px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.status-item:last-child, .bidang-item:last-child {
+    border-bottom: none;
+}
+
+.status-name, .bidang-name {
+    flex: 1;
+    color: #555;
+    font-size: 0.9rem;
+}
+
+.status-count, .bidang-count {
+    color: #5b5fdc;
+    font-weight: 600;
+    min-width: 80px;
+    text-align: right;
+    font-size: 0.9rem;
+}
+
+.bidang-rank {
+    background: #5b5fdc;
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 10px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.bidang-name {
+    display: flex;
+    align-items: center;
+}
+
+/* No Data State */
+.text-center.py-3 {
+    padding: 20px 0;
+    color: #999;
+    font-style: italic;
+}
 </style>
+
 <!-- Hero Section with Video Background -->
 <section class="hero-section">
     <!-- Video Background -->
@@ -47,7 +403,6 @@ include 'header.php';
     </div>
 </section>
 
-
 <!-- Main Content -->
 <section class="main-content">
     <div class="container">
@@ -79,6 +434,127 @@ include 'header.php';
                 </div>
             </div>
         </div>
+        
+        <!-- Statistics Section -->
+        <section class="stats-section">
+            <div class="container">
+                <div class="text-center mb-5 stats-title">
+                    <small>★ STATISTIK & DATA ★</small>
+                    <h2>Statistik Produk Hukum</h2>
+                    <p class="text-muted">Data real-time dari database JDIH DPRD Surakarta</p>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="row g-4 mb-5 stats-grid">
+                    <div class="col-md-4">
+                        <div class="stats-card-small text-center">
+                            <div class="stats-number"><?php echo number_format($total_dokumen); ?></div>
+                            <div class="stats-label">Total Dokumen</div>
+                            <small>Semua produk hukum yang tersedia</small>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="stats-card-small text-center">
+                            <div class="stats-number"><?php echo number_format($dokumen_tahun_ini); ?></div>
+                            <div class="stats-label">Dokumen Tahun <?php echo $current_year; ?></div>
+                            <small>Produk hukum tahun berjalan</small>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="stats-card-small text-center">
+                            <div class="stats-number"><?php echo number_format($dokumen_bulan_ini); ?></div>
+                            <div class="stats-label">Dokumen Bulan Ini</div>
+                            <small>Update terbaru sistem JDIH</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts -->
+                <div class="row g-4">
+                    <div class="col-lg-6">
+                        <div class="stats-card">
+                            <h5>Distribusi Jenis Dokumen</h5>
+                            <small>Persentase berdasarkan kategori produk hukum</small>
+                            <div class="chart-container">
+                                <?php if (!empty($jenis_labels)): ?>
+                                    <canvas id="pieProdukHukum"></canvas>
+                                <?php else: ?>
+                                    <div class="text-center py-5">
+                                        <p class="text-muted">Data distribusi jenis belum tersedia</p>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-6">
+                        <div class="stats-card">
+                            <h5>Tren Dokumen Per Tahun</h5>
+                            <small>Perkembangan 10 tahun terakhir</small>
+                            <div class="chart-container">
+                                <?php if (!empty($trend_labels)): ?>
+                                    <canvas id="barProdukHukum"></canvas>
+                                <?php else: ?>
+                                    <div class="text-center py-5">
+                                        <p class="text-muted">Data tren belum tersedia</p>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Additional Stats -->
+                <div class="row g-4 mt-4">
+                    <div class="col-md-6">
+                        <div class="stats-card">
+                            <h5>Status Dokumen</h5>
+                            <?php if (!empty($status_data)): ?>
+                                <div class="status-list">
+                                    <?php foreach ($status_data as $status): ?>
+                                        <div class="status-item">
+                                            <span class="status-name"><?php echo htmlspecialchars($status['status']); ?></span>
+                                            <span class="status-count"><?php echo number_format($status['jumlah']); ?> dokumen</span>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php else: ?>
+                                <p class="text-muted text-center py-3">Data status belum tersedia</p>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="stats-card">
+                            <h5>Top 5 Bidang Hukum</h5>
+                            <?php if (!empty($bidang_data)): ?>
+                                <div class="bidang-list">
+                                    <?php $counter = 1; ?>
+                                    <?php foreach ($bidang_data as $bidang): ?>
+                                        <div class="bidang-item">
+                                            <span class="bidang-rank">#<?php echo $counter; ?></span>
+                                            <span class="bidang-name"><?php echo htmlspecialchars($bidang['bidangHukum']); ?></span>
+                                            <span class="bidang-count"><?php echo number_format($bidang['jumlah']); ?></span>
+                                        </div>
+                                        <?php $counter++; ?>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php else: ?>
+                                <p class="text-muted text-center py-3">Data bidang hukum belum tersedia</p>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center mt-5">
+                    <a href="index.php?page=statistik" class="btn btn-stats">
+                        <i class="bi bi-graph-up-arrow me-2"></i>Lihat Statistik Lengkap
+                    </a>
+                </div>
+            </div>
+        </section>
         
         <!-- Quick Links -->
         <div class="row mb-5">
@@ -232,38 +708,6 @@ include 'header.php';
         </div>
     </div>
 </section>
-<section class="stats-section">
-    <div class="container">
-        <div class="text-center mb-5 stats-title">
-            <small>★ STATISTIK & DATA ★</small>
-            <h2>Statistik Produk Hukum</h2>
-        </div>
-
-        <div class="row g-4">
-            <div class="col-lg-6">
-                <div class="stats-card">
-                    <h5>Persentase Produk Hukum</h5>
-                    <canvas id="pieProdukHukum"></canvas>
-                </div>
-            </div>
-
-            <div class="col-lg-6">
-                <div class="stats-card">
-                    <h5>Statistik Dokumen</h5>
-                    <small>Tren 10 Tahun Terakhir</small>
-                    <canvas id="barProdukHukum"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <div class="text-center mt-5">
-            <a href="index.php?page=statistik" class="btn btn-stats">
-                Data Statistik Produk JDIH
-            </a>
-        </div>
-    </div>
-</section>
-
 
 <!-- YouTube API Script -->
 <script>
@@ -299,80 +743,183 @@ include 'header.php';
         event.target.mute();
         event.target.playVideo();
     }
-    
-    // Navbar scroll effect - hapus atau komentari kode ini
-    /*
-    window.addEventListener('scroll', function() {
-        const navbar = document.querySelector('.navbar-custom');
-        if (window.scrollY > 100) {
-            navbar.classList.add('scrolled');
-        } else {
-            navbar.classList.remove('scrolled');
-        }
-    });
-    */
 </script>
 
-<!-- Instagram Embed Script -->
-<script async src="//www.instagram.com/embed.js"></script>
-<!-- Chart.js (WAJIB ADA) -->
+<!-- Chart.js Script -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    // Data dari PHP
+    const pieLabels = <?php echo !empty($jenis_labels) ? json_encode($jenis_labels) : '[]'; ?>;
+    const pieData = <?php echo !empty($jenis_data) ? json_encode($jenis_data) : '[]'; ?>;
+    const barLabels = <?php echo !empty($trend_labels) ? json_encode($trend_labels) : '[]'; ?>;
+    const barData = <?php echo !empty($trend_data) ? json_encode($trend_data) : '[]'; ?>;
+
+    // Hitung total untuk persentase
+    const pieTotal = pieData.reduce((a, b) => a + b, 0);
 
     /* PIE CHART */
     const pieCtx = document.getElementById('pieProdukHukum');
-    if (pieCtx) {
+    if (pieCtx && pieLabels.length > 0 && pieTotal > 0) {
         new Chart(pieCtx, {
             type: 'pie',
             data: {
-                labels: [
-                    'Keputusan DPRD',
-                    'Keputusan Sekretaris DPRD',
-                    'Keputusan Pimpinan DPRD',
-                    'Peraturan Daerah',
-                    'Peraturan DPRD',
-                    'English Legal Products'
-                ],
+                labels: pieLabels,
                 datasets: [{
-                    data: [55.1, 17.7, 6.0, 16.6, 1.8, 2.9],
+                    data: pieData,
                     backgroundColor: [
-                        '#5b5fdc',
-                        '#ff7a45',
-                        '#2ecc71',
-                        '#7f9cf5',
-                        '#a855f7',
-                        '#38bdf8'
-                    ]
+                        '#5b5fdc', '#ff7a45', '#2ecc71', 
+                        '#7f9cf5', '#a855f7', '#38bdf8',
+                        '#f59e0b', '#ef4444', '#10b981',
+                        '#6b7280', '#ec4899', '#8b5cf6'
+                    ],
+                    borderWidth: 1,
+                    borderColor: '#fff'
                 }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            padding: 15,
+                            usePointStyle: true,
+                            font: {
+                                size: 11
+                            },
+                            generateLabels: function(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    return data.labels.map(function(label, i) {
+                                        const value = data.datasets[0].data[i];
+                                        const percentage = pieTotal > 0 ? Math.round((value / pieTotal) * 100) : 0;
+                                        
+                                        return {
+                                            text: `${label} (${percentage}%)`,
+                                            fillStyle: data.datasets[0].backgroundColor[i],
+                                            strokeStyle: data.datasets[0].borderColor,
+                                            lineWidth: data.datasets[0].borderWidth,
+                                            hidden: isNaN(data.datasets[0].data[i]) || chart.getDatasetMeta(0).data[i].hidden,
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.raw || 0;
+                                const percentage = pieTotal > 0 ? Math.round((value / pieTotal) * 100) : 0;
+                                return `${label}: ${value} dokumen (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
             }
         });
     }
 
     /* BAR CHART */
     const barCtx = document.getElementById('barProdukHukum');
-    if (barCtx) {
+    if (barCtx && barLabels.length > 0) {
         new Chart(barCtx, {
             type: 'bar',
             data: {
-                labels: ['2017','2018','2019','2020','2021','2022','2023','2024','2025'],
+                labels: barLabels,
                 datasets: [{
                     label: 'Jumlah Dokumen',
-                    data: [5, 12, 18, 50, 22, 110, 85, 62, 78],
-                    backgroundColor: '#c6ff4d'
+                    data: barData,
+                    backgroundColor: '#5b5fdc',
+                    borderColor: '#4a4ec9',
+                    borderWidth: 1,
+                    borderRadius: 5,
+                    hoverBackgroundColor: '#2ecc71'
                 }]
             },
             options: {
+                responsive: true,
+                maintainAspectRatio: false,
                 scales: {
-                    y: { beginAtZero: true }
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Jumlah Dokumen',
+                            font: {
+                                weight: 'bold'
+                            }
+                        },
+                        ticks: {
+                            stepSize: barData.length > 0 ? Math.ceil(Math.max(...barData) / 10) : 1
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Tahun',
+                            font: {
+                                weight: 'bold'
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `Dokumen: ${context.raw}`;
+                            }
+                        }
+                    }
                 }
             }
         });
     }
 
+    // Animasi counter untuk statistik
+    function animateCounter(element, target) {
+        let current = 0;
+        const increment = target / 50;
+        const timer = setInterval(() => {
+            current += increment;
+            if (current >= target) {
+                current = target;
+                clearInterval(timer);
+            }
+            element.textContent = Math.floor(current).toLocaleString();
+        }, 20);
+    }
+
+    // Animate counters on scroll
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const statsElements = document.querySelectorAll('.stats-number');
+                statsElements.forEach(el => {
+                    const target = parseInt(el.textContent.replace(/,/g, ''));
+                    if (!isNaN(target)) {
+                        animateCounter(el, target);
+                    }
+                });
+                observer.disconnect();
+            }
+        });
+    }, { threshold: 0.5 });
+
+    const statsSection = document.querySelector('.stats-grid');
+    if (statsSection) {
+        observer.observe(statsSection);
+    }
 });
 </script>
 
+<!-- Instagram Embed Script -->
+<script async src="//www.instagram.com/embed.js"></script>
 
 <?php include 'footer.php'; ?>
