@@ -9,7 +9,7 @@ $pageTitle = 'English Legal Products - JDIH DPRD Kota Surakarta';
    QUERY DATA UTAMA
 ================================ */
 $query = "SELECT * FROM uploads 
-          WHERE jenis = 'English_Legal' 
+          WHERE jenis = 'English_Legal_Product' 
           ORDER BY idData DESC";
 $result = mysqli_query($koneksi, $query);
 
@@ -18,7 +18,7 @@ $result = mysqli_query($koneksi, $query);
 ================================ */
 $total_query = "SELECT COUNT(*) as total 
                 FROM uploads 
-                WHERE jenis = 'English_Legal'";
+                WHERE jenis = 'English_Legal_Product'";
 $total_result = mysqli_query($koneksi, $total_query);
 $total_dokumen = mysqli_fetch_assoc($total_result)['total'];
 
@@ -28,7 +28,7 @@ $total_dokumen = mysqli_fetch_assoc($total_result)['total'];
 $year_stats_query = "
     SELECT tahun_pengundangan, COUNT(*) as jumlah
     FROM uploads
-    WHERE jenis = 'English_Legal'
+    WHERE jenis = 'English_Legal_Product'
     GROUP BY tahun_pengundangan
     ORDER BY tahun_pengundangan DESC
     LIMIT 5";
@@ -39,7 +39,7 @@ $year_stats_result = mysqli_query($koneksi, $year_stats_query);
 ================================ */
 $popular_query = "
     SELECT * FROM uploads
-    WHERE jenis = 'English_Legal'
+    WHERE jenis = 'English_Legal_Product'
     ORDER BY tanggal_pengundangan DESC
     LIMIT 5";
 $popular_result = mysqli_query($koneksi, $popular_query);
@@ -50,7 +50,7 @@ $popular_result = mysqli_query($koneksi, $popular_query);
 $years_query = "
     SELECT DISTINCT tahun_pengundangan
     FROM uploads
-    WHERE jenis = 'English_Legal'
+    WHERE jenis = 'English_Legal_Product'
     ORDER BY tahun_pengundangan DESC";
 $years_result = mysqli_query($koneksi, $years_query);
 

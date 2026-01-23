@@ -19,6 +19,8 @@ if ($current_filter != 'all') {
     $query = "SELECT * FROM artikel_kegiatan WHERE status = '$status' $filter_query ORDER BY tanggal_publikasi DESC";
     $result = $koneksi->query($query);
 }
+
+
 ?>
 
 <!doctype html>
@@ -28,11 +30,16 @@ if ($current_filter != 'all') {
     <title><?php echo $pageTitle; ?></title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     
+<<<<<<< HEAD
     <!-- CSS FILES -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Open+Sans&display=swap" rel="stylesheet">
                         
+=======
+
+
+>>>>>>> 0235fbab1f1d991a436811501deb3b8965cb1cce
     <style>
         /* OVERRIDE UNTUK HALAMAN KEGIATAN */
         body {
@@ -223,7 +230,7 @@ if ($current_filter != 'all') {
             font-size: 1.2rem;
             line-height: 1.4;
             display: -webkit-box;
-            -webkit-line-clamp: 2;
+            line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
@@ -234,7 +241,7 @@ if ($current_filter != 'all') {
             line-height: 1.7;
             font-size: 0.95rem;
             display: -webkit-box;
-            -webkit-line-clamp: 3;
+            line-clamp: 3;
             -webkit-box-orient: vertical;
             overflow: hidden;
             flex-grow: 1;
@@ -472,7 +479,7 @@ if ($current_filter != 'all') {
                 ?>
             </h2>
             
-            <!-- ACTIVITY CARDS -->
+            <!-- KEGIATAN CARDS -->
             <?php if ($result && $result->num_rows > 0): ?>
                 <div class="activity-cards-wrapper">
                     <?php while ($artikel = $result->fetch_assoc()): ?>
@@ -500,19 +507,95 @@ if ($current_filter != 'all') {
                             $excerpt = substr($excerpt, 0, 150) . '...';
                         }
                         
-                        // Thumbnail image
-                        $thumbnail = !empty($artikel['thumbnail_path']) && file_exists($artikel['thumbnail_path'])
-                            ? $artikel['thumbnail_path']
-                            : 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80';
+                        // ===============================
+                        // PERBAIKAN BAGIAN GAMBAR
+                        // ===============================
+                        
+                        // Cek apakah thumbnail_path ada dan valid
+                        $thumbnail_path = isset($artikel['thumbnail_path']) ? trim($artikel['thumbnail_path']) : '';
+                        
+                        // Default placeholder image
+                        $default_image = 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80';
+                        
+                        // Inisialisasi variabel untuk gambar
+                        $thumbnail = $default_image;
+                        
+                        // Logika untuk menentukan gambar yang akan ditampilkan
+                        if (!empty($thumbnail_path)) {
+                            // Jika path adalah URL lengkap
+                            if (filter_var($thumbnail_path, FILTER_VALIDATE_URL)) {
+                                $thumbnail = $thumbnail_path;
+                            }
+                            // Jika path relatif (mulai dengan uploads/)
+elseif (strpos($thumbnail_path, 'wb_admin/uploads/') === 0) {
+                                // Periksa apakah file ada di server
+                                $server_path = $_SERVER['DOCUMENT_ROOT'] . '/' . $thumbnail_path;
+                                
+                                // Debug: Tampilkan path untuk pengecekan
+                                // echo "<!-- DEBUG: Server path: $server_path -->";
+                                
+                                if (file_exists($server_path)) {
+                                    $thumbnail = $base_url . '/' . $thumbnail_path;
+                                } else {
+                                    // Coba cari di berbagai lokasi yang mungkin
+                                    $possible_paths = [
+                                        $_SERVER['DOCUMENT_ROOT'] . '/jdihcilacap_pasang/' . $thumbnail_path,
+                                        $_SERVER['DOCUMENT_ROOT'] . $thumbnail_path,
+                                        __DIR__ . '/' . $thumbnail_path
+                                    ];
+                                    
+                                    foreach ($possible_paths as $possible_path) {
+                                        if (file_exists($possible_path)) {
+                                            // Hitung URL relatif dari base_url
+                                            $relative_path = str_replace($_SERVER['DOCUMENT_ROOT'], '', $possible_path);
+                                            $thumbnail = $base_url . $relative_path;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                            // Jika path dimulai dengan '/'
+                            elseif (strpos($thumbnail_path, '/') === 0) {
+                                if (file_exists($_SERVER['DOCUMENT_ROOT'] . $thumbnail_path)) {
+                                    $thumbnail = $base_url . $thumbnail_path;
+                                }
+                            }
+                        }
+                        
+                        // Fallback: Jika masih default, coba cari gambar berdasarkan ID artikel
+                        if ($thumbnail === $default_image && isset($artikel['id_artikel'])) {
+                            $possible_image_files = [
+                                'uploads/kegiatan/kegiatan_' . $artikel['id_artikel'] . '.jpg',
+                                'uploads/kegiatan/' . $artikel['id_artikel'] . '.jpg',
+                                'uploads/thumbnail/kegiatan_' . $artikel['id_artikel'] . '.jpg',
+                                'uploads/' . $artikel['id_artikel'] . '.jpg',
+                                'assets/images/kegiatan/' . $artikel['id_artikel'] . '.jpg'
+                            ];
+                            
+                            foreach ($possible_image_files as $image_file) {
+                                if (file_exists($_SERVER['DOCUMENT_ROOT'] . '/jdihcilacap_pasang/' . $image_file)) {
+                                    $thumbnail = $base_url . '/' . $image_file;
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        // ===============================
+                        // AKHIR PERBAIKAN GAMBAR
+                        // ===============================
                         
                         // Penulis
                         $penulis = !empty($artikel['nama_penulis']) ? $artikel['nama_penulis'] : 'Admin JDIH';
-                        ?>
                         
+                        // Buat link detail
+                        $detail = $base_url . "/index.php?page=detail-jdih&id=" . $artikel['id_artikel'];
+                        ?>
                         <div class="activity-card" data-category="<?php echo $article_category; ?>">
-                            <img src="<?php echo $thumbnail; ?>" 
-                                 alt="<?php echo htmlspecialchars($artikel['judul']); ?>" 
-                                 class="activity-image">
+                            <!-- Tambahkan onerror untuk fallback jika gambar masih error -->
+                            <img src="<?php echo htmlspecialchars($thumbnail); ?>" 
+                                alt="<?php echo htmlspecialchars($artikel['judul']); ?>" 
+                                class="activity-image"
+                                onerror="this.onerror=null; this.src='<?php echo $default_image; ?>';">
                             <div class="activity-content">
                                 <div class="activity-meta">
                                     <span class="activity-date">
@@ -532,10 +615,19 @@ if ($current_filter != 'all') {
                                     <span title="Dilihat"><i class="bi bi-eye-fill"></i> <?php echo $artikel['views']; ?></span>
                                     <span title="Penulis"><i class="bi bi-person-fill"></i> <?php echo htmlspecialchars($penulis); ?></span>
                                 </div>
+<<<<<<< HEAD
                                 <!-- PERBAIKAN: Link mengarah ke detail-kegiatan.php dalam folder yang sama -->
                                 <a href="index.php?page=detail-kegiatan.php?id=<?php echo $artikel['id_artikel']; ?>" class="read-more-btn">
                                     Baca Selengkapnya
                                 </a>
+=======
+                                <!-- Link dengan method GET yang jelas -->
+                                <div class="card-actions">
+                                    <a href="<?= $detail ?>" class="read-more-btn">
+                                        <i class="bi bi-eye"></i> Baca Selengkapnya
+                                    </a>
+                                </div>
+>>>>>>> 0235fbab1f1d991a436811501deb3b8965cb1cce
                             </div>
                         </div>
                     <?php endwhile; ?>
@@ -562,46 +654,58 @@ if ($current_filter != 'all') {
     <script src="js/click-scroll.js"></script>
     <script src="js/custom.js"></script>
     
-    <script>
-        // Filter functionality for activities
+        <script>
+        // Pastikan link berfungsi dengan benar
         document.addEventListener('DOMContentLoaded', function() {
-            const filterButtons = document.querySelectorAll('.filter-btn');
-            const activityCards = document.querySelectorAll('[data-category]');
+            console.log('Activity page loaded');
             
-            // Filter dengan JavaScript untuk UX yang lebih baik
-            filterButtons.forEach(button => {
-                button.addEventListener('click', function(e) {
-                    // Hanya untuk JavaScript filtering (opsional)
-                    const filterValue = this.getAttribute('href').split('filter=')[1];
-                    const isAll = this.textContent.trim() === 'Semua Kegiatan';
+            // Tangani klik pada tombol "Baca Selengkapnya" dengan cara yang aman
+            const readMoreButtons = document.querySelectorAll('.read-more-btn');
+            
+            readMoreButtons.forEach(button => {
+                // Simpan href asli
+                const originalHref = button.getAttribute('href');
+                
+                // Pastikan href tidak kosong
+                if (!originalHref || originalHref === '#') {
+                    console.warn('Button has no valid href:', button);
+                    return;
+                }
+                
+                // Hapus semua event listener yang ada
+                const newButton = button.cloneNode(true);
+                button.parentNode.replaceChild(newButton, button);
+                
+                // Tambahkan event listener baru
+                newButton.addEventListener('click', function(e) {
+                    console.log('Navigating to:', originalHref);
                     
-                    if (isAll) filterValue = 'all';
+                    // Pastikan URL lengkap
+                    let url = originalHref;
+                    if (!url.startsWith('http')) {
+                        // Jika relatif, tambahkan base path
+                        url = window.location.origin + '/' + url.replace(/^\//, '');
+                    }
                     
-                    activityCards.forEach(card => {
-                        const cardParent = card.closest('.activity-card');
-                        if (filterValue === 'all' || isAll) {
-                            cardParent.style.display = 'flex';
-                        } else {
-                            const category = card.getAttribute('data-category');
-                            if (category === filterValue) {
-                                cardParent.style.display = 'flex';
-                            } else {
-                                cardParent.style.display = 'none';
-                            }
-                        }
-                    });
+                    // Navigasi ke halaman detail
+                    window.location.href = url;
+                    
+                    // Cegah event default (tapi kita sudah handle dengan window.location)
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
                 });
             });
             
-            // Hover effect untuk kartu kegiatan
-            const cards = document.querySelectorAll('.activity-card');
-            cards.forEach(card => {
-                card.addEventListener('mouseenter', function() {
-                    this.style.transform = 'translateY(-10px)';
+            // Debug: Log semua gambar
+            const images = document.querySelectorAll('.activity-image');
+            images.forEach((img, index) => {
+                img.addEventListener('error', function() {
+                    console.warn(`Image ${index} failed to load:`, this.src);
                 });
                 
-                card.addEventListener('mouseleave', function() {
-                    this.style.transform = 'translateY(0)';
+                img.addEventListener('load', function() {
+                    console.log(`Image ${index} loaded successfully:`, this.src);
                 });
             });
         });

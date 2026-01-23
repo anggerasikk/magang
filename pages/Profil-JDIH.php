@@ -5,12 +5,9 @@ include('header.php');
 ?>
 
 <style>
-    /* OVERRIDE UNTUK HALAMAN INI SAJA */
     body {
-        padding-top: 80px; /* Untuk fixed navbar */
+        padding-top: 80px; 
     }
-    
-    /* HEADER SECTION */
     .page-header {
         background: linear-gradient(15deg, #13547a 0%, #80d0c7 100%);
         padding: 40px 0 30px 0;
@@ -19,7 +16,6 @@ include('header.php');
         position: relative;
         overflow: hidden;
     }
-    
     .page-header::before {
         content: '';
         position: absolute;
@@ -32,7 +28,6 @@ include('header.php');
         opacity: 0.1;
         z-index: 1;
     }
-    
     .page-header h1 {
         font-family: 'Montserrat', sans-serif;
         font-weight: 700;
@@ -70,8 +65,6 @@ include('header.php');
     .page-header .breadcrumb-item+.breadcrumb-item::before {
         color: rgba(255, 255, 255, 0.8);
     }
-
-    /* MAIN CONTENT */
     .main-content {
         padding: 50px 0 60px 0;
         background: #f0f8ff;
@@ -95,8 +88,6 @@ include('header.php');
         height: 3px;
         background: linear-gradient(to right, #13547a, #80d0c7);
     }
-
-    /* PROFILE CARD dengan LOGO */
     .profile-card {
         background: white;
         border-radius: var(--border-radius-medium);
@@ -133,8 +124,6 @@ include('header.php');
         position: relative;
         z-index: 2;
     }
-    
-    /* LOGO DI SINI - Ganti dari tulisan JDIH ke gambar */
     .profile-logo {
         width: 140px;
         height: 140px;
@@ -161,8 +150,6 @@ include('header.php');
         height: 100%;
         object-fit: contain;
     }
-    
-    /* Efek lingkaran di belakang logo */
     .profile-logo::before {
         content: '';
         position: absolute;
@@ -264,8 +251,6 @@ include('header.php');
         position: relative;
         z-index: 1;
     }
-
-    /* STATISTIK PRODUK HUKUM */
     .stats-container {
         background: white;
         border-radius: var(--border-radius-medium);
@@ -370,8 +355,6 @@ include('header.php');
         text-transform: uppercase;
         letter-spacing: 0.5px;
     }
-
-    /* BERITA TERBARU */
     .news-container {
         background: white;
         border-radius: var(--border-radius-medium);
@@ -463,8 +446,6 @@ include('header.php');
         line-height: 1.6;
         margin: 0;
     }
-
-    /* SIDEBAR MENU */
     .sidebar-menu {
         background: white;
         border-radius: var(--border-radius-medium);
@@ -556,8 +537,6 @@ include('header.php');
         margin-right: 10px;
         font-size: 0.9rem;
     }
-
-    /* CONTACT INFO */
     .contact-info {
         background: linear-gradient(135deg, #13547a 0%, #80d0c7 100%);
         color: white;
@@ -641,8 +620,6 @@ include('header.php');
         text-decoration: underline;
         transform: translateX(5px);
     }
-
-    /* PORTAL LINKS */
     .portal-links {
         background: white;
         border-radius: var(--border-radius-medium);
@@ -711,8 +688,6 @@ include('header.php');
         align-items: center;
         width: 100%;
     }
-
-    /* BUTTON STYLES */
     .custom-btn {
         background: linear-gradient(135deg, #13547a 0%, #80d0c7 100%);
         color: white;
@@ -755,8 +730,6 @@ include('header.php');
         transform: translateY(-2px);
         box-shadow: 0 5px 15px rgba(19, 84, 122, 0.3);
     }
-
-    /* RESPONSIVE */
     @media (max-width: 768px) {
         body {
             padding-top: 70px;
@@ -881,7 +854,6 @@ include('header.php');
                 <!-- PROFILE JDIH -->
                 <div class="profile-card">
                     <div class="profile-header">
-                        <!-- LOGO DI SINI - Sudah diganti dengan gambar -->
                         <div class="profile-logo">
                             <img src="images/logo.png" alt="Logo JDIH DPRD Kota Surakarta" title="Logo JDIH DPRD Kota Surakarta">
                         </div>

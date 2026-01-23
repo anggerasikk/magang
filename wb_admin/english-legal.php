@@ -69,7 +69,7 @@ if ($aksi == ''){
                     <div class="pull-right">
                         <span class="badge bg-info">Total: 
                             <?php 
-                            $count_query = "SELECT COUNT(*) as total FROM uploads WHERE jenis = 'English_Legal'";
+                            $count_query = "SELECT COUNT(*) as total FROM uploads WHERE jenis = 'English_Legal_Product'";
                             $count_result = mysqli_query($koneksi, $count_query);
                             $count_data = mysqli_fetch_assoc($count_result);
                             echo $count_data['total'];
@@ -93,91 +93,113 @@ if ($aksi == ''){
                             </tr>
                         </thead>
                         <tbody>
-                        <?php 
-                        // Query data berdasarkan level user
-                        if ($_SESSION['level'] == 'user_admin'){
-                            $query = "SELECT * FROM uploads WHERE jenis = 'English_Legal' ORDER BY idData DESC";
-                        } else {
-                            $user_id = mysqli_real_escape_string($koneksi, $_SESSION['login']);
-                            $query = "SELECT * FROM uploads WHERE id_user = '$user_id' AND jenis = 'English_Legal' ORDER BY idData DESC";
-                        }
-                        
-                        $prokum = mysqli_query($koneksi, $query);
-                        
-                        if(!$prokum) {
-                            die("Query error: " . mysqli_error($koneksi));
-                        }
-                        
-                        $no = 1;
-                        while ($i = mysqli_fetch_assoc($prokum)){
-                            // Cek file gambar
-                            $gambar = "-";
-                            if (!empty($i['image_path']) && file_exists($i['image_path'])) {
-                                $gambar = "<img src='{$i['image_path']}' class='img-preview'>";
-                            }
-                            
-                            // Cek file PDF
-                            $pdf_file = "-";
-                            if (!empty($i['pdf_path']) && file_exists($i['pdf_path'])) {
-                                $pdf_file = "<a href='{$i['pdf_path']}' target='_blank' class='btn btn-xs btn-info'>
-                                                <i class='fa fa-file-pdf-o'></i>
-                                             </a>";
-                            }
-                            
-                            // Status badge warna
-                            $status_badge = "";
-                            if ($i['status'] == 'Berlaku') {
-                                $status_badge = "<span class='label label-success'>{$i['status']}</span>";
-                            } elseif ($i['status'] == 'Tidak Berlaku') {
-                                $status_badge = "<span class='label label-danger'>{$i['status']}</span>";
+                            <?php 
+                            // Query data berdasarkan level user
+                            if ($_SESSION['level'] == 'user_admin'){
+                                $query = "SELECT * FROM uploads WHERE jenis = 'English_Legal_Product' ORDER BY idData DESC";
                             } else {
-                                $status_badge = "<span class='label label-warning'>{$i['status']}</span>";
+                                $user_id = mysqli_real_escape_string($koneksi, $_SESSION['login']);
+                                $query = "SELECT * FROM uploads WHERE id_user = '$user_id' AND jenis = 'English_Legal_Product' ORDER BY idData DESC";
                             }
-                            
-                            echo "<tr>
-                                    <td>$no</td>
-                                    <td>{$i['tahun_pengundangan']}</td>
-                                    <td>{$i['noPeraturan']}</td>                            
-                                    <td>{$i['judul']}</td>
-                                    <td>$status_badge</td>
-                                    <td class='text-center'>$gambar</td>
-                                    <td class='text-center'>$pdf_file</td>
-                                    <td class='text-center'>";
-                            
-                            // Tombol Lihat Detail
-                            echo "<a class='btn btn-info btn-xs btn-action' href='index.php?page=englishlegal&aksi=detail&id={$i['idData']}' title='Lihat Detail'>
-                                    <i class='fa fa-folder-open'></i>
-                                  </a>";
-                            
-                            // Tombol Edit
-                            if ($_SESSION['level'] == 'user_admin' || $_SESSION['level'] == 'user_input'){ 
-                                echo "<a class='btn btn-warning btn-xs btn-action' href='index.php?page=englishlegal&aksi=edit&id={$i['idData']}' title='Edit Data'>
-                                        <i class='fa fa-pencil-square-o'></i>
-                                      </a>";
+
+                            $prokum = mysqli_query($koneksi, $query);
+
+                            if(!$prokum) {
+                                die("Query error: " . mysqli_error($koneksi));
                             }
-                            
-                            // Tombol Hapus hanya untuk admin
-                            if ($_SESSION['level'] == 'user_admin'){ 
-                                echo "<a class='btn btn-danger btn-xs btn-action' href='index.php?page=englishlegal&aksi=hapus&id={$i['idData']}' 
-                                      title='Hapus' onclick='return confirm(\"Yakin menghapus data?\");'>
-                                        <i class='fa fa-trash-o'></i>
-                                      </a>";
+
+                            $no = 1;
+                            $hasData = false;
+
+                            while ($i = mysqli_fetch_assoc($prokum)){
+                                $hasData = true;
+                                
+                                // PASTIKAN SEMUA FIELD ADA NILAINYA
+                                $tahun = isset($i['tahun_pengundangan']) ? $i['tahun_pengundangan'] : '';
+                                $noPeraturan = isset($i['noPeraturan']) ? $i['noPeraturan'] : '';
+                                $judul = isset($i['judul']) ? $i['judul'] : '';
+                                $status = isset($i['status']) ? $i['status'] : '';
+                                $idData = isset($i['idData']) ? $i['idData'] : '';
+                                
+                                // Cek file gambar
+                                $gambar = "<span class='text-muted'>No Image</span>";
+                                if (!empty($i['image_path']) && file_exists($i['image_path'])) {
+                                    $gambar = "<img src='{$i['image_path']}' class='img-preview'>";
+                                }
+                                
+                                // Cek file PDF
+                                $pdf_file = "<span class='text-muted'>No PDF</span>";
+                                if (!empty($i['pdf_path']) && file_exists($i['pdf_path'])) {
+                                    $pdf_file = "<a href='{$i['pdf_path']}' target='_blank' class='btn btn-xs btn-info'>
+                                                    <i class='fa fa-file-pdf-o'></i>
+                                                </a>";
+                                }
+                                
+                                // Status badge warna
+                                $status_badge = "";
+                                if ($status == 'Berlaku') {
+                                    $status_badge = "<span class='label label-success'>$status</span>";
+                                } elseif ($status == 'Tidak Berlaku') {
+                                    $status_badge = "<span class='label label-danger'>$status</span>";
+                                } else {
+                                    $status_badge = "<span class='label label-warning'>$status</span>";
+                                }
+                                
+                                // Mulai baris
+                                echo "<tr>
+                                        <td>$no</td>
+                                        <td>$tahun</td>
+                                        <td>$noPeraturan</td>                            
+                                        <td>$judul</td>
+                                        <td>$status_badge</td>
+                                        <td class='text-center'>$gambar</td>
+                                        <td class='text-center'>$pdf_file</td>
+                                        <td class='text-center'>";
+                                
+                                // Tombol Lihat Detail
+                                echo "<a class='btn btn-info btn-xs btn-action' href='index.php?page=englishlegal&aksi=detail&id=$idData' title='Lihat Detail'>
+                                        <i class='fa fa-folder-open'></i>
+                                    </a>";
+                                
+                                // Tombol Edit
+                                if ($_SESSION['level'] == 'user_admin' || $_SESSION['level'] == 'user_input'){ 
+                                    echo "<a class='btn btn-warning btn-xs btn-action' href='index.php?page=englishlegal&aksi=edit&id=$idData' title='Edit Data'>
+                                            <i class='fa fa-pencil-square-o'></i>
+                                        </a>";
+                                }
+                                
+                                // Tombol Hapus hanya untuk admin
+                                if ($_SESSION['level'] == 'user_admin'){ 
+                                    echo "<a class='btn btn-danger btn-xs btn-action' href='index.php?page=englishlegal&aksi=hapus&id=$idData' 
+                                        title='Hapus' onclick='return confirm(\"Yakin menghapus data?\");'>
+                                            <i class='fa fa-trash-o'></i>
+                                        </a>";
+                                }
+                                
+                                // Tombol Export Word
+                                echo "<a class='btn btn-success btn-xs btn-action' href='index.php?page=englishlegal&aksi=eksport&id=$idData' title='Export Word'>
+                                        <i class='fa fa-file-word-o'></i>
+                                    </a>";
+                                
+                                echo "</td></tr>";
+                                $no++;
                             }
-                            
-                            // Tombol Export Word
-                            echo "<a class='btn btn-success btn-xs btn-action' href='index.php?page=englishlegal&aksi=eksport&id={$i['idData']}' title='Export Word'>
-                                    <i class='fa fa-file-word-o'></i>
-                                  </a>";
-                            
-                            echo "</td></tr>";
-                            $no++;
-                        }
-                        
-                        if($no == 1) {
-                            echo "<tr><td colspan='8' class='text-center'>Tidak ada data</td></tr>";
-                        }
-                        ?>
-                        </tbody>
+
+                            // JIKA TIDAK ADA DATA - PASTIKAN MEMBUAT 8 SEL TERPISAH
+                            if(!$hasData) {
+                                echo "<tr>
+                                        <td>1</td>
+                                        <td>-</td>
+                                        <td>-</td>
+                                        <td>Tidak ada data</td>
+                                        <td><span class='label label-default'>-</span></td>
+                                        <td class='text-center'><span class='text-muted'>-</span></td>
+                                        <td class='text-center'><span class='text-muted'>-</span></td>
+                                        <td class='text-center'>-</td>
+                                    </tr>";
+                            }
+                            ?>
+                            </tbody>
                     </table>
                 </div>
             </div>

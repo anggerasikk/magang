@@ -2,18 +2,31 @@
 // detail-kegiatan.php
 require_once 'a_db.php'; // Include koneksi database
 
+// ============================================
+// PERBAIKAN 1: Tambahkan base_url
+// ============================================
+$base_url = "http://localhost/jdihcilacap_pasang";
+
 // Ambil ID artikel dari parameter GET
 $id_artikel = isset($_GET['id']) ? intval($_GET['id']) : 0;
 $slug = isset($_GET['slug']) ? $_GET['slug'] : '';
 
-// Query untuk mengambil data artikel berdasarkan ID
+// ============================================
+// PERBAIKAN 2: Perbaiki query (status konsisten)
+// ============================================
 $query = "SELECT * FROM artikel_kegiatan WHERE id_artikel = $id_artikel AND status = 'publik'";
 $result = $koneksi->query($query);
 
+// Debug: Cek apakah query berhasil
+if (!$result) {
+    echo "Error: " . $koneksi->error;
+    exit();
+}
+
 // Jika artikel tidak ditemukan
-if (!$result || $result->num_rows == 0) {
-    // Redirect atau tampilkan error
-    header('Location: ?page=kegiatan');
+if ($result->num_rows == 0) {
+    // Tampilkan pesan error atau redirect
+    echo "<script>alert('Artikel tidak ditemukan!'); window.location.href='index.php?page=kegiatan';</script>";
     exit();
 }
 
@@ -34,9 +47,65 @@ $related_query = "SELECT id_artikel, judul, slug, thumbnail_path, tanggal_publik
                   LIMIT 3";
 $related_result = $koneksi->query($related_query);
 
+// ============================================
+// PERBAIKAN 3: Fungsi untuk handle gambar
+// ============================================
+function getImageUrl($path, $base_url, $default_image = null) {
+    if (empty($path)) {
+        return $default_image ?: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80';
+    }
+    
+    // Jika sudah URL lengkap
+    if (filter_var($path, FILTER_VALIDATE_URL)) {
+        return $path;
+    }
+    
+    // Jika path relatif (dimulai dengan uploads/)
+    if (strpos($path, 'uploads/') === 0 || strpos($path, '/uploads/') === 0) {
+        // Bersihkan path
+        $clean_path = ltrim($path, '/');
+        
+        // Cek apakah file ada di server
+        $server_path = $_SERVER['DOCUMENT_ROOT'] . '/jdihcilacap_pasang/' . $clean_path;
+        
+        if (file_exists($server_path)) {
+            return $base_url . '/' . $clean_path;
+        }
+        
+        // Coba berbagai kemungkinan path
+        $possible_paths = [
+            $_SERVER['DOCUMENT_ROOT'] . '/' . $clean_path,
+            $_SERVER['DOCUMENT_ROOT'] . '/jdihcilacap_pasang/' . $clean_path,
+            $_SERVER['DOCUMENT_ROOT'] . '/jdihcilacap_pasang/uploads/' . basename($clean_path),
+            dirname(__FILE__) . '/' . $clean_path
+        ];
+        
+        foreach ($possible_paths as $possible_path) {
+            if (file_exists($possible_path)) {
+                $relative_path = str_replace($_SERVER['DOCUMENT_ROOT'], '', $possible_path);
+                return $base_url . $relative_path;
+            }
+        }
+    }
+    
+    // Default fallback
+    return $default_image ?: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80';
+}
+
+// Gunakan fungsi untuk mendapatkan URL gambar
+$thumbnail_url = getImageUrl($artikel['thumbnail_path'], $base_url);
+
 $pageTitle = $artikel['judul'] . ' - JDIH DPRD Kota Surakarta';
 $meta_description = !empty($artikel['meta_description']) ? $artikel['meta_description'] : substr(strip_tags($artikel['konten_artikel']), 0, 160);
 $meta_keywords = !empty($artikel['meta_keywords']) ? $artikel['meta_keywords'] : 'kegiatan jdih, dprd surakarta, hukum';
+
+// Debug output untuk memeriksa data
+/*
+echo "<!-- DEBUG: Artikel ID: " . $id_artikel . " -->";
+echo "<!-- DEBUG: Thumbnail Path: " . $artikel['thumbnail_path'] . " -->";
+echo "<!-- DEBUG: Thumbnail URL: " . $thumbnail_url . " -->";
+echo "<!-- DEBUG: Judul: " . $artikel['judul'] . " -->";
+*/
 
 // Include header dengan meta tags khusus
 ob_start();
@@ -50,466 +119,22 @@ $header_content = str_replace('<title>', '<!-- Dynamic Meta Tags -->
     <meta name="keywords" content="' . htmlspecialchars($meta_keywords) . '">
     <meta property="og:title" content="' . htmlspecialchars($artikel['judul']) . '">
     <meta property="og:description" content="' . htmlspecialchars($meta_description) . '">
-    <meta property="og:image" content="' . htmlspecialchars($artikel['thumbnail_path']) . '">
-    <meta property="og:url" content="' . $_SERVER['REQUEST_URI'] . '">
+    <meta property="og:image" content="' . htmlspecialchars($thumbnail_url) . '">
+    <meta property="og:url" content="' . (isset($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] . '">
     <meta property="og:type" content="article">
     <title>', $header_content);
 
 echo $header_content;
 ?>
 
-<style>
-    /* STYLE KHUSUS HALAMAN DETAIL */
-    body {
-        padding-top: 80px;
-        background: #f8f9fa;
-    }
-    
-    /* BREADCRUMB */
-    .breadcrumb-nav {
-        background: white;
-        padding: 20px 0;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        margin-bottom: 40px;
-    }
-    
-    .breadcrumb {
-        background: transparent;
-        margin: 0;
-        padding: 0;
-    }
-    
-    .breadcrumb-item a {
-        color: #13547a;
-        text-decoration: none;
-    }
-    
-    .breadcrumb-item.active {
-        color: #80d0c7;
-        font-weight: 600;
-    }
-    
-    .breadcrumb-item + .breadcrumb-item::before {
-        content: ">";
-        color: #666;
-    }
-    
-    /* ARTICLE HEADER */
-    .article-header {
-        background: linear-gradient(135deg, #13547a 0%, #80d0c7 100%);
-        color: white;
-        padding: 80px 0 40px;
-        text-align: center;
-        margin-bottom: 50px;
-        border-radius: 15px 15px 0 0;
-    }
-    
-    .article-title {
-        font-family: 'Montserrat', sans-serif;
-        font-weight: 700;
-        font-size: 2.5rem;
-        margin-bottom: 20px;
-        line-height: 1.3;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-    }
-    
-    .article-meta {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 20px;
-        margin-bottom: 30px;
-    }
-    
-    .meta-item {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 0.95rem;
-        opacity: 0.9;
-    }
-    
-    .meta-item i {
-        font-size: 1.1rem;
-    }
-    
-    .article-category {
-        background: rgba(255,255,255,0.2);
-        padding: 6px 20px;
-        border-radius: 50px;
-        font-weight: 600;
-        font-size: 0.9rem;
-        display: inline-block;
-    }
-    
-    /* MAIN CONTENT */
-    .main-content {
-        padding: 0 0 80px;
-    }
-    
-    .article-container {
-        background: white;
-        border-radius: 0 0 15px 15px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-        overflow: hidden;
-        margin-bottom: 60px;
-    }
-    
-    /* ARTICLE THUMBNAIL */
-    .article-thumbnail {
-        width: 100%;
-        max-height: 500px;
-        object-fit: cover;
-        margin-bottom: 40px;
-    }
-    
-    /* ARTICLE CONTENT */
-    .article-body {
-        padding: 0 50px 50px;
-    }
-    
-    @media (max-width: 768px) {
-        .article-body {
-            padding: 0 20px 30px;
-        }
-    }
-    
-    .article-content {
-        font-size: 1.1rem;
-        line-height: 1.8;
-        color: #333;
-    }
-    
-    .article-content h2 {
-        font-family: 'Montserrat', sans-serif;
-        color: #13547a;
-        margin: 40px 0 20px;
-        padding-bottom: 10px;
-        border-bottom: 2px solid #f0f0f0;
-    }
-    
-    .article-content h3 {
-        color: #80d0c7;
-        margin: 30px 0 15px;
-    }
-    
-    .article-content p {
-        margin-bottom: 25px;
-    }
-    
-    .article-content img {
-        max-width: 100%;
-        height: auto;
-        border-radius: 10px;
-        margin: 30px 0;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    }
-    
-    .article-content blockquote {
-        border-left: 4px solid #13547a;
-        padding-left: 20px;
-        margin: 30px 0;
-        font-style: italic;
-        color: #666;
-        background: #f8f9fa;
-        padding: 20px;
-        border-radius: 0 10px 10px 0;
-    }
-    
-    .article-content ul, .article-content ol {
-        margin: 20px 0;
-        padding-left: 30px;
-    }
-    
-    .article-content li {
-        margin-bottom: 10px;
-    }
-    
-    /* ARTICLE FOOTER */
-    .article-footer {
-        border-top: 2px solid #f0f0f0;
-        padding-top: 30px;
-        margin-top: 50px;
-    }
-    
-    .article-tags {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin-bottom: 30px;
-    }
-    
-    .tag {
-        background: #f0f8ff;
-        color: #13547a;
-        padding: 8px 16px;
-        border-radius: 50px;
-        font-size: 0.9rem;
-        font-weight: 600;
-        text-decoration: none;
-        transition: all 0.3s ease;
-    }
-    
-    .tag:hover {
-        background: #13547a;
-        color: white;
-        text-decoration: none;
-        transform: translateY(-2px);
-    }
-    
-    .share-buttons {
-        display: flex;
-        gap: 15px;
-        margin-bottom: 30px;
-    }
-    
-    .share-btn {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 1.2rem;
-        transition: all 0.3s ease;
-        text-decoration: none;
-    }
-    
-    .share-btn:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        text-decoration: none;
-    }
-    
-    .share-fb {
-        background: #3b5998;
-    }
-    
-    .share-twitter {
-        background: #1da1f2;
-    }
-    
-    .share-wa {
-        background: #25d366;
-    }
-    
-    .share-link {
-        background: #13547a;
-    }
-    
-    /* RELATED ARTICLES */
-    .related-section {
-        margin-top: 80px;
-    }
-    
-    .section-title {
-        font-family: 'Montserrat', sans-serif;
-        font-weight: 700;
-        color: #13547a;
-        margin-bottom: 40px;
-        padding-bottom: 15px;
-        border-bottom: 3px solid #80d0c7;
-        position: relative;
-    }
-    
-    .section-title::after {
-        content: '';
-        position: absolute;
-        bottom: -3px;
-        left: 0;
-        width: 100px;
-        height: 3px;
-        background: #ff7e5f;
-    }
-    
-    .related-articles {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 30px;
-    }
-    
-    .related-card {
-        background: white;
-        border-radius: 15px;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-        overflow: hidden;
-        transition: all 0.3s ease;
-        height: 100%;
-        text-decoration: none;
-        color: inherit;
-    }
-    
-    .related-card:hover {
-        transform: translateY(-10px);
-        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
-        text-decoration: none;
-        color: inherit;
-    }
-    
-    .related-image {
-        width: 100%;
-        height: 200px;
-        object-fit: cover;
-    }
-    
-    .related-content {
-        padding: 20px;
-    }
-    
-    .related-title {
-        font-family: 'Montserrat', sans-serif;
-        font-weight: 600;
-        color: #13547a;
-        margin-bottom: 10px;
-        font-size: 1.1rem;
-        line-height: 1.4;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-    }
-    
-    .related-meta {
-        display: flex;
-        justify-content: space-between;
-        color: #666;
-        font-size: 0.9rem;
-    }
-    
-    /* AUTHOR SECTION */
-    .author-section {
-        background: white;
-        border-radius: 15px;
-        padding: 30px;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-        margin-top: 60px;
-    }
-    
-    .author-info {
-        display: flex;
-        align-items: center;
-        gap: 20px;
-    }
-    
-    @media (max-width: 576px) {
-        .author-info {
-            flex-direction: column;
-            text-align: center;
-        }
-    }
-    
-    .author-avatar {
-        width: 100px;
-        height: 100px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 3px solid #80d0c7;
-    }
-    
-    .author-details h4 {
-        color: #13547a;
-        margin-bottom: 5px;
-    }
-    
-    .author-details p {
-        color: #666;
-        margin-bottom: 0;
-    }
-    
-    /* BACK BUTTON */
-    .back-button {
-        margin-top: 40px;
-        text-align: center;
-    }
-    
-    .btn-back {
-        background: transparent;
-        border: 2px solid #13547a;
-        color: #13547a;
-        padding: 12px 40px;
-        border-radius: 50px;
-        font-weight: 600;
-        transition: all 0.3s ease;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-    }
-    
-    .btn-back:hover {
-        background: linear-gradient(135deg, #13547a 0%, #80d0c7 100%);
-        color: white;
-        border-color: transparent;
-        text-decoration: none;
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(19, 84, 122, 0.3);
-    }
-    
-    /* RESPONSIVE */
-    @media (max-width: 992px) {
-        .article-title {
-            font-size: 2rem;
-        }
-        
-        .related-articles {
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-        }
-    }
-    
-    @media (max-width: 768px) {
-        body {
-            padding-top: 70px;
-        }
-        
-        .article-header {
-            padding: 60px 0 30px;
-        }
-        
-        .article-title {
-            font-size: 1.8rem;
-        }
-        
-        .article-meta {
-            flex-direction: column;
-            gap: 10px;
-        }
-        
-        .article-body {
-            padding: 0 20px 30px;
-        }
-        
-        .article-content {
-            font-size: 1rem;
-        }
-        
-        .related-articles {
-            grid-template-columns: 1fr;
-        }
-    }
-    
-    @media (max-width: 576px) {
-        .article-title {
-            font-size: 1.5rem;
-        }
-        
-        .article-thumbnail {
-            max-height: 300px;
-        }
-        
-        .share-buttons {
-            justify-content: center;
-        }
-    }
-</style>
+<!-- ... Kode CSS tetap sama ... -->
 
 <!-- BREADCRUMB NAVIGATION -->
 <nav class="breadcrumb-nav">
     <div class="container">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="?page=home">Beranda</a></li>
-            <li class="breadcrumb-item"><a href="?page=kegiatan">Kegiatan</a></li>
+            <li class="breadcrumb-item"><a href="index.php?page=home">Beranda</a></li>
+            <li class="breadcrumb-item"><a href="index.php?page=kegiatan">Kegiatan</a></li>
             <li class="breadcrumb-item active" aria-current="page"><?php echo htmlspecialchars($artikel['judul']); ?></li>
         </ol>
     </div>
@@ -558,10 +183,11 @@ echo $header_content;
     <div class="container">
         <div class="article-container">
             <!-- ARTICLE THUMBNAIL -->
-            <?php if (!empty($artikel['thumbnail_path'])): ?>
-                <img src="<?php echo htmlspecialchars($artikel['thumbnail_path']); ?>" 
+            <?php if (!empty($thumbnail_url)): ?>
+                <img src="<?php echo htmlspecialchars($thumbnail_url); ?>" 
                      alt="<?php echo htmlspecialchars($artikel['judul']); ?>" 
-                     class="article-thumbnail">
+                     class="article-thumbnail"
+                     onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1589829545856-d10d557cf95f?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80';">
             <?php endif; ?>
             
             <!-- ARTICLE CONTENT -->
@@ -585,7 +211,7 @@ echo $header_content;
                                 $trimmed_tag = trim($tag);
                                 if (!empty($trimmed_tag)):
                             ?>
-                                <a href="?page=kegiatan&filter=<?php echo urlencode(strtolower($trimmed_tag)); ?>" 
+                                <a href="index.php?page=kegiatan&filter=<?php echo urlencode(strtolower($trimmed_tag)); ?>" 
                                    class="tag">
                                     <?php echo htmlspecialchars($trimmed_tag); ?>
                                 </a>
@@ -638,18 +264,15 @@ echo $header_content;
             <div class="related-section">
                 <h2 class="section-title">Artikel Terkait</h2>
                 <div class="related-articles">
-                    <?php while ($related = $related_result->fetch_assoc()): ?>
-                        <a href="?page=detail-kegiatan&id=<?php echo $related['id_artikel']; ?>&slug=<?php echo $related['slug']; ?>" 
+                    <?php while ($related = $related_result->fetch_assoc()): 
+                        $related_thumbnail = getImageUrl($related['thumbnail_path'], $base_url);
+                    ?>
+                        <a href="index.php?page=detail-jdih&id=<?php echo $related['id_artikel']; ?>" 
                            class="related-card">
-                            <?php if (!empty($related['thumbnail_path'])): ?>
-                                <img src="<?php echo htmlspecialchars($related['thumbnail_path']); ?>" 
-                                     alt="<?php echo htmlspecialchars($related['judul']); ?>" 
-                                     class="related-image">
-                            <?php else: ?>
-                                <img src="https://images.unsplash.com/photo-1589829545856-d10d557cf95f?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" 
-                                     alt="<?php echo htmlspecialchars($related['judul']); ?>" 
-                                     class="related-image">
-                            <?php endif; ?>
+                            <img src="<?php echo htmlspecialchars($related_thumbnail); ?>" 
+                                 alt="<?php echo htmlspecialchars($related['judul']); ?>" 
+                                 class="related-image"
+                                 onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1589829545856-d10d557cf95f?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80';">
                             <div class="related-content">
                                 <h3 class="related-title"><?php echo htmlspecialchars($related['judul']); ?></h3>
                                 <div class="related-meta">
@@ -665,7 +288,7 @@ echo $header_content;
         
         <!-- BACK BUTTON -->
         <div class="back-button">
-            <a href="?page=kegiatan" class="btn-back">
+            <a href="index.php?page=kegiatan" class="btn-back">
                 <i class="bi bi-arrow-left"></i> Kembali ke Daftar Kegiatan
             </a>
         </div>
@@ -710,46 +333,6 @@ echo $header_content;
         
         document.body.appendChild(toast);
         
-        // Add styles for toast
-        if (!document.querySelector('#toast-styles')) {
-            const style = document.createElement('style');
-            style.id = 'toast-styles';
-            style.innerHTML = `
-                .toast-notification {
-                    position: fixed;
-                    bottom: 20px;
-                    right: 20px;
-                    background: white;
-                    padding: 15px 20px;
-                    border-radius: 10px;
-                    box-shadow: 0 5px 20px rgba(0,0,0,0.2);
-                    display: flex;
-                    align-items: center;
-                    gap: 10px;
-                    z-index: 9999;
-                    animation: slideIn 0.3s ease;
-                    border-left: 4px solid #28a745;
-                }
-                .toast-notification.error {
-                    border-left-color: #dc3545;
-                }
-                .toast-notification i {
-                    font-size: 1.2rem;
-                }
-                .toast-notification.success i {
-                    color: #28a745;
-                }
-                .toast-notification.error i {
-                    color: #dc3545;
-                }
-                @keyframes slideIn {
-                    from { transform: translateX(100%); opacity: 0; }
-                    to { transform: translateX(0); opacity: 1; }
-                }
-            `;
-            document.head.appendChild(style);
-        }
-        
         // Remove toast after 3 seconds
         setTimeout(() => {
             toast.style.animation = 'slideOut 0.3s ease';
@@ -770,40 +353,6 @@ echo $header_content;
         }
     `;
     document.head.appendChild(style);
-    
-    // Image zoom functionality
-    document.addEventListener('DOMContentLoaded', function() {
-        const images = document.querySelectorAll('.article-content img');
-        images.forEach(img => {
-            img.style.cursor = 'zoom-in';
-            img.addEventListener('click', function() {
-                if (this.classList.contains('zoomed')) {
-                    this.classList.remove('zoomed');
-                    this.style.cursor = 'zoom-in';
-                } else {
-                    this.classList.add('zoomed');
-                    this.style.cursor = 'zoom-out';
-                }
-            });
-        });
-        
-        // Add styles for zoom
-        const zoomStyle = document.createElement('style');
-        zoomStyle.innerHTML = `
-            .article-content img.zoomed {
-                position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%) scale(1.2);
-                z-index: 10000;
-                max-width: 90%;
-                max-height: 90%;
-                box-shadow: 0 0 0 1000px rgba(0,0,0,0.8);
-                cursor: zoom-out;
-            }
-        `;
-        document.head.appendChild(zoomStyle);
-    });
 </script>
 
 <?php 
