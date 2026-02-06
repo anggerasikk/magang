@@ -355,61 +355,53 @@ include 'header.php';
             <!-- SIDEBAR -->
             <div class="col-lg-4">
                 
-                <!-- INFO BOX -->
-                <div class="sidebar-menu">
-                    <h4><i class="bi bi-info-circle"></i> Informasi Penting</h4>
-                    <p class="mb-0">
-                        Struktur ini berfungsi sebagai landasan organisasi dalam 
-                        pengelolaan produk hukum, monografi, dan informasi lainnya 
-                        yang terkait dengan tugas dan fungsi DPRD Kota Surakarta.
-                    </p>
-                </div>
-
                 <!-- MENU TERKAIT -->
                 <div class="sidebar-menu">
                     <h4><i class="bi bi-link-45deg"></i> Menu Terkait</h4>
                     <ul>
-                        <li>
-                            <a href="alur-pengelolaan.php">
+                        <li class="<?= (strpos($_SERVER['PHP_SELF'], 'Profil-JDIH') !== false) ? 'active' : '' ?>">
+                            <a href="?page=profil-jdih">
+                                <i class="bi bi-building"></i>
+                                Profil JDIH
+                            </a>
+                        </li>
+                        <li class="<?= (strpos($_SERVER['PHP_SELF'], 'struktur-organisasi') !== false) ? 'active' : '' ?>">
+                            <a href="?page=struktur-organisasi">
                                 <i class="bi bi-diagram-3"></i>
-                                Alur Pengelolaan Produk Hukum
+                                Struktur Organisasi
                             </a>
                         </li>
-                        <li>
-                            <a href="sop-pengelola.php">
+                        <li class="<?= (strpos($_SERVER['PHP_SELF'], 'alur-pengelolaan') !== false) ? 'active' : '' ?>">
+                            <a href="?page=alur-pengelolaan">
+                                <i class="bi bi-diagram-2"></i>
+                                Alur Pengelolaan
+                            </a>
+                        </li>
+                        <li class="<?= (strpos($_SERVER['PHP_SELF'], 'sop-pengelola') !== false) ? 'active' : '' ?>">
+                            <a href="?page=sop-pengelola">
                                 <i class="bi bi-clipboard-check"></i>
-                                SOP Pengelola JDIH
+                                SOP Pengelola
                             </a>
                         </li>
-                        <li>
-                            <a href="dasar-hukum.php">
+                        <li class="<?= (strpos($_SERVER['PHP_SELF'], 'dasar-hukum') !== false) ? 'active' : '' ?>">
+                            <a href="?page=dasar-hukum">
                                 <i class="bi bi-journal-text"></i>
-                                Dasar Hukum JDIH
+                                Dasar Hukum
                             </a>
                         </li>
-                        <li>
-                            <a href="visi-misi.php">
-                                <i class="bi bi-bullseye"></i>
-                                Visi & Misi
+                        <li class="<?= (strpos($_SERVER['PHP_SELF'], 'surat-keputusan') !== false) ? 'active' : '' ?>">
+                            <a href="?page=surat-keputusan">
+                                <i class="bi bi-file-earmark-pdf"></i>
+                                Surat Keputusan
                             </a>
                         </li>
-                        <li>
-                            <a href="keputusan-dprd.php">
-                                <i class="bi bi-file-earmark-text"></i>
-                                Keputusan DPRD
+                        <li class="<?= (strpos($_SERVER['PHP_SELF'], 'video-profile') !== false) ? 'active' : '' ?>">
+                            <a href="?page=video-profile">
+                                <i class="bi bi-play-circle"></i>
+                                Video Profile
                             </a>
                         </li>
                     </ul>
-                </div>
-
-                <!-- DOWNLOAD BOX -->
-                <div class="sidebar-menu">
-                    <h4><i class="bi bi-download"></i> Download</h4>
-                    <p class="mb-3">Unduh gambar struktur organisasi dalam format high-resolution:</p>
-                    <a href="images/struktur/pengarah.jpg" download class="download-btn">
-                        <i class="bi bi-download"></i>
-                        Download Struktur Organisasi
-                    </a>
                 </div>
 
             </div>

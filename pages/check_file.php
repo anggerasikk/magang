@@ -34,8 +34,8 @@ function searchFileEverywhere($filename) {
         $root . '/uploads/pdf/' . $filename,
         
         // Admin uploads
-        $root . '/wb_admin/uploads/' . $filename,
-        $root . '/wb_admin/uploads/pdf/' . $filename,
+        $root . '/panel_control/uploads/' . $filename,
+        $root . '/panel_control/uploads/pdf/' . $filename,
         
         // Variasi path
         $current_dir . '/../uploads/' . $filename,

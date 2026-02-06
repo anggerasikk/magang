@@ -1,0 +1,37 @@
+RewriteEngine On
+Options +FollowSymLinks
+ServerSignature Off
+Options -Indexes
+
+# =========================
+# JANGAN REWRITE FILE UPLOAD
+# =========================
+RewriteCond %{REQUEST_URI} ^/jdihcilacap_pasang_2026/panel_control/uploads/ [NC]
+RewriteRule ^ - [L]
+
+# =========================
+# HIDE index.php
+# =========================
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.php [L]
+
+# =========================
+# BATASI METODE REQUEST
+# =========================
+<LimitExcept GET POST>
+    Deny from all
+</LimitExcept>
+
+# =========================
+# BLOK BOT BERBAHAYA
+# =========================
+SetEnvIfNoCase User-Agent "sqlmap|nikto|fuzzer|curl|wget|python" bad_bot
+Deny from env=bad_bot
+
+# =========================
+# BLOK FILE SENSITIF
+# =========================
+<FilesMatch "\.(log|sql|env|ini|bak)$">
+    Deny from all
+</FilesMatch>

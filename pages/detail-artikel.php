@@ -1,179 +1,199 @@
 <?php
 /**
- * DETAIL ARTIKEL HUKUM
+ * DETAIL ARTIKEL HUKUM - VERSION FIXED
  * File: detail-artikel.php
- * Fungsi: Menampilkan detail artikel hukum dari DPRD Kota Surakarta
  */
 
+// ============================================
+// KEAMANAN: ERROR HANDLING
+// ============================================
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+ini_set('log_errors', 1);
+ini_set('error_log', __DIR__ . '/logs/php_errors.log');
+
+// ============================================
+// KEAMANAN: SESSION START
+// ============================================
 session_start();
 
 // ============================================
-// KONEKSI DATABASE
+// KEAMANAN: INCLUDE REQUIRED FILES
 // ============================================
-$host = "localhost";
-$username = "root";
-$password = "";
-$database = "jdihdprd";
-
-$koneksi = mysqli_connect($host, $username, $password, $database);
-
-if (!$koneksi) {
-    die("Koneksi database gagal: " . mysqli_connect_error());
+// Database
+if (!isset($koneksi) || !$koneksi) {
+    include_once "a_db.php";
 }
 
-mysqli_set_charset($koneksi, "utf8");
+// Functions - Gunakan fungsi dari artikel-hukum.php
+if (!function_exists('sanitize_input')) {
+    function sanitize_input($input) {
+        return htmlspecialchars(trim($input), ENT_QUOTES, 'UTF-8');
+    }
+}
+
+if (!function_exists('safe_output')) {
+    function safe_output($data) {
+        return htmlspecialchars($data, ENT_QUOTES, 'UTF-8');
+    }
+}
 
 // ============================================
-// KONFIGURASI PATH
+// FUNGSI DECODE ID YANG KOMPATIBEL
 // ============================================
-$base_upload_path = "C:/xampp/htdocs/jdihcilacap_pasang/wb_admin/uploads/";
-$artikel_pdf_path = "C:/xampp/htdocs/jdihcilacap_pasang/wb_admin/uploads/artikel_hukum/pdf/";
-$artikel_images_path = "C:/xampp/htdocs/jdihcilacap_pasang/wb_admin/uploads/artikel_hukum/images/";
-
-$web_artikel_pdf_path = "/jdihcilacap_pasang/wb_admin/uploads/artikel_hukum/pdf/";
-$web_artikel_images_path = "/jdihcilacap_pasang/wb_admin/uploads/artikel_hukum/images/";
-
-/* ======================
-   VALIDASI ID
-====================== */
-$id = isset($_GET['id']) ? intval($_GET['id']) : 0;
-if ($id <= 0) {
-    header("Location: artikel-hukum.php");
-    exit;
-}
-
-/* ======================
-   AMBIL DATA ARTIKEL
-====================== */
-$stmt = mysqli_prepare(
-    $koneksi,
-    "SELECT 
-        id_artikel,
-        judul,
-        jenis_artikel,
-        tanggal_terbit,
-        tahun_terbit,
-        penulis,
-        jurnal,
-        issn,
-        volume,
-        issue,
-        halaman,
-        bidang_hukum,
-        keywords,
-        abstrak,
-        status,
-        bahasa,
-        file_pdf,
-        thumbnail,
-        created_at,
-        updated_at,
-        id_user
-     FROM artikel_hukum 
-     WHERE id_artikel = ? AND status = 'published' 
-     LIMIT 1"
-);
-
-if (!$stmt) {
-    die("Error: Gagal menyiapkan query database");
-}
-
-mysqli_stmt_bind_param($stmt, "i", $id);
-$execute_success = mysqli_stmt_execute($stmt);
-
-if (!$execute_success) {
-    die("Error: Gagal mengeksekusi query: " . mysqli_error($koneksi));
-}
-
-$result = mysqli_stmt_get_result($stmt);
-
-if (!$result || mysqli_num_rows($result) === 0) {
-    header("Location: artikel-hukum.php");
-    exit;
-}
-
-if (mysqli_num_rows($result) == 0) {
-    die("Error: Artikel tidak ditemukan di database (ID: $id)");
-}
-
-$data = mysqli_fetch_assoc($result);
-mysqli_stmt_close($stmt);
-
-/* ======================
-   FUNGSI BANTU
-====================== */
-function tgl($tgl) {
-    if (empty($tgl) || $tgl == '0000-00-00') return '-';
+function decode_article_token($token) {
+    // Decode base64
+    $decoded = base64_decode($token);
     
-    $bulan = array(
-        'January' => 'Januari',
-        'February' => 'Februari',
-        'March' => 'Maret',
-        'April' => 'April',
-        'May' => 'Mei',
-        'June' => 'Juni',
-        'July' => 'Juli',
-        'August' => 'Agustus',
-        'September' => 'September',
-        'October' => 'Oktober',
-        'November' => 'November',
-        'December' => 'Desember'
-    );
-    
-    $english_date = date('d F Y', strtotime($tgl));
-    return str_replace(array_keys($bulan), array_values($bulan), $english_date);
-}
-
-// Fungsi untuk menemukan file PDF di server
-function findArtikelPDFFile($filename, $id = null) {
-    global $artikel_pdf_path;
-    
-    if (empty($filename) && empty($id)) {
-        return null;
+    if (!$decoded) {
+        return 0;
     }
     
-    if (!empty($filename)) {
-        $filename = basename($filename);
-        $clean_filename = preg_replace('/(\.pdf)+$/i', '.pdf', $filename);
+    // Format dari artikel-hukum.php: 'jdih_<id>_<timestamp>'
+    $parts = explode('_', $decoded);
+    
+    if (count($parts) >= 3 && $parts[0] === 'jdih') {
+        $id = (int)$parts[1];
+        return $id > 0 ? $id : 0;
+    }
+    
+    // Coba format alternatif
+    if (is_numeric($decoded)) {
+        return (int)$decoded;
+    }
+    
+    return 0;
+}
+
+// ============================================
+// GET & VALIDATE TOKEN/ID
+// ============================================
+$id = 0;
+$debug_mode = isset($_GET['debug']);
+
+// Cek token dari URL
+if (isset($_GET['token']) && !empty($_GET['token'])) {
+    $raw_token = $_GET['token'];
+    $token = urldecode($raw_token); // Decode URL encoding dulu
+    
+    if ($debug_mode) {
+        error_log("Token received: " . $raw_token);
+        error_log("Token after urldecode: " . $token);
+    }
+    
+    // Coba decode dengan fungsi yang kompatibel
+    $id = decode_article_token($token);
+    
+    if ($debug_mode) {
+        error_log("Decoded ID: " . $id);
+    }
+    
+    // Jika masih 0, coba langsung decode base64
+    if ($id <= 0) {
+        $direct_decode = base64_decode($token);
+        if ($debug_mode) {
+            error_log("Direct base64 decode: " . $direct_decode);
+        }
         
-        $possible_locations = [
-            $artikel_pdf_path . $clean_filename,
-            str_replace('/', '\\', $artikel_pdf_path) . $clean_filename,
-            $_SERVER['DOCUMENT_ROOT'] . '/jdihcilacap_pasang/wb_admin/uploads/artikel/pdf/' . $clean_filename,
+        // Cek jika hasil decode adalah format jdih_X_timestamp
+        if ($direct_decode && strpos($direct_decode, 'jdih_') === 0) {
+            $parts = explode('_', $direct_decode);
+            if (count($parts) >= 2 && is_numeric($parts[1])) {
+                $id = (int)$parts[1];
+            }
+        }
+    }
+}
+
+// Debug output
+if ($debug_mode) {
+    echo "<!-- DEBUG: Final ID: $id -->\n";
+}
+
+// Validasi ID
+if ($id <= 0) {
+    error_log("Invalid ID or token: " . ($_GET['token'] ?? 'none'));
+    header("Location: index.php?page=artikel-hukum&error=invalid_token");
+    exit;
+}
+
+// ============================================
+// FUNGSI BANTU FILE - UPDATE DENGAN PATH YANG SAMA
+// ============================================
+
+// Gunakan path yang sama dengan artikel-hukum.php
+function get_article_base_path() {
+    $document_root = str_replace('\\', '/', $_SERVER['DOCUMENT_ROOT']);
+    $base_path = $document_root . "/jdihcilacap_pasang_2026/panel_control/uploads/artikel_hukum/";
+    
+    // Fallback paths
+    if (!is_dir($base_path)) {
+        $possible_paths = [
+            $document_root . "/panel_control/uploads/artikel_hukum/",
+            $document_root . "/uploads/artikel_hukum/",
+            dirname(__DIR__) . "/panel_control/uploads/artikel_hukum/",
+            "C:/xampp/htdocs/jdihcilacap_pasang_2026/panel_control/uploads/artikel_hukum/",
+            "C:/laragon/www/jdihcilacap_pasang_2026/panel_control/uploads/artikel_hukum/"
         ];
         
-        foreach ($possible_locations as $location) {
-            if (file_exists($location) && is_file($location) && is_readable($location)) {
-                $finfo = finfo_open(FILEINFO_MIME_TYPE);
-                $mime_type = finfo_file($finfo, $location);
-                finfo_close($finfo);
-                
-                if (stripos($mime_type, 'pdf') !== false) {
-                    return $location;
-                }
+        foreach ($possible_paths as $path) {
+            if (is_dir($path)) {
+                $base_path = $path;
+                break;
             }
         }
     }
     
-    // Coba dengan ID
+    return $base_path;
+}
+
+// Fungsi untuk menemukan file PDF
+function find_article_pdf($filename, $id = null) {
+    $base_path = get_article_base_path();
+    $pdf_path = $base_path . "pdf/";
+    
+    if (!is_dir($pdf_path)) {
+        @mkdir($pdf_path, 0755, true);
+    }
+    
+    if ($debug_mode = (isset($GLOBALS['debug_mode']) && $GLOBALS['debug_mode'])) {
+        error_log("Searching PDF for filename: $filename, ID: $id");
+        error_log("PDF path: $pdf_path");
+    }
+    
+    // Cari berdasarkan filename dari database
+    if (!empty($filename)) {
+        $clean_name = basename($filename);
+        $test_path = $pdf_path . $clean_name;
+        
+        if ($debug_mode) error_log("Testing path: $test_path");
+        
+        if (file_exists($test_path) && is_file($test_path) && is_readable($test_path)) {
+            $mime = mime_content_type($test_path);
+            if (stripos($mime, 'pdf') !== false) {
+                return $test_path;
+            }
+        }
+    }
+    
+    // Cari berdasarkan ID
     if ($id) {
-        $possible_filenames = [
+        $patterns = [
             $id . '.pdf',
             $id . '.PDF',
             'artikel_' . $id . '.pdf',
-            'artikel_' . $id . '.PDF',
             'ARTIKEL_' . $id . '.pdf',
+            'artikel_' . $id . '.PDF',
         ];
         
-        foreach ($possible_filenames as $filename) {
-            $location = $artikel_pdf_path . $filename;
-            if (file_exists($location) && is_file($location) && is_readable($location)) {
-                $finfo = finfo_open(FILEINFO_MIME_TYPE);
-                $mime_type = finfo_file($finfo, $location);
-                finfo_close($finfo);
-                
-                if (stripos($mime_type, 'pdf') !== false) {
-                    return $location;
+        foreach ($patterns as $pattern) {
+            $test_path = $pdf_path . $pattern;
+            if ($debug_mode) error_log("Testing ID path: $test_path");
+            
+            if (file_exists($test_path) && is_file($test_path) && is_readable($test_path)) {
+                $mime = mime_content_type($test_path);
+                if (stripos($mime, 'pdf') !== false) {
+                    return $test_path;
                 }
             }
         }
@@ -182,14 +202,33 @@ function findArtikelPDFFile($filename, $id = null) {
     return null;
 }
 
-// Fungsi untuk menemukan gambar thumbnail
-function findArtikelImageFile($filename, $id = null) {
-    global $artikel_images_path;
+// Fungsi untuk menemukan gambar
+function find_article_image($filename, $id = null) {
+    $base_path = get_article_base_path();
+    $image_path = $base_path . "images/";
     
-    if (empty($filename) && $id) {
-        $image_extensions = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'JPG', 'JPEG', 'PNG', 'WEBP', 'GIF'];
-        foreach ($image_extensions as $ext) {
-            $test_filenames = [
+    if (!is_dir($image_path)) {
+        @mkdir($image_path, 0755, true);
+    }
+    
+    // Cari berdasarkan filename
+    if (!empty($filename)) {
+        $clean_name = basename($filename);
+        $test_path = $image_path . $clean_name;
+        
+        if (file_exists($test_path) && is_file($test_path) && is_readable($test_path)) {
+            $mime = mime_content_type($test_path);
+            if (strpos($mime, 'image/') === 0) {
+                return $test_path;
+            }
+        }
+    }
+    
+    // Cari berdasarkan ID
+    if ($id) {
+        $extensions = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'JPG', 'JPEG', 'PNG', 'WEBP', 'GIF'];
+        foreach ($extensions as $ext) {
+            $patterns = [
                 $id . '.' . $ext,
                 'artikel_' . $id . '.' . $ext,
                 'ARTIKEL_' . $id . '.' . $ext,
@@ -197,39 +236,26 @@ function findArtikelImageFile($filename, $id = null) {
                 'cover_' . $id . '.' . $ext,
             ];
             
-            foreach ($test_filenames as $test_filename) {
-                $test_path = $artikel_images_path . $test_filename;
-                if (file_exists($test_path)) {
+            foreach ($patterns as $pattern) {
+                $test_path = $image_path . $pattern;
+                if (file_exists($test_path) && is_file($test_path) && is_readable($test_path)) {
                     return $test_path;
                 }
             }
         }
-        return null;
     }
     
-    if (empty($filename)) {
-        return null;
-    }
-    
-    $filename = basename($filename);
-    
-    $possible_locations = [
-        $artikel_images_path . $filename,
-        str_replace('/', '\\', $artikel_images_path) . $filename,
-        $_SERVER['DOCUMENT_ROOT'] . '/jdihcilacap_pasang/wb_admin/uploads/artikel/images/' . $filename,
-    ];
-    
-    foreach ($possible_locations as $location) {
-        if (file_exists($location) && is_file($location) && is_readable($location)) {
-            return $location;
-        }
+    // Default image
+    $default_path = get_article_base_path() . "../../images/ARTIKEL HUKUM.png";
+    if (file_exists($default_path)) {
+        return $default_path;
     }
     
     return null;
 }
 
 // Fungsi format ukuran file
-function formatFileSize($bytes) {
+function format_file_size($bytes) {
     if ($bytes >= 1073741824) {
         return number_format($bytes / 1073741824, 2) . ' GB';
     } elseif ($bytes >= 1048576) {
@@ -241,136 +267,224 @@ function formatFileSize($bytes) {
     }
 }
 
-// Fungsi generate URL file
-function generateFileUrl($file_path) {
-    $root = $_SERVER['DOCUMENT_ROOT'];
-    $root = str_replace('\\', '/', $root);
-    $file_path = str_replace('\\', '/', $file_path);
+// Fungsi konversi path ke URL
+function path_to_url($physical_path) {
+    $doc_root = str_replace('\\', '/', $_SERVER['DOCUMENT_ROOT']);
+    $physical_path = str_replace('\\', '/', $physical_path);
     
-    // Jika file ada dalam DOCUMENT_ROOT
-    if (strpos($file_path, $root) === 0) {
-        $url_path = substr($file_path, strlen($root));
+    if (strpos($physical_path, $doc_root) === 0) {
+        $url_path = substr($physical_path, strlen($doc_root));
+        if (strpos($url_path, '/') !== 0) {
+            $url_path = '/' . $url_path;
+        }
         return $url_path;
     }
     
-    // Untuk XAMPP absolute path
-    if (strpos($file_path, 'C:/xampp/htdocs') === 0) {
-        $url_path = substr($file_path, strlen('C:/xampp/htdocs'));
-        return $url_path;
+    return $physical_path;
+}
+
+// ============================================
+// QUERY DATABASE
+// ============================================
+$query = "SELECT * FROM artikel_hukum WHERE id_artikel = ? AND UPPER(status) = 'PUBLISHED' LIMIT 1";
+$stmt = mysqli_prepare($koneksi, $query);
+
+if (!$stmt) {
+    error_log("Database prepare error: " . mysqli_error($koneksi));
+    die("Database error. Please try again later.");
+}
+
+mysqli_stmt_bind_param($stmt, "i", $id);
+mysqli_stmt_execute($stmt);
+$result = mysqli_stmt_get_result($stmt);
+
+if (!$result || mysqli_num_rows($result) === 0) {
+    mysqli_stmt_close($stmt);
+    
+    if ($debug_mode) {
+        echo "<!-- DEBUG: No article found with ID: $id -->";
     }
     
-    // Jika tidak bisa dikonversi, return path relatif
-    return $file_path;
+    header("Location: index.php?page=artikel-hukum&error=doc_not_found");
+    exit;
 }
 
-/* ======================
-   PROSES PENCARIAN FILE
-====================== */
-$debug_mode = isset($_GET['debug']);
-$file_found = false;
-$file_info = null;
-$file_url = '';
-$file_size_formatted = '0 MB';
-$file_name_display = '';
+$data = mysqli_fetch_assoc($result);
+mysqli_stmt_close($stmt);
 
-$file_path_db = $data['file_pdf'] ?? '';
+// ============================================
+// CEK FILE PDF DAN GAMBAR
+// ============================================
+$pdf_file = $data['file_pdf'] ?? '';
+$thumbnail_file = $data['thumbnail'] ?? '';
 
-if (!empty($file_path_db)) {
-    $actual_file_path = findArtikelPDFFile($file_path_db, $data['id_artikel']);
-    
-    if ($actual_file_path && file_exists($actual_file_path)) {
-        $file_found = true;
-        $file_info = [
-            'path' => $actual_file_path,
-            'size' => filesize($actual_file_path),
-            'time' => filemtime($actual_file_path),
-            'mime' => mime_content_type($actual_file_path)
-        ];
-        
-        $file_size_formatted = formatFileSize($file_info['size']);
-        $file_name_display = basename($actual_file_path);
-        
-        // Generate URL untuk browser
-        $file_url = generateFileUrl($actual_file_path);
-        
-        // Tambahkan parameter timestamp untuk menghindari cache
-        $file_url .= '?t=' . time();
-    }
-}
+// Cari file PDF
+$actual_pdf_path = find_article_pdf($pdf_file, $data['id_artikel']);
+$pdf_found = ($actual_pdf_path && file_exists($actual_pdf_path));
+$pdf_url = $pdf_found ? path_to_url($actual_pdf_path) . '?t=' . time() : '';
+$file_size = $pdf_found ? format_file_size(filesize($actual_pdf_path)) : '0 MB';
 
-/* ======================
-   PROSES PENCARIAN GAMBAR
-====================== */
-$image_found = false;
-$image_url = '';
-$thumbnail_path = $data['thumbnail'] ?? '';
+// Cari gambar
+$actual_image_path = find_article_image($thumbnail_file, $data['id_artikel']);
+$image_found = ($actual_image_path && file_exists($actual_image_path));
+$image_url = $image_found ? path_to_url($actual_image_path) : '';
 
-if (!empty($thumbnail_path)) {
-    $actual_image_path = findArtikelImageFile($thumbnail_path, $data['id_artikel']);
-} else {
-    $actual_image_path = findArtikelImageFile(null, $data['id_artikel']);
-}
-
-if ($actual_image_path && file_exists($actual_image_path)) {
-    $image_found = true;
-    $image_url = generateFileUrl($actual_image_path);
-    
-    // Pastikan URL dimulai dengan slash
-    if (!empty($image_url) && !preg_match('/^https?:\/\//', $image_url) && $image_url[0] !== '/') {
-        $image_url = '/' . $image_url;
-    }
-}
-
-$page_title = $data['judul'] . " - Artikel Hukum - JDIH DPRD Kota Surakarta";
+// ============================================
+// TAMPILKAN HALAMAN
+// ============================================
+$page_title = safe_output($data['judul']) . " - JDIH DPRD Kota Surakarta";
 include "header.php";
 ?>
+
+<!-- STYLE UPDATE UNTUK SERAGAM -->
+<style>
+/* Style utama dari detail-keputusan */
+.card-header.fw-bold {
+    background-color: #f8f9fa !important;
+    color: #495057 !important;
+    border-bottom: 1px solid #dee2e6 !important;
+    font-size: 1.1rem !important;
+}
+
+.table-bordered td:first-child {
+    font-weight: 600;
+    background-color: #f8f9fa;
+    width: 30%;
+}
+
+.badge {
+    font-size: 0.85em;
+    padding: 0.4em 0.8em;
+}
+
+.btn-group .btn {
+    padding: 0.375rem 0.75rem;
+}
+
+.file-icon-large i {
+    font-size: 4rem;
+}
+
+.pdf-preview {
+    width: 100%;
+    height: 600px;
+    border: none;
+    background: #525659;
+}
+
+.modal-xl {
+    max-width: 1200px;
+}
+
+/* Style khusus untuk artikel */
+.keyword-badge {
+    display: inline-block;
+    background: #e9ecef;
+    color: #495057;
+    padding: 4px 10px;
+    border-radius: 20px;
+    margin-right: 5px;
+    margin-bottom: 5px;
+    font-size: 12px;
+}
+
+.abstract-content {
+    line-height: 1.8;
+    font-size: 16px;
+}
+
+/* Shadow untuk card seperti di detail-keputusan */
+.shadow-sm {
+    box-shadow: 0 .125rem .25rem rgba(0,0,0,.075)!important;
+}
+
+/* Warna konsisten */
+.bg-primary {
+    background-color: #0d6efd !important;
+}
+
+.bg-success {
+    background-color: #198754 !important;
+}
+
+.bg-info {
+    background-color: #0dcaf0 !important;
+}
+
+.bg-danger {
+    background-color: #dc3545 !important;
+}
+
+.bg-warning {
+    background-color: #ffc107 !important;
+}
+
+/* Button styles konsisten */
+.btn-success {
+    background-color: #198754;
+    border-color: #198754;
+}
+
+.btn-primary {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.btn-info {
+    background-color: #0dcaf0;
+    border-color: #0dcaf0;
+    color: #000;
+}
+
+.btn-outline-primary {
+    color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.btn-outline-secondary {
+    color: #6c757d;
+    border-color: #6c757d;
+}
+</style>
 
 <div class="container py-4">
     <!-- BREADCRUMB -->
     <nav aria-label="breadcrumb" class="mb-4">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="index.php">Beranda</a></li>
-            <li class="breadcrumb-item"><a href="artikel-hukum.php">Artikel Hukum</a></li>
+            <li class="breadcrumb-item"><a href="index.php">Home</a></li>
+            <li class="breadcrumb-item"><a href="index.php?page=artikel-hukum">Artikel Hukum</a></li>
             <li class="breadcrumb-item active">Detail Artikel</li>
         </ol>
     </nav>
 
     <!-- BACK BUTTON -->
-    <a href="artikel-hukum.php" class="btn btn-light mb-3">
-        <i class="fas fa-arrow-left"></i> Kembali ke Artikel Hukum
+    <a href="index.php?page=artikel-hukum" class="btn btn-light mb-3">
+        <i class="fas fa-arrow-left"></i> Kembali ke Daftar Artikel
     </a>
 
     <?php if($debug_mode): ?>
-    <div class="alert alert-info">
+    <div class="alert alert-info mb-4">
         <h5><i class="fas fa-bug"></i> Debug Information</h5>
         <div class="row">
             <div class="col-md-6">
                 <table class="table table-sm table-bordered">
-                    <tr><th>Database PDF Path</th><td><code><?= htmlspecialchars($file_path_db ?? 'NULL') ?></code></td></tr>
-                    <tr><th>Database Thumbnail</th><td><code><?= htmlspecialchars($thumbnail_path ?? 'NULL') ?></code></td></tr>
-                    <tr><th>PDF Found</th><td><?= $file_found ? '<span class="badge bg-success">YES</span>' : '<span class="badge bg-danger">NO</span>' ?></td></tr>
-                    <tr><th>Image Found</th><td><?= $image_found ? '<span class="badge bg-success">YES</span>' : '<span class="badge bg-danger">NO</span>' ?></td></tr>
+                    <tr><th>ID Artikel</th><td><?= $id ?></td></tr>
+                    <tr><th>Token</th><td><?= $_GET['token'] ?? 'N/A' ?></td></tr>
+                    <tr><th>PDF Found</th><td><?= $pdf_found ? '<span class="badge bg-success">YES</span>' : '<span class="badge bg-danger">NO</span>' ?></td></tr>
                 </table>
             </div>
             <div class="col-md-6">
                 <table class="table table-sm table-bordered">
                     <tr><th>Document Root</th><td><code><?= $_SERVER['DOCUMENT_ROOT'] ?></code></td></tr>
-                    <tr><th>PDF Path</th><td><code><?= $artikel_pdf_path ?></code></td></tr>
-                    <tr><th>Image Path</th><td><code><?= $artikel_images_path ?></code></td></tr>
+                    <tr><th>Current Dir</th><td><code><?= __DIR__ ?></code></td></tr>
                 </table>
             </div>
         </div>
-        <?php if($file_found): ?>
+        <?php if($pdf_found): ?>
         <table class="table table-sm table-bordered mt-2">
-            <tr><th>Actual PDF Path</th><td><code><?= htmlspecialchars($file_info['path']) ?></code></td></tr>
-            <tr><th>File URL</th><td><code><?= htmlspecialchars($file_url) ?></code></td></tr>
-            <tr><th>File Size</th><td><?= $file_size_formatted ?></td></tr>
-        </table>
-        <?php endif; ?>
-        <?php if($image_found): ?>
-        <table class="table table-sm table-bordered mt-2">
-            <tr><th>Actual Image Path</th><td><code><?= htmlspecialchars($actual_image_path) ?></code></td></tr>
-            <tr><th>Image URL</th><td><code><?= htmlspecialchars($image_url) ?></code></td></tr>
+            <tr><th>Actual Path</th><td><code><?= htmlspecialchars($actual_pdf_path) ?></code></td></tr>
+            <tr><th>File URL</th><td><code><?= htmlspecialchars($pdf_url) ?></code></td></tr>
+            <tr><th>File Size</th><td><?= $file_size ?></td></tr>
         </table>
         <?php endif; ?>
     </div>
@@ -382,30 +496,56 @@ include "header.php";
             <div class="card mb-4">
                 <div class="card-header bg-primary text-white">
                     <h4 class="mb-0">
-                        <i class="fas fa-book"></i> 
-                        <?= htmlspecialchars($data['judul']) ?>
+                        <i class="fas fa-file-alt"></i> 
+                        <?= safe_output($data['judul']) ?>
                     </h4>
                 </div>
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-8">
-                            <h5 class="text-primary">
-                                <i class="fas fa-tag"></i> 
-                                <?= htmlspecialchars($data['jenis_artikel']) ?>
-                            </h5>
-                            <p class="text-muted mb-0">
-                                <i class="fas fa-calendar"></i> 
-                                Tanggal Terbit: <?= tgl($data['tanggal_terbit']) ?>
-                            </p>
+                            <h5 class="text-primary mb-3">Informasi Artikel Hukum</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong><i class="fas fa-user"></i> Penulis:</strong><br>
+                                    <?= safe_output($data['penulis'] ?? '-') ?></p>
+                                    
+                                    <p><strong><i class="fas fa-book"></i> Jurnal:</strong><br>
+                                    <?= safe_output($data['jurnal'] ?? '-') ?></p>
+                                    
+                                    <p><strong><i class="fas fa-calendar"></i> Tahun Terbit:</strong><br>
+                                    <?= safe_output($data['tahun_terbit'] ?? '-') ?></p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong><i class="fas fa-tag"></i> Jenis Artikel:</strong><br>
+                                    <?= safe_output($data['jenis_artikel'] ?? '-') ?></p>
+                                    
+                                    <p><strong><i class="fas fa-language"></i> Bahasa:</strong><br>
+                                    <?= safe_output($data['bahasa'] ?? '-') ?></p>
+                                    
+                                    <p><strong><i class="fas fa-gavel"></i> Bidang Hukum:</strong><br>
+                                    <?= safe_output($data['bidang_hukum'] ?? '-') ?></p>
+                                </div>
+                            </div>
+                            
+                            <?php if(!empty($data['keywords'])): ?>
+                            <div class="mt-3">
+                                <strong><i class="fas fa-tags"></i> Keywords:</strong><br>
+                                <?php 
+                                $keywords = explode(',', $data['keywords']);
+                                foreach ($keywords as $keyword): ?>
+                                    <span class="keyword-badge"><?= safe_output(trim($keyword)) ?></span>
+                                <?php endforeach; ?>
+                            </div>
+                            <?php endif; ?>
                         </div>
                         <div class="col-md-4 text-end">
-                            <?php if($file_found): ?>
+                            <?php if($pdf_found): ?>
                             <span class="badge bg-success fs-6 p-2">
-                                <i class="fas fa-check-circle"></i> PDF Tersedia
+                                <i class="fas fa-check-circle"></i> File Tersedia
                             </span>
                             <?php else: ?>
-                            <span class="badge bg-warning fs-6 p-2">
-                                <i class="fas fa-exclamation-circle"></i> PDF Tidak Tersedia
+                            <span class="badge bg-danger fs-6 p-2">
+                                <i class="fas fa-exclamation-circle"></i> File Tidak Ditemukan
                             </span>
                             <?php endif; ?>
                         </div>
@@ -413,122 +553,93 @@ include "header.php";
                 </div>
             </div>
 
-            <!-- THUMBNAIL & INFO UTAMA -->
+            <!-- GAMBAR THUMBNAIL -->
+            <?php if($image_found): ?>
             <div class="card mb-4">
+                <div class="card-header fw-bold">
+                    <i class="fas fa-image"></i> THUMBNAIL
+                </div>
                 <div class="card-body">
-                    <div class="row">
-                        <!-- THUMBNAIL -->
-                        <div class="col-md-3">
-                            <?php if($image_found && !empty($image_url)): ?>
-                            <div class="text-center">
-                                <img src="<?= htmlspecialchars($image_url) ?>" 
-                                     alt="<?= htmlspecialchars($data['judul']) ?>"
-                                     class="img-fluid rounded shadow"
-                                     style="max-height: 250px; object-fit: cover;"
-                                     onerror="this.onerror=null; this.src='data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22200%22%20height%3D%22250%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23f8f9fa%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20font-family%3D%22Arial%22%20font-size%3D%2214%22%20text-anchor%3D%22middle%22%20dy%3D%22.3em%22%20fill%3D%22%236c757d%22%3EArtikel%20Hukum%3C%2Ftext%3E%3C%2Fsvg%3E'">
-                                <p class="text-muted small mt-2">Cover Artikel</p>
-                            </div>
-                            <?php else: ?>
-                            <div class="text-center">
-                                <div class="placeholder-image rounded" style="width: 200px; height: 250px; background: #f8f9fa; display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0 auto;">
-                                    <i class="fas fa-book fa-4x text-secondary mb-3"></i>
-                                    <p class="text-muted small">Tidak ada gambar</p>
-                                </div>
-                            </div>
-                            <?php endif; ?>
-                        </div>
-                        
-                        <!-- INFO UTAMA -->
-                        <div class="col-md-9">
-                            <h5 class="border-bottom pb-2">Informasi Artikel</h5>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <p><strong><i class="fas fa-user-edit"></i> Penulis:</strong><br>
-                                    <?= htmlspecialchars($data['penulis'] ?: '-') ?></p>
-                                    
-                                    <p><strong><i class="fas fa-newspaper"></i> Jurnal:</strong><br>
-                                    <?= htmlspecialchars($data['jurnal'] ?: '-') ?></p>
-                                    
-                                    <p><strong><i class="fas fa-barcode"></i> ISSN:</strong><br>
-                                    <?= htmlspecialchars($data['issn'] ?: '-') ?></p>
-                                </div>
-                                <div class="col-md-6">
-                                    <p><strong><i class="fas fa-calendar-alt"></i> Tahun Terbit:</strong><br>
-                                    <?= htmlspecialchars($data['tahun_terbit'] ?: '-') ?></p>
-                                    
-                                    <p><strong><i class="fas fa-language"></i> Bahasa:</strong><br>
-                                    <?= htmlspecialchars($data['bahasa'] ?: '-') ?></p>
-                                    
-                                    <p><strong><i class="fas fa-tags"></i> Bidang Hukum:</strong><br>
-                                    <?= htmlspecialchars($data['bidang_hukum'] ?: '-') ?></p>
-                                </div>
-                            </div>
-                            
-                            <p><strong><i class="fas fa-key"></i> Keywords:</strong><br>
-                            <span class="text-muted"><?= htmlspecialchars($data['keywords'] ?: '-') ?></span></p>
-                        </div>
+                    <div class="text-center">
+                        <img src="<?= safe_output($image_url) ?>" 
+                             alt="<?= safe_output($data['judul']) ?>"
+                             class="img-fluid rounded"
+                             style="max-height: 300px;">
                     </div>
                 </div>
             </div>
+            <?php endif; ?>
+
+            <!-- ABSTRAK -->
+            <?php if(!empty($data['abstrak'])): ?>
+            <div class="card mb-4">
+                <div class="card-header fw-bold">
+                    <i class="fas fa-file-text"></i> ABSTRAK
+                </div>
+                <div class="card-body">
+                    <div class="abstract-content">
+                        <?= nl2br(safe_output($data['abstrak'])) ?>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
 
             <!-- ======================
                  METADATA DETAIL
             ====================== -->
             <div class="card mb-4">
-                <div class="card-header fw-bold">
-                    <i class="fas fa-info-circle"></i> METADATA DETAIL
-                </div>
+                <div class="card-header fw-bold">METADATA DETAIL</div>
                 <div class="card-body p-0">
                     <table class="table table-bordered mb-0">
-                        <tr><td width="30%">ID Artikel</td><td><?= htmlspecialchars($data['id_artikel']) ?></td></tr>
-                        <tr><td>Jenis Artikel</td><td><?= htmlspecialchars($data['jenis_artikel']) ?></td></tr>
-                        <tr><td>Judul</td><td><?= htmlspecialchars($data['judul']) ?></td></tr>
-                        <tr><td>Penulis</td><td><?= htmlspecialchars($data['penulis']) ?></td></tr>
-                        <tr><td>Jurnal</td><td><?= htmlspecialchars($data['jurnal'] ?: '-') ?></td></tr>
-                        <tr><td>ISSN</td><td><?= htmlspecialchars($data['issn'] ?: '-') ?></td></tr>
-                        <tr><td>Volume</td><td><?= htmlspecialchars($data['volume'] ?: '-') ?></td></tr>
-                        <tr><td>Issue</td><td><?= htmlspecialchars($data['issue'] ?: '-') ?></td></tr>
-                        <tr><td>Halaman</td><td><?= htmlspecialchars($data['halaman'] ?: '-') ?></td></tr>
-                        <tr><td>Tanggal Terbit</td><td><?= tgl($data['tanggal_terbit']) ?></td></tr>
-                        <tr><td>Tahun Terbit</td><td><?= htmlspecialchars($data['tahun_terbit']) ?></td></tr>
-                        <tr><td>Bidang Hukum</td><td><?= htmlspecialchars($data['bidang_hukum'] ?: '-') ?></td></tr>
-                        <tr><td>Keywords</td><td><?= htmlspecialchars($data['keywords'] ?: '-') ?></td></tr>
-                        <tr><td>Bahasa</td><td><?= htmlspecialchars($data['bahasa'] ?: '-') ?></td></tr>
+                        <tr>
+                            <td width="30%">ID Artikel</td>
+                            <td><?= safe_output($data['id_artikel']) ?></td>
+                        </tr>
+                        <tr>
+                            <td>ISSN</td>
+                            <td><?= safe_output($data['issn'] ?? '-') ?></td>
+                        </tr>
+                        <tr>
+                            <td>Volume</td>
+                            <td><?= safe_output($data['volume'] ?? '-') ?></td>
+                        </tr>
+                        <tr>
+                            <td>Issue</td>
+                            <td><?= safe_output($data['issue'] ?? '-') ?></td>
+                        </tr>
+                        <tr>
+                            <td>Halaman</td>
+                            <td><?= safe_output($data['halaman'] ?? '-') ?></td>
+                        </tr>
+                        <tr>
+                            <td>Tanggal Terbit</td>
+                            <td><?= !empty($data['tanggal_terbit']) ? date('d F Y', strtotime($data['tanggal_terbit'])) : '-' ?></td>
+                        </tr>
                         <tr>
                             <td>Status</td>
                             <td>
                                 <?php 
                                 $status = $data['status'] ?? '-';
                                 $badge_class = '';
-                                if ($status == 'published') $badge_class = 'bg-success';
-                                elseif ($status == 'draft') $badge_class = 'bg-warning';
-                                elseif ($status == 'archived') $badge_class = 'bg-secondary';
+                                if ($status == 'Published' || $status == 'PUBLISHED') $badge_class = 'bg-success';
+                                elseif ($status == 'Draft') $badge_class = 'bg-warning';
+                                elseif ($status == 'Archived') $badge_class = 'bg-secondary';
                                 else $badge_class = 'bg-info';
                                 ?>
-                                <span class="badge <?= $badge_class ?>"><?= ucfirst($status) ?></span>
+                                <span class="badge <?= $badge_class ?>"><?= safe_output(ucfirst($status)) ?></span>
                             </td>
                         </tr>
-                        <tr><td>Dibuat Pada</td><td><?= date('d/m/Y H:i', strtotime($data['created_at'])) ?></td></tr>
-                        <tr><td>Diupdate Pada</td><td><?= date('d/m/Y H:i', strtotime($data['updated_at'])) ?></td></tr>
+                        <tr>
+                            <td>Dibuat Pada</td>
+                            <td><?= !empty($data['created_at']) ? date('d/m/Y H:i', strtotime($data['created_at'])) : '-' ?></td>
+                        </tr>
+                        <tr>
+                            <td>Diupdate Pada</td>
+                            <td><?= !empty($data['updated_at']) ? date('d/m/Y H:i', strtotime($data['updated_at'])) : '-' ?></td>
+                        </tr>
                     </table>
                 </div>
             </div>
-
-            <!-- ======================
-                 ABSTRAK
-            ====================== -->
-            <?php if(!empty($data['abstrak'])): ?>
-            <div class="card mb-4">
-                <div class="card-header fw-bold">
-                    <i class="fas fa-file-alt"></i> ABSTRAK
-                </div>
-                <div class="card-body">
-                    <div class="abstract-content">
-                        <?= nl2br(htmlspecialchars($data['abstrak'])) ?>
-                    </div>
-                </div>
-            </div>
-            <?php endif; ?>
 
             <!-- ======================
                  DOKUMEN DIGITAL
@@ -538,7 +649,7 @@ include "header.php";
                     <i class="fas fa-file-pdf"></i> DOKUMEN DIGITAL
                 </div>
                 <div class="card-body">
-                    <?php if($file_found): ?>
+                    <?php if($pdf_found): ?>
                     <div class="row align-items-center">
                         <div class="col-md-2 text-center">
                             <div class="file-icon-large">
@@ -546,29 +657,34 @@ include "header.php";
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <h6><?= htmlspecialchars($file_name_display) ?></h6>
+                            <h6><?= safe_output(basename($actual_pdf_path)) ?></h6>
                             <p class="text-muted mb-1">
-                                <i class="fas fa-hdd"></i> Ukuran: <?= $file_size_formatted ?>
+                                <i class="fas fa-hdd"></i> Ukuran: <?= $file_size ?>
                             </p>
                             <p class="text-muted mb-0">
                                 <i class="fas fa-calendar"></i> 
-                                Diupdate: <?= date('d/m/Y H:i', $file_info['time']) ?>
+                                Diupdate: <?= date('d/m/Y H:i', filemtime($actual_pdf_path)) ?>
                             </p>
                         </div>
                         <div class="col-md-4">
                             <div class="d-grid gap-2">
                                 <!-- Tombol Download dengan atribut download -->
-                                <a href="<?= htmlspecialchars($file_url) ?>" 
+                                <a href="<?= safe_output($pdf_url) ?>" 
                                    target="_blank" 
-                                   download="<?= htmlspecialchars($file_name_display) ?>" 
+                                   download="<?= safe_output(basename($actual_pdf_path)) ?>" 
                                    class="btn btn-success btn-lg">
-                                    <i class="fas fa-download"></i> Download PDF
+                                    <i class="fas fa-download"></i> Download File
                                 </a>
                                 <div class="btn-group" role="group">
-                                    <a href="<?= htmlspecialchars($file_url) ?>" target="_blank" class="btn btn-outline-primary">
+                                    <a href="<?= safe_output($pdf_url) ?>" 
+                                       target="_blank"
+                                       class="btn btn-outline-primary">
                                         <i class="fas fa-external-link-alt"></i> Buka
                                     </a>
-                                    <button type="button" class="btn btn-outline-info" onclick="showPreview()">
+                                    <button type="button" 
+                                            class="btn btn-outline-info" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#previewModal">
                                         <i class="fas fa-search"></i> Pratinjau
                                     </button>
                                 </div>
@@ -576,28 +692,25 @@ include "header.php";
                         </div>
                     </div>
                     <?php else: ?>
-                    <div class="alert alert-warning">
+                    <div class="alert alert-danger">
                         <div class="d-flex">
                             <div class="flex-shrink-0">
                                 <i class="fas fa-exclamation-triangle fa-3x"></i>
                             </div>
                             <div class="flex-grow-1 ms-3">
-                                <h5 class="alert-heading">File PDF Tidak Ditemukan!</h5>
-                                <p class="mb-2">Dokumen PDF artikel ini tidak tersedia di server.</p>
+                                <h5 class="alert-heading">File Tidak Ditemukan!</h5>
+                                <p class="mb-2">Dokumen PDF tidak tersedia untuk artikel ini.</p>
                                 <hr>
                                 <div class="mb-3">
-                                    <strong>Informasi:</strong><br>
+                                    <strong>Informasi Debug:</strong><br>
                                     <small class="text-muted">
-                                        Path database: <code><?= htmlspecialchars($file_path_db ?: 'NULL') ?></code><br>
-                                        Artikel ID: <code><?= htmlspecialchars($data['id_artikel']) ?></code>
+                                        Nama file database: <code><?= htmlspecialchars($pdf_file) ?></code><br>
+                                        ID Artikel: <code><?= $data['id_artikel'] ?></code>
                                     </small>
                                 </div>
                                 <div class="d-flex gap-2">
-                                    <a href="?id=<?= $id ?>&debug=1" class="btn btn-warning btn-sm">
+                                    <a href="?token=<?= urlencode($_GET['token'] ?? '') ?>&debug=1" class="btn btn-warning btn-sm">
                                         <i class="fas fa-bug"></i> Debug Mode
-                                    </a>
-                                    <a href="artikel-hukum.php" class="btn btn-primary btn-sm">
-                                        <i class="fas fa-arrow-left"></i> Kembali ke Daftar
                                     </a>
                                 </div>
                             </div>
@@ -606,7 +719,6 @@ include "header.php";
                     <?php endif; ?>
                 </div>
             </div>
-
         </div>
 
         <!-- SIDEBAR -->
@@ -618,18 +730,23 @@ include "header.php";
                 </div>
                 <div class="card-body">
                     <div class="d-grid gap-2">
-                        <?php if($file_found): ?>
+                        <?php if($pdf_found): ?>
                         <!-- Tombol Download di sidebar -->
-                        <a href="<?= htmlspecialchars($file_url) ?>" 
+                        <a href="<?= safe_output($pdf_url) ?>" 
                            target="_blank" 
-                           download="<?= htmlspecialchars($file_name_display) ?>" 
+                           download="<?= safe_output(basename($actual_pdf_path)) ?>" 
                            class="btn btn-success">
                             <i class="fas fa-download"></i> Download PDF
                         </a>
-                        <a href="<?= htmlspecialchars($file_url) ?>" target="_blank" class="btn btn-primary">
+                        <a href="<?= safe_output($pdf_url) ?>" 
+                           target="_blank"
+                           class="btn btn-primary">
                             <i class="fas fa-external-link-alt"></i> Buka di Tab Baru
                         </a>
-                        <button onclick="showPreview()" class="btn btn-info">
+                        <button type="button" 
+                                class="btn btn-info" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#previewModal">
                             <i class="fas fa-search-plus"></i> Pratinjau
                         </button>
                         <?php else: ?>
@@ -637,15 +754,15 @@ include "header.php";
                             <i class="fas fa-download"></i> Download (Tidak Tersedia)
                         </button>
                         <?php endif; ?>
-                        <a href="artikel-hukum.php" class="btn btn-outline-secondary">
-                            <i class="fas fa-list"></i> Lihat Semua Artikel
+                        <a href="index.php?page=artikel-hukum" class="btn btn-outline-secondary">
+                            <i class="fas fa-list"></i> Lihat Semua
                         </a>
                     </div>
                 </div>
             </div>
 
             <!-- FILE INFO -->
-            <?php if($file_found): ?>
+            <?php if($pdf_found): ?>
             <div class="card mb-3 shadow-sm">
                 <div class="card-header bg-info text-white">
                     <h6 class="mb-0"><i class="fas fa-file-alt"></i> Informasi File</h6>
@@ -654,15 +771,15 @@ include "header.php";
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <span><i class="fas fa-file"></i> Nama File</span>
-                            <span class="badge bg-light text-dark"><?= htmlspecialchars($file_name_display) ?></span>
+                            <span class="badge bg-light text-dark"><?= safe_output(basename($actual_pdf_path)) ?></span>
                         </li>
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <span><i class="fas fa-weight-hanging"></i> Ukuran</span>
-                            <span class="badge bg-primary"><?= $file_size_formatted ?></span>
+                            <span class="badge bg-primary"><?= $file_size ?></span>
                         </li>
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <span><i class="fas fa-calendar"></i> Diupdate</span>
-                            <span class="badge bg-light text-dark"><?= date('d/m/Y', $file_info['time']) ?></span>
+                            <span class="badge bg-light text-dark"><?= date('d/m/Y', filemtime($actual_pdf_path)) ?></span>
                         </li>
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <span><i class="fas fa-file-pdf"></i> Format</span>
@@ -673,7 +790,7 @@ include "header.php";
             </div>
             <?php endif; ?>
 
-            <!-- ARTICLE INFO -->
+            <!-- INFO ARTIKEL -->
             <div class="card mb-3 shadow-sm">
                 <div class="card-header bg-success text-white">
                     <h6 class="mb-0"><i class="fas fa-info-circle"></i> Info Artikel</h6>
@@ -681,20 +798,18 @@ include "header.php";
                 <div class="card-body">
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <span><i class="fas fa-hashtag"></i> ID</span>
-                            <span class="badge bg-dark"><?= htmlspecialchars($data['id_artikel']) ?></span>
+                            <span>ID</span>
+                            <span class="badge bg-dark"><?= safe_output($data['id_artikel']) ?></span>
                         </li>
                         <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <span><i class="fas fa-tag"></i> Jenis</span>
-                            <span class="badge bg-info"><?= htmlspecialchars($data['jenis_artikel']) ?></span>
+                            <span>Tahun</span>
+                            <span class="badge bg-warning"><?= safe_output($data['tahun_terbit']) ?></span>
                         </li>
                         <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <span><i class="fas fa-calendar"></i> Tahun</span>
-                            <span class="badge bg-warning"><?= htmlspecialchars($data['tahun_terbit']) ?></span>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <span><i class="fas fa-language"></i> Bahasa</span>
-                            <span class="badge bg-secondary"><?= htmlspecialchars($data['bahasa']) ?></span>
+                            <span>Status</span>
+                            <span class="badge bg-<?= strtolower($data['status']) == 'published' ? 'success' : 'warning' ?>">
+                                <?= safe_output(ucfirst($data['status'])) ?>
+                            </span>
                         </li>
                     </ul>
                 </div>
@@ -718,7 +833,7 @@ include "header.php";
                     <p class="small mb-0">
                         <i class="fas fa-phone-alt"></i>
                         <strong>Bantuan Teknis:</strong><br>
-                        Hubungi Administrator Sistem
+                        Hubungi Administrator
                     </p>
                 </div>
             </div>
@@ -726,21 +841,21 @@ include "header.php";
     </div>
 
     <!-- PREVIEW MODAL -->
-    <?php if($file_found): ?>
+    <?php if($pdf_found): ?>
     <div class="modal fade" id="previewModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title">
                         <i class="fas fa-file-pdf"></i> 
-                        Pratinjau: <?= htmlspecialchars(substr($data['judul'], 0, 50)) ?>...
+                        Pratinjau: <?= safe_output(substr($data['judul'], 0, 50)) ?>...
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-0" style="background: #525659;">
                     <iframe 
                         id="pdfViewer"
-                        src="<?= htmlspecialchars($file_url) ?>#view=FitH&toolbar=1&navpanes=0" 
+                        src="<?= safe_output($pdf_url) ?>#view=FitH&toolbar=1&navpanes=0" 
                         width="100%" 
                         height="600"
                         frameborder="0"
@@ -751,13 +866,13 @@ include "header.php";
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                         <i class="fas fa-times"></i> Tutup
                     </button>
-                    <a href="<?= htmlspecialchars($file_url) ?>" target="_blank" class="btn btn-primary">
+                    <a href="<?= safe_output($pdf_url) ?>" target="_blank" class="btn btn-primary">
                         <i class="fas fa-expand"></i> Buka Fullscreen
                     </a>
                     <!-- Tombol Download di modal -->
-                    <a href="<?= htmlspecialchars($file_url) ?>" 
+                    <a href="<?= safe_output($pdf_url) ?>" 
                        target="_blank" 
-                       download="<?= htmlspecialchars($file_name_display) ?>" 
+                       download="<?= safe_output(basename($actual_pdf_path)) ?>" 
                        class="btn btn-success">
                         <i class="fas fa-download"></i> Download
                     </a>
@@ -768,13 +883,8 @@ include "header.php";
     <?php endif; ?>
 </div>
 
-<?php if($file_found): ?>
+<?php if($pdf_found): ?>
 <script>
-function showPreview() {
-    var modal = new bootstrap.Modal(document.getElementById('previewModal'));
-    modal.show();
-}
-
 // Refresh iframe saat modal dibuka
 document.getElementById('previewModal')?.addEventListener('shown.bs.modal', function () {
     var iframe = document.getElementById('pdfViewer');
@@ -782,17 +892,9 @@ document.getElementById('previewModal')?.addEventListener('shown.bs.modal', func
         iframe.src = iframe.src;
     }
 });
-
-// Track download
-document.querySelectorAll('a[download]').forEach(link => {
-    link.addEventListener('click', function() {
-        console.log('Download started:', this.href);
-    });
-});
 </script>
 <?php endif; ?>
 
 <?php
 include "footer.php";
-mysqli_close($koneksi);
 ?>

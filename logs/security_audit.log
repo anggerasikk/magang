@@ -1,0 +1,17 @@
+[2026-01-27 03:53:31] [INFO] [::1] [tmsh41ra6nctusto7e1gdd4j5a] PAGE_ACCESS: detail_keputusan.php accessed from http://localhost/jdihcilacap_pasang_2026/?page=keputusan-dprd
+[2026-01-27 03:53:31] [ERROR] [::1] [tmsh41ra6nctusto7e1gdd4j5a] SECURITY_ALERT: Database config missing: a_db.php
+[2026-01-27 03:54:50] [INFO] [::1] [tmsh41ra6nctusto7e1gdd4j5a] PAGE_ACCESS: detail_keputusan.php accessed from http://localhost/jdihcilacap_pasang_2026/?page=keputusan-dprd
+[2026-01-27 03:54:50] [WARNING] [::1] [tmsh41ra6nctusto7e1gdd4j5a] INVALID_TOKEN_PARTS: Wrong number of parts or invalid prefix
+[2026-01-27 03:54:50] [WARNING] [::1] [tmsh41ra6nctusto7e1gdd4j5a] INVALID_TOKEN: Token validation failed
+[2026-01-27 03:54:54] [INFO] [::1] [tmsh41ra6nctusto7e1gdd4j5a] PAGE_ACCESS: detail_keputusan.php accessed from http://localhost/jdihcilacap_pasang_2026/index.php?page=keputusan-dprd&error=invalid_token&t=1769486090
+[2026-01-27 03:54:54] [WARNING] [::1] [tmsh41ra6nctusto7e1gdd4j5a] INVALID_TOKEN_PARTS: Wrong number of parts or invalid prefix
+[2026-01-27 03:54:54] [WARNING] [::1] [tmsh41ra6nctusto7e1gdd4j5a] INVALID_TOKEN: Token validation failed
+[2026-01-27 03:54:55] [INFO] [::1] [tmsh41ra6nctusto7e1gdd4j5a] PAGE_ACCESS: detail_keputusan.php accessed from http://localhost/jdihcilacap_pasang_2026/index.php?page=keputusan-dprd&error=invalid_token&t=1769486094
+[2026-01-27 03:54:55] [WARNING] [::1] [tmsh41ra6nctusto7e1gdd4j5a] INVALID_TOKEN_PARTS: Wrong number of parts or invalid prefix
+[2026-01-27 03:54:55] [WARNING] [::1] [tmsh41ra6nctusto7e1gdd4j5a] INVALID_TOKEN: Token validation failed
+[2026-01-27 03:54:58] [INFO] [::1] [tmsh41ra6nctusto7e1gdd4j5a] PAGE_ACCESS: detail_keputusan.php accessed from http://localhost/jdihcilacap_pasang_2026/index.php?page=keputusan-dprd&error=invalid_token&t=1769486095
+[2026-01-27 03:54:58] [WARNING] [::1] [tmsh41ra6nctusto7e1gdd4j5a] INVALID_TOKEN_PARTS: Wrong number of parts or invalid prefix
+[2026-01-27 03:54:58] [WARNING] [::1] [tmsh41ra6nctusto7e1gdd4j5a] INVALID_TOKEN: Token validation failed
+[2026-01-27 03:55:01] [INFO] [::1] [tmsh41ra6nctusto7e1gdd4j5a] PAGE_ACCESS: detail_keputusan.php accessed from http://localhost/jdihcilacap_pasang_2026/index.php?page=keputusan-dprd&error=invalid_token&t=1769486098
+[2026-01-27 03:55:01] [WARNING] [::1] [tmsh41ra6nctusto7e1gdd4j5a] INVALID_TOKEN_PARTS: Wrong number of parts or invalid prefix
+[2026-01-27 03:55:01] [WARNING] [::1] [tmsh41ra6nctusto7e1gdd4j5a] INVALID_TOKEN: Token validation failed

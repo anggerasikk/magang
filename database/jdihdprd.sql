@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: 127.0.0.1
--- Generation Time: 22 Jul 2025 pada 07.18
+-- Generation Time: 22 Jul 2025 pada 07.19
 -- Versi Server: 10.1.13-MariaDB
 -- PHP Version: 5.6.20
 
@@ -151,8 +151,8 @@ INSERT INTO `uploads` (`idData`, `tahun_pengundangan`, `tanggal_pengundangan`, `
 (25, 'gdg', '2025-06-07', '2025-07-22', 'Keputusan_Sekretaris_DPRD', '53455555555', 'cvbcb dfghdf dfhdf dgh', ' drdfgdg', 'dgdgdg', 'dfgdfg', 'Berlaku', 'Indonesia', 'pdf_685b926cd7dd9.pdf', 'uploads/pdf/pdf_685b926cd7dd9.pdf', '', '', '', '', '', '', '', '', '', '', '', '', 'img_685b926cd7ddf.png', 'uploads/images/img_685b926cd7ddf.png', '2025-06-25 13:08:44'),
 (26, '2025', '2024-06-07', '2022-01-08', 'Peraturan_DPRD', '223/d.r/20/2025', 'peraturan dprd tentang pelaksnaan pokok pikran DPRD', 'perDPRD', 'surakarta', 'surakarta', 'Berlaku', 'Indonesia', 'pdf_685ba25f55b01.pdf', 'uploads/pdf/pdf_685ba25f55b01.pdf', '', '-', '-', '23.perdprd', 'DPRD kota Surakarta', '-', '231312', 'pemerintahan', '424234', '2w1eqwe', 'DPRD Kota Surakarta', 'Pokok Pikiran DPRD', 'img_685ba25f55d50.png', 'uploads/images/img_685ba25f55d50.png', '2025-06-25 14:16:47'),
 (27, '2022', '2025-06-26', '2025-06-26', 'Keputusan_Pimpinan_DPRD', 'qweqe', ' okwee e e ee e ', 'dcasdfa', 'sdfsdf', 'sdfsdf', 'Berlaku', 'Indonesia', 'pdf_685cca8a787e7.pdf', 'uploads/pdf/pdf_685cca8a787e7.pdf', '', 'qrwer', 'werwe', 'werwer', 'werw', 'werw', 'werwe', 'werwe', 'werw', 'wer', 'wer', 'werwer', 'img_685cca8a787f0.png', 'uploads/images/img_685cca8a787f0.png', '2025-06-26 11:20:26'),
-(29, 'sdfgdg', '2025-06-26', '2025-06-26', 'Keputusan_DPRD', 'dfgdf', 'dfgdf', 'dfg', 'fg', '', 'Berlaku', 'Indonesia', '2020kepimdprd33316632.pdf.pdf', 'uploads/pdf/2020kepimdprd33316632.pdf.pdf', 'http://localhost/jdihcilacap/wb_admin/uploads/pdf/2020kepimdprd33316632.pdf.pdf', 'dfgdfg', 'dfg', 'dfg', 'dfg', 'dfg', 'dfg', 'dfg', 'dfg', 'dgf', 'dfg', 'dfg', 'img_685cedd22ab04.png', 'uploads/images/img_685cedd22ab04.png', '2025-06-26 13:50:58'),
-(32, '2025', '2025-07-22', '2025-07-22', 'Keputusan_Sekretaris_DPRD', '65/66/555', 'bagus banget', 'bg', 'solo', 'solo', 'Berlaku', 'Indonesia', '2020kepimdprd33316632.pdf.pdf', 'uploads/pdf/2020kepimdprd33316632.pdf.pdf', 'http://localhost/jdihcilacap/wb_admin/uploads/pdf/2020kepimdprd33316632.pdf.pdf', 'ok', 'ok', '788', 'solo', 'solo', 'solo', 'solo', '5656', 'http://localhost/jdihcilacap/perpu_detail?doc=<?=  ?>', 'solo', 'bagus', 'img_687f10ddbb75b.png', 'uploads/images/img_687f10ddbb75b.png', '2025-07-22 11:17:33');
+(29, 'sdfgdg', '2025-06-26', '2025-06-26', 'Keputusan_DPRD', 'dfgdf', 'dfgdf', 'dfg', 'fg', '', 'Berlaku', 'Indonesia', '2020kepimdprd33316632.pdf.pdf', 'uploads/pdf/2020kepimdprd33316632.pdf.pdf', 'http://localhost/jdihcilacap/panel_control/uploads/pdf/2020kepimdprd33316632.pdf.pdf', 'dfgdfg', 'dfg', 'dfg', 'dfg', 'dfg', 'dfg', 'dfg', 'dfg', 'dgf', 'dfg', 'dfg', 'img_685cedd22ab04.png', 'uploads/images/img_685cedd22ab04.png', '2025-06-26 13:50:58'),
+(32, '2025', '2025-07-22', '2025-07-22', 'Keputusan_Sekretaris_DPRD', '65/66/555', 'bagus banget', 'bg', 'solo', 'solo', 'Berlaku', 'Indonesia', '2020kepimdprd33316632.pdf.pdf', 'uploads/pdf/2020kepimdprd33316632.pdf.pdf', 'http://localhost/jdihcilacap/panel_control/uploads/pdf/2020kepimdprd33316632.pdf.pdf', 'ok', 'ok', '788', 'solo', 'solo', 'solo', 'solo', '5656', 'http://localhost/jdihcilacap/perpu_detail?doc=<?=  ?>', 'solo', 'bagus', 'img_687f10ddbb75b.png', 'uploads/images/img_687f10ddbb75b.png', '2025-07-22 11:17:33');
 
 --
 -- Indexes for dumped tables

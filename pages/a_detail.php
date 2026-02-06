@@ -1,5 +1,5 @@
 <?php
-include 'wb_admin/a_db.php';
+include 'panel_control/a_db.php';
 
 $doc = isset($_GET['doc']) ? base64_decode($_GET['doc']) : 0;
 $id = intval($doc);
@@ -14,8 +14,8 @@ if (!$result || mysqli_num_rows($result) === 0) {
 
 $data = mysqli_fetch_assoc($result);
 $pdf_name = htmlspecialchars($data['pdf_name']);
-$pdf_path = 'wb_admin/' . $data['pdf_path'];
-$image_path = 'wb_admin/' . $data['image_path'];
+$pdf_path = 'panel_control/' . $data['pdf_path'];
+$image_path = 'panel_control/' . $data['image_path'];
 $tanggal = date('Y-m-d H:i:s', strtotime($data['uploaded_at']));
 ?>
 

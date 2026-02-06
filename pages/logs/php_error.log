@@ -1,0 +1,6 @@
+[03-Feb-2026 07:15:47 UTC] PHP Fatal error:  Cannot redeclare isActiveMenu() (previously declared in C:\laragon\www\jdihcilacap_pasang_2026\pages\header.php:9) in C:\laragon\www\jdihcilacap_pasang_2026\pages\header.php on line 9
+[03-Feb-2026 07:15:49 UTC] PHP Fatal error:  Cannot redeclare isActiveMenu() (previously declared in C:\laragon\www\jdihcilacap_pasang_2026\pages\header.php:9) in C:\laragon\www\jdihcilacap_pasang_2026\pages\header.php on line 9
+[03-Feb-2026 07:15:49 UTC] PHP Fatal error:  Cannot redeclare isActiveMenu() (previously declared in C:\laragon\www\jdihcilacap_pasang_2026\pages\header.php:9) in C:\laragon\www\jdihcilacap_pasang_2026\pages\header.php on line 9
+[03-Feb-2026 07:15:49 UTC] PHP Fatal error:  Cannot redeclare isActiveMenu() (previously declared in C:\laragon\www\jdihcilacap_pasang_2026\pages\header.php:9) in C:\laragon\www\jdihcilacap_pasang_2026\pages\header.php on line 9
+[03-Feb-2026 07:15:49 UTC] PHP Fatal error:  Cannot redeclare isActiveMenu() (previously declared in C:\laragon\www\jdihcilacap_pasang_2026\pages\header.php:9) in C:\laragon\www\jdihcilacap_pasang_2026\pages\header.php on line 9
+[03-Feb-2026 07:15:50 UTC] PHP Fatal error:  Cannot redeclare isActiveMenu() (previously declared in C:\laragon\www\jdihcilacap_pasang_2026\pages\header.php:9) in C:\laragon\www\jdihcilacap_pasang_2026\pages\header.php on line 9

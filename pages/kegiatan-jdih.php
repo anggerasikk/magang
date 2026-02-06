@@ -1,25 +1,154 @@
 <?php
 // kegiatan.php
+
+// ============================================
+// SESSION SECURITY
+// ============================================
+session_start([
+    'cookie_httponly' => true,
+    'cookie_secure' => isset($_SERVER['HTTPS']),
+    'cookie_samesite' => 'Strict',
+    'use_strict_mode' => true
+]);
+
+// ============================================
+// SECURITY HEADERS
+// ============================================
+header('X-Frame-Options: DENY');
+header('X-Content-Type-Options: nosniff');
+header('X-XSS-Protection: 1; mode=block');
+header('Referrer-Policy: strict-origin-when-cross-origin');
+
 require_once 'a_db.php'; // Include koneksi database
+require_once 'a_functions.php'; // Include encryption functions
 
-// Tambahkan base URL di atas
-$base_url = "http://localhost/jdihcilacap_pasang";
-$pageTitle = 'Kegiatan JDIH - JDIH DPRD Kota Surakarta';
-include 'header.php';
+// ============================================
+// HELPER FUNCTIONS TAMBAHAN (HANYA YANG BELUM ADA)
+// ============================================
 
-// Query untuk mengambil data artikel kegiatan
-$status = 'publik'; // Hanya ambil artikel yang sudah dipublish
-$query = "SELECT * FROM artikel_kegiatan WHERE status = '$status' ORDER BY tanggal_publikasi DESC LIMIT 6";
-$result = $koneksi->query($query);
-
-// Handle filter berdasarkan kategori (ambil dari kata kunci atau judul)
-$current_filter = isset($_GET['filter']) ? $_GET['filter'] : 'all';
-if ($current_filter != 'all') {
-    $filter_query = " AND (meta_keywords LIKE '%$current_filter%' OR judul LIKE '%$current_filter%')";
-    $query = "SELECT * FROM artikel_kegiatan WHERE status = '$status' $filter_query ORDER BY tanggal_publikasi DESC";
-    $result = $koneksi->query($query);
+// Cek apakah fungsi safe_include sudah ada di a_functions.php
+if (!function_exists('safe_include')) {
+    function safe_include($file_path) {
+        $allowed_files = ['a_db.php', 'a_functions.php', 'header.php', 'footer.php'];
+        $filename = basename($file_path);
+        
+        if (in_array($filename, $allowed_files, true)) {
+            $full_path = __DIR__ . DIRECTORY_SEPARATOR . $filename;
+            if (file_exists($full_path) && is_file($full_path)) {
+                return $full_path;
+            }
+        }
+        return false;
+    }
 }
 
+// Cek apakah fungsi validate_image_path sudah ada
+if (!function_exists('validate_image_path')) {
+    function validate_image_path($path) {
+        if (empty($path)) return false;
+        
+        // Bersihkan path dari directory traversal
+        $clean_path = str_replace(['../', './', '..\\', '.\\'], '', $path);
+        $clean_path = basename($clean_path);
+        
+        // Validasi ekstensi file
+        $extension = strtolower(pathinfo($clean_path, PATHINFO_EXTENSION));
+        $allowed_extensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'];
+        
+        if (!in_array($extension, $allowed_extensions, true)) {
+            return false;
+        }
+        
+        // Validasi nama file
+        $filename = pathinfo($clean_path, PATHINFO_FILENAME);
+        if (!preg_match('/^[a-zA-Z0-9_\-\s\.]+$/', $filename)) {
+            return false;
+        }
+        
+        return $clean_path;
+    }
+}
+
+// Cek apakah fungsi safe_output sudah ada, jika tidak gunakan yang default
+if (!function_exists('safe_output')) {
+    // Fallback function jika tidak ada di a_functions.php
+    function safe_output($string, $context = 'html') {
+        if ($string === null || $string === '') {
+            return '';
+        }
+        
+        $string = (string) $string;
+        
+        if ($context === 'attr') {
+            // Untuk atribut HTML
+            return htmlspecialchars($string, ENT_QUOTES | ENT_HTML5, 'UTF-8', false);
+        } else {
+            // Untuk konten HTML biasa
+            return htmlspecialchars($string, ENT_NOQUOTES | ENT_HTML5, 'UTF-8', false);
+        }
+    }
+}
+
+// ============================================
+// VALIDASI INPUT DAN PARAMETER
+// ============================================
+$current_filter = 'all';
+if (isset($_GET['filter'])) {
+    $filter = trim($_GET['filter']);
+    $allowed_filters = ['all', 'sosialisasi', 'pelatihan', 'seminar', 'workshop', 'lainnya'];
+    
+    if (in_array($filter, $allowed_filters, true)) {
+        $current_filter = $filter;
+    }
+}
+
+// ============================================
+// CSRF TOKEN (JIKA BELUM ADA DI SESSION)
+// ============================================
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
+// ============================================
+// QUERY DENGAN PREPARED STATEMENTS
+// ============================================
+$status = 'publik';
+
+if ($current_filter === 'all') {
+    // Query tanpa filter
+    $query = "SELECT * FROM artikel_kegiatan WHERE status = ? ORDER BY tanggal_publikasi DESC LIMIT 6";
+    $stmt = $koneksi->prepare($query);
+    if (!$stmt) {
+        error_log("Prepare statement error: " . $koneksi->error);
+        die("Terjadi kesalahan sistem.");
+    }
+    $stmt->bind_param('s', $status);
+} else {
+    // Query dengan filter
+    $query = "SELECT * FROM artikel_kegiatan WHERE status = ? 
+              AND (meta_keywords LIKE CONCAT('%', ?, '%') OR judul LIKE CONCAT('%', ?, '%')) 
+              ORDER BY tanggal_publikasi DESC";
+    $stmt = $koneksi->prepare($query);
+    if (!$stmt) {
+        error_log("Prepare statement error: " . $koneksi->error);
+        die("Terjadi kesalahan sistem.");
+    }
+    $stmt->bind_param('sss', $status, $current_filter, $current_filter);
+}
+
+if (!$stmt->execute()) {
+    error_log("Query execution error: " . $stmt->error);
+    die("Terjadi kesalahan saat mengambil data.");
+}
+
+$result = $stmt->get_result();
+
+// Update base URL untuk struktur baru
+$base_url = "http://localhost/jdihcilacap_pasang_2026/jdihcilacap_pasang_2026";
+$pageTitle = 'Berita JDIH - JDIH DPRD Kota Surakarta';
+
+// Include header
+include 'header.php';
 
 ?>
 
@@ -27,19 +156,14 @@ if ($current_filter != 'all') {
 <html lang="id">
 <head>
     <meta charset="utf-8">
-    <title><?php echo $pageTitle; ?></title>
+    <title><?php echo safe_output($pageTitle); ?></title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     
-<<<<<<< HEAD
     <!-- CSS FILES -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Open+Sans&display=swap" rel="stylesheet">
-                        
-=======
-
-
->>>>>>> 0235fbab1f1d991a436811501deb3b8965cb1cce
+    
     <style>
         /* OVERRIDE UNTUK HALAMAN KEGIATAN */
         body {
@@ -69,6 +193,7 @@ if ($current_filter != 'all') {
             font-size: 1.2rem;
             opacity: 0.95;
             max-width: 700px;
+            color: #ffff;
             margin: 0 auto;
             line-height: 1.6;
         }
@@ -430,9 +555,9 @@ if ($current_filter != 'all') {
         <div class="container">
             <div class="row">
                 <div class="col-12">
-                    <h1 class="page-title">Kegiatan JDIH</h1>
+                    <h1 class="page-title">Berita JDIH</h1>
                     <p class="page-subtitle">
-                        Dokumentasi kegiatan dan aktivitas Jaringan Dokumentasi dan Informasi Hukum 
+                        Dokumentasi berita dan aktivitas Jaringan Dokumentasi dan Informasi Hukum 
                         Sekretariat DPRD Kota Surakarta
                     </p>
                 </div>
@@ -445,10 +570,10 @@ if ($current_filter != 'all') {
         <div class="container">
             <!-- FILTER SECTION -->
             <div class="activity-filter">
-                <h4 class="filter-title"><i class="bi bi-funnel me-2"></i>Filter Kegiatan</h4>
+                <h4 class="filter-title"><i class="bi bi-funnel me-2"></i>Filter Berita</h4>
                 <div class="filter-tags">
                     <a href="?page=kegiatan" class="filter-btn <?php echo ($current_filter == 'all') ? 'active' : ''; ?>">
-                        Semua Kegiatan
+                        Semua Berita
                     </a>
                     <a href="?page=kegiatan&filter=sosialisasi" class="filter-btn <?php echo ($current_filter == 'sosialisasi') ? 'active' : ''; ?>">
                         Sosialisasi
@@ -472,9 +597,9 @@ if ($current_filter != 'all') {
             <h2 class="section-title"><i class="bi bi-calendar-event me-2"></i>
                 <?php 
                 if ($current_filter == 'all') {
-                    echo 'Kegiatan Terbaru';
+                    echo 'Berita Terbaru';
                 } else {
-                    echo 'Kegiatan ' . ucfirst($current_filter);
+                    echo 'Kegiatan ' . ucfirst(safe_output($current_filter));
                 }
                 ?>
             </h2>
@@ -501,18 +626,15 @@ if ($current_filter != 'all') {
                         // Format tanggal
                         $tanggal = date('d M Y', strtotime($artikel['tanggal_publikasi']));
                         
-                        // Ambil excerpt dari konten
+                        // Ambil excerpt dari konten dengan sanitasi
                         $excerpt = strip_tags($artikel['konten_artikel']);
                         if (strlen($excerpt) > 150) {
                             $excerpt = substr($excerpt, 0, 150) . '...';
                         }
                         
-                        // ===============================
-                        // PERBAIKAN BAGIAN GAMBAR
-                        // ===============================
-                        
-                        // Cek apakah thumbnail_path ada dan valid
-                        $thumbnail_path = isset($artikel['thumbnail_path']) ? trim($artikel['thumbnail_path']) : '';
+                        // ====================================
+                        // PENANGANAN GAMBAR YANG AMAN
+                        // ====================================
                         
                         // Default placeholder image
                         $default_image = 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80';
@@ -520,114 +642,203 @@ if ($current_filter != 'all') {
                         // Inisialisasi variabel untuk gambar
                         $thumbnail = $default_image;
                         
-                        // Logika untuk menentukan gambar yang akan ditampilkan
-                        if (!empty($thumbnail_path)) {
+                        // Cek apakah thumbnail_path ada dan valid
+                        if (!empty($artikel['thumbnail_path'])) {
+                            $thumbnail_path = trim($artikel['thumbnail_path']);
+                            
                             // Jika path adalah URL lengkap
                             if (filter_var($thumbnail_path, FILTER_VALIDATE_URL)) {
                                 $thumbnail = $thumbnail_path;
-                            }
-                            // Jika path relatif (mulai dengan uploads/)
-elseif (strpos($thumbnail_path, 'wb_admin/uploads/') === 0) {
-                                // Periksa apakah file ada di server
-                                $server_path = $_SERVER['DOCUMENT_ROOT'] . '/' . $thumbnail_path;
+                            } else {
+                                // Validasi path lokal
+                                $validated_filename = validate_image_path($thumbnail_path);
                                 
-                                // Debug: Tampilkan path untuk pengecekan
-                                // echo "<!-- DEBUG: Server path: $server_path -->";
-                                
-                                if (file_exists($server_path)) {
-                                    $thumbnail = $base_url . '/' . $thumbnail_path;
-                                } else {
-                                    // Coba cari di berbagai lokasi yang mungkin
-                                    $possible_paths = [
-                                        $_SERVER['DOCUMENT_ROOT'] . '/jdihcilacap_pasang/' . $thumbnail_path,
-                                        $_SERVER['DOCUMENT_ROOT'] . $thumbnail_path,
-                                        __DIR__ . '/' . $thumbnail_path
+                                if ($validated_filename !== false) {
+                                    // Lokasi yang diizinkan (whitelist approach) - SAMA DENGAN detail-kegiatan.php
+                                    $allowed_dirs = [
+                                        // Laragon structure
+                                        'C:/laragon/www/jdihcilacap_pasang_2026/panel_control/uploads/artikel/',
+                                        'C:/laragon/www/jdihcilacap_pasang_2026/uploads/artikel/',
+                                        'C:/laragon/www/jdihcilacap_pasang_2026/uploads/',
+                                        
+                                        // XAMPP structure
+                                        'C:/xampp/htdocs/jdihcilacap_pasang_2026/panel_control/uploads/artikel/',
+                                        'C:/xampp/htdocs/jdihcilacap_pasang_2026/uploads/artikel/',
+                                        
+                                        // XAMPP 8 structure
+                                        'C:/xampp8/htdocs/jdihcilacap_pasang_2026/jdihcilacap_pasang_2026/panel_control/uploads/artikel/',
+                                        'C:/xampp8/htdocs/jdihcilacap_pasang_2026/jdihcilacap_pasang_2026/uploads/artikel/',
+                                        
+                                        // Document root based
+                                        $_SERVER['DOCUMENT_ROOT'] . '/jdihcilacap_pasang_2026/panel_control/uploads/artikel/',
+                                        $_SERVER['DOCUMENT_ROOT'] . '/jdihcilacap_pasang_2026/uploads/artikel/',
+                                        $_SERVER['DOCUMENT_ROOT'] . '/panel_control/uploads/artikel/',
+                                        $_SERVER['DOCUMENT_ROOT'] . '/uploads/artikel/',
+                                        $_SERVER['DOCUMENT_ROOT'] . '/uploads/',
                                     ];
                                     
-                                    foreach ($possible_paths as $possible_path) {
-                                        if (file_exists($possible_path)) {
-                                            // Hitung URL relatif dari base_url
-                                            $relative_path = str_replace($_SERVER['DOCUMENT_ROOT'], '', $possible_path);
-                                            $thumbnail = $base_url . $relative_path;
-                                            break;
+                                    foreach ($allowed_dirs as $base_dir) {
+                                        $full_path = $base_dir . $validated_filename;
+                                        if (file_exists($full_path) && is_file($full_path)) {
+                                            // Verifikasi path
+                                            $real_path = realpath($full_path);
+                                            $real_base = realpath($base_dir);
+                                            
+                                            if ($real_path && $real_base && strpos($real_path, $real_base) === 0) {
+                                                // Verifikasi ini benar-benar file gambar
+                                                $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                                                $mime_type = finfo_file($finfo, $real_path);
+                                                finfo_close($finfo);
+                                                
+                                                if (strpos($mime_type, 'image/') === 0) {
+                                                    // Buat URL web - Konversi path dengan lebih fleksibel
+                                                    $web_path = '';
+                                                    
+                                                    if (strpos($real_path, $_SERVER['DOCUMENT_ROOT']) === 0) {
+                                                        $web_path = str_replace($_SERVER['DOCUMENT_ROOT'], '', $real_path);
+                                                    }
+                                                    elseif (strpos($real_path, 'C:\\laragon\\www') === 0 || strpos($real_path, 'C:/laragon/www') === 0) {
+                                                        $web_path = str_replace(['C:\\laragon\\www', 'C:/laragon/www'], '', $real_path);
+                                                    }
+                                                    elseif (strpos($real_path, 'C:\\xampp\\htdocs') === 0 || strpos($real_path, 'C:/xampp/htdocs') === 0) {
+                                                        $web_path = str_replace(['C:\\xampp\\htdocs', 'C:/xampp/htdocs'], '', $real_path);
+                                                    }
+                                                    elseif (strpos($real_path, 'C:\\xampp8\\htdocs') === 0 || strpos($real_path, 'C:/xampp8/htdocs') === 0) {
+                                                        $web_path = str_replace(['C:\\xampp8\\htdocs', 'C:/xampp8/htdocs'], '', $real_path);
+                                                    }
+                                                    
+                                                    // Normalize path
+                                                    $web_path = str_replace('\\', '/', $web_path);
+                                                    if (strpos($web_path, '/') !== 0) {
+                                                        $web_path = '/' . $web_path;
+                                                    }
+                                                    
+                                                    $thumbnail = $web_path;
+                                                    break;
+                                                }
+                                            }
                                         }
                                     }
                                 }
                             }
-                            // Jika path dimulai dengan '/'
-                            elseif (strpos($thumbnail_path, '/') === 0) {
-                                if (file_exists($_SERVER['DOCUMENT_ROOT'] . $thumbnail_path)) {
-                                    $thumbnail = $base_url . $thumbnail_path;
-                                }
-                            }
                         }
                         
-                        // Fallback: Jika masih default, coba cari gambar berdasarkan ID artikel
+                        // Fallback: Cari gambar berdasarkan ID artikel
                         if ($thumbnail === $default_image && isset($artikel['id_artikel'])) {
-                            $possible_image_files = [
-                                'uploads/kegiatan/kegiatan_' . $artikel['id_artikel'] . '.jpg',
-                                'uploads/kegiatan/' . $artikel['id_artikel'] . '.jpg',
-                                'uploads/thumbnail/kegiatan_' . $artikel['id_artikel'] . '.jpg',
-                                'uploads/' . $artikel['id_artikel'] . '.jpg',
-                                'assets/images/kegiatan/' . $artikel['id_artikel'] . '.jpg'
-                            ];
-                            
-                            foreach ($possible_image_files as $image_file) {
-                                if (file_exists($_SERVER['DOCUMENT_ROOT'] . '/jdihcilacap_pasang/' . $image_file)) {
-                                    $thumbnail = $base_url . '/' . $image_file;
-                                    break;
+                            // Validasi ID artikel
+                            if (is_numeric($artikel['id_artikel'])) {
+                                $possible_image_files = [
+                                    'artikel_' . $artikel['id_artikel'] . '.jpg',
+                                    'kegiatan_' . $artikel['id_artikel'] . '.jpg',
+                                    'article_' . $artikel['id_artikel'] . '.jpg',
+                                    $artikel['id_artikel'] . '.jpg',
+                                    'artikel_' . $artikel['id_artikel'] . '.png',
+                                    'kegiatan_' . $artikel['id_artikel'] . '.png',
+                                    'article_' . $artikel['id_artikel'] . '.png',
+                                    $artikel['id_artikel'] . '.png',
+                                    'artikel_' . $artikel['id_artikel'] . '.jpeg',
+                                    'kegiatan_' . $artikel['id_artikel'] . '.jpeg',
+                                    'article_' . $artikel['id_artikel'] . '.jpeg',
+                                    $artikel['id_artikel'] . '.jpeg',
+                                ];
+                                
+                                $base_dirs = [
+                                    // Laragon
+                                    'C:/laragon/www/jdihcilacap_pasang_2026/panel_control/uploads/artikel/',
+                                    'C:/laragon/www/jdihcilacap_pasang_2026/uploads/artikel/',
+                                    
+                                    // XAMPP
+                                    'C:/xampp/htdocs/jdihcilacap_pasang_2026/panel_control/uploads/artikel/',
+                                    'C:/xampp/htdocs/jdihcilacap_pasang_2026/uploads/artikel/',
+                                    
+                                    // XAMPP 8
+                                    'C:/xampp8/htdocs/jdihcilacap_pasang_2026/jdihcilacap_pasang_2026/panel_control/uploads/artikel/',
+                                    'C:/xampp8/htdocs/jdihcilacap_pasang_2026/jdihcilacap_pasang_2026/uploads/artikel/',
+                                    
+                                    // Document root
+                                    $_SERVER['DOCUMENT_ROOT'] . '/jdihcilacap_pasang_2026/panel_control/uploads/artikel/',
+                                    $_SERVER['DOCUMENT_ROOT'] . '/jdihcilacap_pasang_2026/uploads/artikel/',
+                                    $_SERVER['DOCUMENT_ROOT'] . '/panel_control/uploads/artikel/',
+                                    $_SERVER['DOCUMENT_ROOT'] . '/uploads/artikel/',
+                                ];
+                                
+                                foreach ($base_dirs as $base_dir) {
+                                    foreach ($possible_image_files as $image_file) {
+                                        $check_path = $base_dir . $image_file;
+                                        if (file_exists($check_path)) {
+                                            $real_path = realpath($check_path);
+                                            $real_base = realpath($base_dir);
+                                            
+                                            if ($real_path && $real_base && strpos($real_path, $real_base) === 0) {
+                                                // Konversi path dengan lebih fleksibel
+                                                $web_path = '';
+                                                
+                                                if (strpos($real_path, $_SERVER['DOCUMENT_ROOT']) === 0) {
+                                                    $web_path = str_replace($_SERVER['DOCUMENT_ROOT'], '', $real_path);
+                                                }
+                                                elseif (strpos($real_path, 'C:\\laragon\\www') === 0 || strpos($real_path, 'C:/laragon/www') === 0) {
+                                                    $web_path = str_replace(['C:\\laragon\\www', 'C:/laragon/www'], '', $real_path);
+                                                }
+                                                elseif (strpos($real_path, 'C:\\xampp\\htdocs') === 0 || strpos($real_path, 'C:/xampp/htdocs') === 0) {
+                                                    $web_path = str_replace(['C:\\xampp\\htdocs', 'C:/xampp/htdocs'], '', $real_path);
+                                                }
+                                                elseif (strpos($real_path, 'C:\\xampp8\\htdocs') === 0 || strpos($real_path, 'C:/xampp8/htdocs') === 0) {
+                                                    $web_path = str_replace(['C:\\xampp8\\htdocs', 'C:/xampp8/htdocs'], '', $real_path);
+                                                }
+                                                
+                                                // Normalize path
+                                                $web_path = str_replace('\\', '/', $web_path);
+                                                if (strpos($web_path, '/') !== 0) {
+                                                    $web_path = '/' . $web_path;
+                                                }
+                                                
+                                                $thumbnail = $web_path;
+                                                break 2;
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
                         
-                        // ===============================
-                        // AKHIR PERBAIKAN GAMBAR
-                        // ===============================
-                        
-                        // Penulis
-                        $penulis = !empty($artikel['nama_penulis']) ? $artikel['nama_penulis'] : 'Admin JDIH';
-                        
-                        // Buat link detail
-                        $detail = $base_url . "/index.php?page=detail-jdih&id=" . $artikel['id_artikel'];
+                        // Buat link detail dengan enkripsi token
+                        $encrypted_token = encode_id($artikel['id_artikel']);
+                        $detail_link = "?page=detail-kegiatan&token=" . urlencode($encrypted_token);
                         ?>
-                        <div class="activity-card" data-category="<?php echo $article_category; ?>">
-                            <!-- Tambahkan onerror untuk fallback jika gambar masih error -->
-                            <img src="<?php echo htmlspecialchars($thumbnail); ?>" 
-                                alt="<?php echo htmlspecialchars($artikel['judul']); ?>" 
+                        <div class="activity-card" data-category="<?php echo safe_output($article_category, 'attr'); ?>">
+                            <img src="<?php echo safe_output($thumbnail, 'attr'); ?>" 
+                                alt="<?php echo safe_output($artikel['judul'], 'attr'); ?>" 
                                 class="activity-image"
-                                onerror="this.onerror=null; this.src='<?php echo $default_image; ?>';">
+                                onerror="this.onerror=null; this.src='<?php echo safe_output($default_image, 'attr'); ?>';">
                             <div class="activity-content">
                                 <div class="activity-meta">
                                     <span class="activity-date">
-                                        <i class="bi bi-calendar3"></i> <?php echo $tanggal; ?>
+                                        <i class="bi bi-calendar3"></i> <?php echo safe_output($tanggal); ?>
                                     </span>
                                     <span class="activity-category">
-                                        <?php echo ucfirst($article_category); ?>
+                                        <?php echo safe_output(ucfirst($article_category)); ?>
                                     </span>
                                 </div>
-                                <h3 class="activity-title" title="<?php echo htmlspecialchars($artikel['judul']); ?>">
-                                    <?php echo htmlspecialchars($artikel['judul']); ?>
+                                <h3 class="activity-title" title="<?php echo safe_output($artikel['judul'], 'attr'); ?>">
+                                    <?php echo safe_output($artikel['judul']); ?>
                                 </h3>
                                 <p class="activity-excerpt">
-                                    <?php echo htmlspecialchars($excerpt); ?>
+                                    <?php echo safe_output($excerpt); ?>
                                 </p>
                                 <div class="activity-stats">
-                                    <span title="Dilihat"><i class="bi bi-eye-fill"></i> <?php echo $artikel['views']; ?></span>
-                                    <span title="Penulis"><i class="bi bi-person-fill"></i> <?php echo htmlspecialchars($penulis); ?></span>
+                                    <span title="Dilihat"><i class="bi bi-eye-fill"></i> <?php echo safe_output($artikel['views']); ?></span>
+                                    <span title="Penulis"><i class="bi bi-person-fill"></i> 
+                                        <?php 
+                                        echo !empty($artikel['nama_penulis']) 
+                                            ? safe_output($artikel['nama_penulis']) 
+                                            : 'Admin JDIH'; 
+                                        ?>
+                                    </span>
                                 </div>
-<<<<<<< HEAD
-                                <!-- PERBAIKAN: Link mengarah ke detail-kegiatan.php dalam folder yang sama -->
-                                <a href="index.php?page=detail-kegiatan.php?id=<?php echo $artikel['id_artikel']; ?>" class="read-more-btn">
-                                    Baca Selengkapnya
+                                <!-- Link ke halaman detail-kegiatan dengan ID -->
+                                <a href="<?php echo safe_output($detail_link, 'attr'); ?>" class="read-more-btn">
+                                    <i class="bi bi-eye"></i> Baca Selengkapnya
                                 </a>
-=======
-                                <!-- Link dengan method GET yang jelas -->
-                                <div class="card-actions">
-                                    <a href="<?= $detail ?>" class="read-more-btn">
-                                        <i class="bi bi-eye"></i> Baca Selengkapnya
-                                    </a>
-                                </div>
->>>>>>> 0235fbab1f1d991a436811501deb3b8965cb1cce
                             </div>
                         </div>
                     <?php endwhile; ?>
@@ -636,10 +847,10 @@ elseif (strpos($thumbnail_path, 'wb_admin/uploads/') === 0) {
                 <!-- Empty state -->
                 <div class="empty-state">
                     <i class="bi bi-calendar-x"></i>
-                    <h4>Tidak Ada Kegiatan</h4>
-                    <p>Belum ada kegiatan yang tersedia untuk kategori ini.</p>
+                    <h4>Tidak Ada Berita</h4>
+                    <p>Belum ada berita yang tersedia untuk kategori ini.</p>
                     <a href="?page=kegiatan" class="btn btn-primary mt-3" style="background: linear-gradient(135deg, #13547a 0%, #80d0c7 100%); border: none;">
-                        Lihat Semua Kegiatan
+                        Lihat Semua Berita
                     </a>
                 </div>
             <?php endif; ?>
@@ -654,59 +865,29 @@ elseif (strpos($thumbnail_path, 'wb_admin/uploads/') === 0) {
     <script src="js/click-scroll.js"></script>
     <script src="js/custom.js"></script>
     
-        <script>
-        // Pastikan link berfungsi dengan benar
+    <script>
+        // Simple initialization
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Activity page loaded');
-            
-            // Tangani klik pada tombol "Baca Selengkapnya" dengan cara yang aman
-            const readMoreButtons = document.querySelectorAll('.read-more-btn');
-            
-            readMoreButtons.forEach(button => {
-                // Simpan href asli
-                const originalHref = button.getAttribute('href');
-                
-                // Pastikan href tidak kosong
-                if (!originalHref || originalHref === '#') {
-                    console.warn('Button has no valid href:', button);
-                    return;
-                }
-                
-                // Hapus semua event listener yang ada
-                const newButton = button.cloneNode(true);
-                button.parentNode.replaceChild(newButton, button);
-                
-                // Tambahkan event listener baru
-                newButton.addEventListener('click', function(e) {
-                    console.log('Navigating to:', originalHref);
-                    
-                    // Pastikan URL lengkap
-                    let url = originalHref;
-                    if (!url.startsWith('http')) {
-                        // Jika relatif, tambahkan base path
-                        url = window.location.origin + '/' + url.replace(/^\//, '');
-                    }
-                    
-                    // Navigasi ke halaman detail
-                    window.location.href = url;
-                    
-                    // Cegah event default (tapi kita sudah handle dengan window.location)
-                    e.preventDefault();
-                    e.stopPropagation();
-                    return false;
-                });
-            });
             
             // Debug: Log semua gambar
             const images = document.querySelectorAll('.activity-image');
             images.forEach((img, index) => {
                 img.addEventListener('error', function() {
                     console.warn(`Image ${index} failed to load:`, this.src);
+                    // Fallback ke default image
+                    this.src = 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80';
                 });
-                
-                img.addEventListener('load', function() {
-                    console.log(`Image ${index} loaded successfully:`, this.src);
-                });
+            });
+            
+            // CSRF Protection untuk form (jika ada)
+            const forms = document.querySelectorAll('form');
+            forms.forEach(form => {
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = 'csrf_token';
+                csrfInput.value = '<?php echo $_SESSION["csrf_token"] ?? ""; ?>';
+                form.appendChild(csrfInput);
             });
         });
     </script>
@@ -715,7 +896,11 @@ elseif (strpos($thumbnail_path, 'wb_admin/uploads/') === 0) {
 </html>
 
 <?php 
-// Tutup koneksi database
+// Tutup koneksi database dengan aman
+if (isset($stmt)) {
+    $stmt->close();
+}
+
 if (isset($koneksi)) {
     $koneksi->close();
 }

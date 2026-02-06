@@ -1,0 +1,16 @@
+[28-Jan-2026 07:19:42 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown database 'jdih_database' in C:\laragon\www\jdihcilacap_pasang_2026\pages\pokok-pikiran-dprd.php:275
+Stack trace:
+#0 C:\laragon\www\jdihcilacap_pasang_2026\pages\pokok-pikiran-dprd.php(275): mysqli_connect('localhost', 'root', Object(SensitiveParameterValue), 'jdih_database')
+#1 C:\laragon\www\jdihcilacap_pasang_2026\pages\home.php(103): include('C:\\laragon\\www\\...')
+#2 C:\laragon\www\jdihcilacap_pasang_2026\index.php(5): include('C:\\laragon\\www\\...')
+#3 {main}
+  thrown in C:\laragon\www\jdihcilacap_pasang_2026\pages\pokok-pikiran-dprd.php on line 275
+[28-Jan-2026 07:22:41 UTC] PHP Warning:  mkdir(): Invalid path in C:\laragon\www\jdihcilacap_pasang_2026\pages\pokok-pikiran-dprd.php on line 223
+[28-Jan-2026 07:22:41 UTC] PHP Fatal error:  Uncaught ValueError: Path cannot be empty in C:\laragon\www\jdihcilacap_pasang_2026\pages\pokok-pikiran-dprd.php:241
+Stack trace:
+#0 C:\laragon\www\jdihcilacap_pasang_2026\pages\pokok-pikiran-dprd.php(241): error_log('[2026-01-28 07:...', 3, '')
+#1 C:\laragon\www\jdihcilacap_pasang_2026\pages\pokok-pikiran-dprd.php(283): security_log('Database connec...', 'INFO')
+#2 C:\laragon\www\jdihcilacap_pasang_2026\pages\home.php(103): include('C:\\laragon\\www\\...')
+#3 C:\laragon\www\jdihcilacap_pasang_2026\index.php(5): include('C:\\laragon\\www\\...')
+#4 {main}
+  thrown in C:\laragon\www\jdihcilacap_pasang_2026\pages\pokok-pikiran-dprd.php on line 241

@@ -1,5 +1,53 @@
+# =========================
+# BASIC HARDENING
+# =========================
+Options -Indexes
+ServerSignature Off
 
+# Blok file sensitif
+<FilesMatch "\.(env|ini|log|sql|bak|old|lock|json|yml|yaml|md|txt)$">
+    Deny from all
+</FilesMatch>
+
+# Blok akses ke .git
+RedirectMatch 404 /\.git
+
+# =========================
+# PROTEKSI REQUEST BERBAHAYA
+# =========================
 RewriteEngine On
+
+# Blok SQL Injection sederhana
+RewriteCond %{QUERY_STRING} (\.\./|union|select|insert|delete|drop|truncate|benchmark|sleep|load_file|outfile) [NC]
+RewriteRule ^(.*)$ - [F,L]
+
+# Blok XSS dasar
+RewriteCond %{QUERY_STRING} (<|>|script|iframe|onerror|onload) [NC]
+RewriteRule ^(.*)$ - [F,L]
+
+# Blok command injection
+RewriteCond %{QUERY_STRING} (base64|eval|system|exec|shell_exec|passthru) [NC]
+RewriteRule ^(.*)$ - [F,L]
+
+# =========================
+# FRONT CONTROLLER
+# =========================
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^([^/]+)?$ index.php?page=$1 [QSA,L]
+RewriteRule ^ index.php [L]
+
+# =========================
+# HIDE index.php FROM URL
+# =========================
+RewriteEngine On
+
+# Jika request bukan file & folder asli
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# =========================
+# SECURITY HARDENING
+# =========================
+Options -Indexes
+ServerSignature Off
+

@@ -117,6 +117,7 @@ if (isset($_GET['year']) && $_GET['year'] !== 'all') {
     
     .page-header .subtitle {
         font-size: 1.1rem;
+        color : #ffffff;
         opacity: 0.9;
         max-width: 700px;
         margin: 0 auto;
@@ -352,57 +353,96 @@ if (isset($_GET['year']) && $_GET['year'] !== 'all') {
     }
     
     /* SIDEBAR */
-    .sidebar-card {
+    .sidebar-menu {
         background: white;
-        border-radius: 10px;
+        border-radius: var(--border-radius-medium);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
         padding: 25px;
-        margin-bottom: 25px;
-        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+        margin-bottom: 30px;
+        position: relative;
+        overflow: hidden;
     }
     
-    .sidebar-title {
+    .sidebar-menu::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: linear-gradient(to right, #13547a, #80d0c7);
+    }
+    
+    .sidebar-menu h4 {
         color: #13547a;
-        font-size: 1.2rem;
+        font-family: 'Montserrat', sans-serif;
         font-weight: 600;
+        font-size: 1.2rem;
         margin-bottom: 20px;
         padding-bottom: 10px;
         border-bottom: 2px solid #f0f0f0;
         display: flex;
         align-items: center;
-        gap: 10px;
     }
     
-    .quick-links {
+    .sidebar-menu h4 i {
+        color: #80d0c7;
+        margin-right: 10px;
+    }
+    
+    .sidebar-menu ul {
         list-style: none;
         padding: 0;
         margin: 0;
     }
     
-    .quick-links li {
-        margin-bottom: 10px;
+    .sidebar-menu ul li {
+        margin-bottom: 12px;
     }
     
-    .quick-links a {
+    .sidebar-menu ul li:last-child {
+        margin-bottom: 0;
+    }
+    
+    .sidebar-menu ul li a {
+        color: var(--p-color);
+        text-decoration: none;
+        padding: 12px 15px;
+        border-radius: var(--border-radius-small);
         display: flex;
         align-items: center;
-        padding: 12px 15px;
-        color: #555;
-        text-decoration: none;
-        border-radius: 6px;
         transition: all 0.3s;
-        gap: 10px;
+        font-weight: 500;
+        position: relative;
+        overflow: hidden;
     }
     
-    .quick-links a:hover {
+    .sidebar-menu ul li a::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 3px;
+        background: #80d0c7;
+        transform: scaleY(0);
+        transition: transform 0.3s ease;
+    }
+    
+    .sidebar-menu ul li a:hover::before {
+        transform: scaleY(1);
+    }
+    
+    .sidebar-menu ul li a:hover {
         background: #f0f8ff;
         color: #13547a;
         transform: translateX(5px);
     }
     
-    .quick-links a i {
+    .sidebar-menu ul li a i {
         color: #80d0c7;
-        font-size: 1.1rem;
-        width: 20px;
+        margin-right: 10px;
+        font-size: 0.9rem;
     }
     
     /* STATS CARD */
@@ -710,81 +750,53 @@ if (isset($_GET['year']) && $_GET['year'] !== 'all') {
             <!-- SIDEBAR -->
             <div class="col-lg-4">
                 
-                <!-- STATISTIK -->
-                <div class="sidebar-card">
-                    <h5 class="sidebar-title">
-                        <i class="bi bi-bar-chart"></i> Statistik
-                    </h5>
-                    <div class="stats-grid">
-                        <div class="stat-item">
-                            <div class="stat-number"><?php echo count($documents); ?></div>
-                            <div class="stat-label">Total Dokumen</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-number"><?php echo max(array_column($documents, 'year')); ?></div>
-                            <div class="stat-label">Tahun Terbaru</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- MENU CEPAT -->
-                <div class="sidebar-card">
-                    <h5 class="sidebar-title">
-                        <i class="bi bi-link-45deg"></i> Menu Cepat
-                    </h5>
-                    <ul class="quick-links">
-                        <li><a href="profil-jdih.php"><i class="bi bi-house-door"></i> Profil JDIH</a></li>
-                        <li><a href="struktur-organisasi.php"><i class="bi bi-diagram-3"></i> Struktur Organisasi</a></li>
-                        <li><a href="dasar-hukum.php" style="background: #f0f8ff; color: #13547a;"><i class="bi bi-file-earmark-text"></i> Dasar Hukum</a></li>
-                        <li><a href="sop-pengelola.php"><i class="bi bi-list-check"></i> SOP Pengelola</a></li>
-                        <li><a href="alur-pengelolaan.php"><i class="bi bi-arrow-repeat"></i> Alur Pengelolaan</a></li>
-                        <li><a href="surat-keputusan.php"><i class="bi bi-file-earmark-medical"></i> Surat Keputusan</a></li>
-                        <li><a href="visi-misi.php"><i class="bi bi-bullseye"></i> Visi & Misi</a></li>
-                    </ul>
-                </div>
-                
-                <!-- DOKUMEN POPULER -->
-                <div class="sidebar-card">
-                    <h5 class="sidebar-title">
-                        <i class="bi bi-download"></i> Paling Sering Diunduh
-                    </h5>
-                    <ul class="quick-links">
-                        <?php 
-                        $popularDocs = array_slice($documents, 0, 4);
-                        foreach ($popularDocs as $doc): 
-                        ?>
-                        <li>
-                            <a href="<?php echo $doc['file_url']; ?>" target="_blank" onclick="trackDownload(<?php echo $doc['id']; ?>)">
-                                <i class="bi bi-file-earmark-pdf"></i>
-                                <div>
-                                    <div><?php echo substr($doc['title'], 0, 50); ?>...</div>
-                                    <small style="color: #666; font-size: 0.8rem;">Download</small>
-                                </div>
+                <!-- MENU TERKAIT -->
+                <div class="sidebar-menu">
+                    <h4><i class="bi bi-link-45deg"></i> Menu Terkait</h4>
+                    <ul>
+                        <li class="<?= (strpos($_SERVER['PHP_SELF'], 'Profil-JDIH') !== false) ? 'active' : '' ?>">
+                            <a href="?page=profil-jdih">
+                                <i class="bi bi-building"></i>
+                                Profil JDIH
                             </a>
                         </li>
-                        <?php endforeach; ?>
+                        <li class="<?= (strpos($_SERVER['PHP_SELF'], 'struktur-organisasi') !== false) ? 'active' : '' ?>">
+                            <a href="?page=struktur-organisasi">
+                                <i class="bi bi-diagram-3"></i>
+                                Struktur Organisasi
+                            </a>
+                        </li>
+                        <li class="<?= (strpos($_SERVER['PHP_SELF'], 'alur-pengelolaan') !== false) ? 'active' : '' ?>">
+                            <a href="?page=alur-pengelolaan">
+                                <i class="bi bi-diagram-2"></i>
+                                Alur Pengelolaan
+                            </a>
+                        </li>
+                        <li class="<?= (strpos($_SERVER['PHP_SELF'], 'sop-pengelola') !== false) ? 'active' : '' ?>">
+                            <a href="?page=sop-pengelola">
+                                <i class="bi bi-clipboard-check"></i>
+                                SOP Pengelola
+                            </a>
+                        </li>
+                        <li class="<?= (strpos($_SERVER['PHP_SELF'], 'dasar-hukum') !== false) ? 'active' : '' ?>">
+                            <a href="?page=dasar-hukum">
+                                <i class="bi bi-journal-text"></i>
+                                Dasar Hukum
+                            </a>
+                        </li>
+                        <li class="<?= (strpos($_SERVER['PHP_SELF'], 'surat-keputusan') !== false) ? 'active' : '' ?>">
+                            <a href="?page=surat-keputusan">
+                                <i class="bi bi-file-earmark-pdf"></i>
+                                Surat Keputusan
+                            </a>
+                        </li>
+                        <li class="<?= (strpos($_SERVER['PHP_SELF'], 'video-profile') !== false) ? 'active' : '' ?>">
+                            <a href="?page=video-profile">
+                                <i class="bi bi-play-circle"></i>
+                                Video Profile
+                            </a>
+                        </li>
                     </ul>
-                </div>
-                
-                <!-- KONTAK -->
-                <div class="sidebar-card">
-                    <h5 class="sidebar-title">
-                        <i class="bi bi-telephone"></i> Kontak
-                    </h5>
-                    <div class="contact-info">
-                        <div class="mb-3">
-                            <div style="font-weight: 600; color: #13547a;">Koordinator JDIH</div>
-                            <div>Budi Santoso, SH., M.Hum.</div>
-                        </div>
-                        <div class="mb-3">
-                            <div style="font-weight: 600; color: #13547a;">Telepon</div>
-                            <div><a href="tel:+62271234567" style="color: #13547a;">(0271) 234567 ext. 123</a></div>
-                        </div>
-                        <div class="mb-3">
-                            <div style="font-weight: 600; color: #13547a;">Email</div>
-                            <div><a href="mailto:jdih@dprd-surakarta.go.id" style="color: #13547a;">jdih@dprd-surakarta.go.id</a></div>
-                        </div>
-                    </div>
                 </div>
                 
             </div>

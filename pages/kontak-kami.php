@@ -1,120 +1,329 @@
 <?php
-// kontak-kami.php
 
-// Include koneksi database
-require_once 'a_db.php';
-include 'header.php';
+include_once "a_db.php";
+// ============================================
+// KEAMANAN LEVEL 1: ERROR HANDLING
+// ============================================
+error_reporting(E_ALL);
+ini_set('display_errors', 0); // Tidak tampilkan error ke user
+ini_set('log_errors', 1);
+ini_set('error_log', __DIR__ . '/logs/php_errors.log');
 
-// Inisialisasi variabel
+// ============================================
+// KEAMANAN LEVEL 2: SESSION SECURITY
+// ============================================
+session_start([
+    'cookie_httponly' => true,
+    'cookie_secure' => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on',
+    'cookie_samesite' => 'Strict',
+    'use_only_cookies' => 1
+]);
+
+// ============================================
+// KEAMANAN LEVEL 3: INCLUDE REQUIRED FILES
+// ============================================
+// Check and include a_functions.php dan a_db.php dengan error handling
+if (!file_exists('a_functions.php')) {
+    error_log("CRITICAL: a_functions.php not found in " . __DIR__);
+    
+    // Fallback functions if a_functions.php doesn't exist
+    function sanitize($input) {
+        if (is_array($input)) {
+            return array_map('sanitize', $input);
+        }
+        // Handle null values untuk PHP 8.1+
+        if ($input === null) {
+            return '';
+        }
+        return htmlspecialchars(trim($input), ENT_QUOTES, 'UTF-8');
+    }
+    
+    function safe_output($data) {
+        // Handle null values untuk PHP 8.1+
+        if ($data === null) {
+            return '';
+        }
+        return htmlspecialchars($data, ENT_QUOTES, 'UTF-8');
+    }
+    
+    function sanitize_input($input) {
+        return sanitize($input);
+    }
+} else {
+    include_once "a_functions.php";
+    
+    // Override fungsi safe_output jika perlu
+    if (!function_exists('safe_output')) {
+        function safe_output($data) {
+            if ($data === null) {
+                return '';
+            }
+            if (is_array($data)) {
+                return array_map('safe_output', $data);
+            }
+            if (!is_string($data)) {
+                $data = (string)$data;
+            }
+            return htmlspecialchars($data, ENT_QUOTES, 'UTF-8');
+        }
+    }
+}
+
+
+
+// ============================================
+// KEAMANAN LEVEL 4: INPUT VALIDATION & SANITIZATION
+// ============================================
+// Sanitize all POST parameters
+$clean_post = [];
+foreach ($_POST as $key => $value) {
+    $clean_post[$key] = sanitize_input($value);
+}
+
+// Inisialisasi variabel dengan data sanitized
 $success_message = '';
 $error_message = '';
 $validation_errors = [];
 
-// Proses form jika ada POST request
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Ambil dan sanitasi data
-    $nama = mysqli_real_escape_string($koneksi, $_POST['name'] ?? '');
-    $email = mysqli_real_escape_string($koneksi, $_POST['email'] ?? '');
-    $telepon = mysqli_real_escape_string($koneksi, $_POST['phone'] ?? '');
-    $subjek = mysqli_real_escape_string($koneksi, $_POST['subject'] ?? '');
-    $pesan = mysqli_real_escape_string($koneksi, $_POST['message'] ?? '');
-    
-    // Validasi
-    $errors = [];
-    
-    // Validasi nama
-    if (empty($nama)) {
-        $errors[] = "Nama lengkap wajib diisi";
-    } elseif (strlen($nama) < 3) {
-        $errors[] = "Nama minimal 3 karakter";
-    }
-    
-    // Validasi email
-    if (empty($email)) {
-        $errors[] = "Email wajib diisi";
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $errors[] = "Format email tidak valid";
-    }
-    
-    // Validasi subjek
-    if (empty($subjek)) {
-        $errors[] = "Jenis pesan wajib dipilih";
-    }
-    
-    // Validasi pesan
-    if (empty($pesan)) {
-        $errors[] = "Pesan wajib diisi";
-    } elseif (strlen($pesan) < 10) {
-        $errors[] = "Pesan minimal 10 karakter";
-    }
-    
-    // Cek checkbox persetujuan
-    if (!isset($_POST['privacy'])) {
-        $errors[] = "Anda harus menyetujui kebijakan privasi";
-    }
-    
-    // Jika tidak ada error, simpan ke database
-    if (empty($errors)) {
-        // Cek apakah table sudah ada
-        $check_table = $koneksi->query("SHOW TABLES LIKE 'pesan_kontak'");
+// ============================================
+// KEAMANAN LEVEL 5: ANTI-SPAM & RATE LIMITING
+// ============================================
+// Cek jika ada session untuk rate limiting
+if (!isset($_SESSION['last_submission'])) {
+    $_SESSION['last_submission'] = 0;
+}
+
+$current_time = time();
+$time_since_last = $current_time - $_SESSION['last_submission'];
+
+// Rate limiting: minimal 30 detik antara submission
+if ($time_since_last < 30 && $_SERVER["REQUEST_METHOD"] == "POST") {
+    $error_message = "Silakan tunggu 30 detik sebelum mengirim pesan lagi.";
+}
+
+// ============================================
+// KEAMANAN LEVEL 6: HONEYPOT TRAP
+// ============================================
+// Honeypot field untuk menangkap bot
+$honeypot_field = isset($_POST['honeypot']) ? trim($_POST['honeypot']) : '';
+
+// Jika honeypot diisi (hanya bot yang akan mengisi), tolak submission
+if (!empty($honeypot_field)) {
+    error_log("Bot detected via honeypot on contact form");
+    // Tampilkan pesan sukses palsu untuk menipu bot
+    $success_message = "Terima kasih! Pesan Anda telah berhasil dikirim.";
+    // Log aktivitas tanpa menyimpan ke database
+    $access_log = sprintf(
+        "[%s] BOT DETECTED - IP: %s | Form: contact | Honeypot triggered\n",
+        date('Y-m-d H:i:s'),
+        $_SERVER['REMOTE_ADDR'] ?? 'unknown'
+    );
+    error_log($access_log);
+}
+
+// ============================================
+// KEAMANAN LEVEL 7: CSRF PROTECTION
+// ============================================
+// Generate CSRF token jika belum ada
+if (!isset($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
+// ============================================
+// KEAMANAN LEVEL 8: PROSES FORM DENGAN VALIDASI KETAT
+// ============================================
+if ($_SERVER["REQUEST_METHOD"] == "POST" && empty($error_message) && empty($honeypot_field)) {
+    // Validasi CSRF token
+    $csrf_token = $clean_post['csrf_token'] ?? '';
+    if (!hash_equals($_SESSION['csrf_token'], $csrf_token)) {
+        $error_message = "Token keamanan tidak valid. Silakan refresh halaman dan coba lagi.";
+        error_log("CSRF token mismatch on contact form");
+    } else {
+        // Ambil dan sanitasi data dari clean_post (sudah disanitasi)
+        $nama = $clean_post['name'] ?? '';
+        $email = $clean_post['email'] ?? '';
+        $telepon = $clean_post['phone'] ?? '';
+        $subjek = $clean_post['subject'] ?? '';
+        $pesan = $clean_post['message'] ?? '';
         
-        // Buat table jika belum ada
-        if ($check_table->num_rows == 0) {
-            $create_table = "CREATE TABLE IF NOT EXISTS pesan_kontak (
-                id INT(11) AUTO_INCREMENT PRIMARY KEY,
-                nama VARCHAR(100) NOT NULL,
-                email VARCHAR(100) NOT NULL,
-                telepon VARCHAR(20),
-                subjek VARCHAR(50) NOT NULL,
-                pesan TEXT NOT NULL,
-                tanggal_dikirim TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                status VARCHAR(20) DEFAULT 'terkirim'
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
-            
-            if (!$koneksi->query($create_table)) {
-                $error_message = "Gagal membuat tabel database: " . $koneksi->error;
-                $validation_errors = $errors;
+        // Validasi ketat
+        $errors = [];
+        
+        // Validasi nama dengan regex
+        if (empty($nama)) {
+            $errors[] = "Nama lengkap wajib diisi";
+        } elseif (strlen($nama) < 3) {
+            $errors[] = "Nama minimal 3 karakter";
+        } elseif (strlen($nama) > 100) {
+            $errors[] = "Nama maksimal 100 karakter";
+        } elseif (!preg_match('/^[a-zA-Z\s\.\-\']+$/u', $nama)) {
+            $errors[] = "Nama hanya boleh mengandung huruf, spasi, titik, tanda hubung, dan apostrof";
+        }
+        
+        // Validasi email ketat
+        if (empty($email)) {
+            $errors[] = "Email wajib diisi";
+        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $errors[] = "Format email tidak valid";
+        } elseif (strlen($email) > 100) {
+            $errors[] = "Email maksimal 100 karakter";
+        } elseif (!preg_match('/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/', $email)) {
+            $errors[] = "Format email tidak sesuai";
+        }
+        
+        // Validasi telepon opsional
+        if (!empty($telepon)) {
+            if (strlen($telepon) > 20) {
+                $errors[] = "Nomor telepon maksimal 20 karakter";
+            } elseif (!preg_match('/^[\d\s\-\+\(\)]+$/', $telepon)) {
+                $errors[] = "Format nomor telepon tidak valid";
             }
         }
         
-        // Jika tidak ada error, lanjutkan penyimpanan
-        if (empty($error_message)) {
-            // Siapkan query dengan prepared statement
-            $sql = "INSERT INTO pesan_kontak (nama, email, telepon, subjek, pesan) VALUES (?, ?, ?, ?, ?)";
-            $stmt = $koneksi->prepare($sql);
-            
-            if ($stmt) {
-                // Bind parameter
-                $stmt->bind_param("sssss", $nama, $email, $telepon, $subjek, $pesan);
+        // Validasi subjek
+        $allowed_subjects = ['informasi', 'saran', 'konsultasi', 'kerjasama', 'lainnya'];
+        if (empty($subjek)) {
+            $errors[] = "Jenis pesan wajib dipilih";
+        } elseif (!in_array($subjek, $allowed_subjects)) {
+            $errors[] = "Jenis pesan tidak valid";
+        }
+        
+        // Validasi pesan ketat
+        if (empty($pesan)) {
+            $errors[] = "Pesan wajib diisi";
+        } elseif (strlen($pesan) < 10) {
+            $errors[] = "Pesan minimal 10 karakter";
+        } elseif (strlen($pesan) > 2000) {
+            $errors[] = "Pesan maksimal 2000 karakter";
+        } elseif (preg_match('/http[s]?:\/\/|www\.|\[url|\[link/i', $pesan)) {
+            $errors[] = "Pesan mengandung link yang tidak diperbolehkan";
+        }
+        
+        // Cek checkbox persetujuan
+        if (!isset($clean_post['privacy'])) {
+            $errors[] = "Anda harus menyetujui kebijakan privasi";
+        }
+        
+        // Cek jumlah kata kunci spam
+        $spam_keywords = ['viagra', 'cialis', 'casino', 'lottery', 'porn', 'xxx', 'buy now', 'click here'];
+        $message_lower = strtolower($pesan);
+        foreach ($spam_keywords as $keyword) {
+            if (strpos($message_lower, $keyword) !== false) {
+                $errors[] = "Pesan mengandung konten yang tidak diizinkan";
+                break;
+            }
+        }
+        
+        // Jika tidak ada error, simpan ke database
+        if (empty($errors)) {
+            try {
+                // Siapkan query dengan prepared statement untuk mencegah SQL injection
+                $sql = "INSERT INTO pesan_kontak 
+                (nama, email, telepon, subjek, pesan) 
+                VALUES (?, ?, ?, ?, ?)";
+
                 
-                // Eksekusi
-                if ($stmt->execute()) {
-                    $success_message = "Terima kasih! Pesan Anda telah berhasil dikirim. Kami akan menghubungi Anda segera.";
+                if ($stmt = $koneksi->prepare($sql)) {
+                    // Bind parameter
+                    $stmt->bind_param("sssss", 
+                        $nama, 
+                        $email, 
+                        $telepon, 
+                        $subjek, 
+                        $pesan
+                    );
                     
-                    // Reset form data
-                    $_POST = array(); // Reset semua data POST
+                    // Eksekusi
+                    if ($stmt->execute()) {
+                        $success_message = "Terima kasih! Pesan Anda telah berhasil dikirim. Kami akan menghubungi Anda segera.";
+                        
+                        // Set rate limiting timestamp
+                        $_SESSION['last_submission'] = $current_time;
+                        
+                        // Generate new CSRF token untuk mencegah replay attacks
+                        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+                        
+                        // Log aktivitas sukses
+                        $access_log = sprintf(
+                            "[%s] CONTACT FORM - IP: %s | Name: %s | Email: %s | Subject: %s\n",
+                            date('Y-m-d H:i:s'),
+                            $ip_address,
+                            substr($nama, 0, 50),
+                            substr($email, 0, 50),
+                            $subjek
+                        );
+                        error_log($access_log);
+                        
+                        // Reset form data dengan session untuk mencegah resubmission
+                        $_SESSION['form_submitted'] = true;
+                        
+                        $_SESSION['success_token'] = bin2hex(random_bytes(8));
+
+                        header("Location: index.php?page=kontak-kami&success=" . $_SESSION['success_token']);
+                        exit();
+
+
+                        
+                    } else {
+                        $error_message = "Maaf, terjadi kesalahan saat menyimpan data. Silakan coba lagi nanti.";
+                        error_log("Database error on contact form: " . $stmt->error);
+                    }
+                    
+                    $stmt->close();
                 } else {
-                    $error_message = "Maaf, terjadi kesalahan saat menyimpan data. Error: " . $stmt->error;
+                    $error_message = "Maaf, terjadi kesalahan sistem. Silakan coba lagi nanti.";
+                    error_log("Prepare statement failed: " . $koneksi->error);
                 }
                 
-                $stmt->close();
-            } else {
-                $error_message = "Maaf, terjadi kesalahan sistem. Error: " . $koneksi->error;
+            } catch (Exception $e) {
+                $error_message = "Maaf, terjadi kesalahan sistem. Silakan coba lagi nanti.";
+                error_log("Exception on contact form: " . $e->getMessage());
             }
+        } else {
+            $validation_errors = $errors;
+            
+            // Log validation errors
+            $validation_log = sprintf(
+                "[%s] VALIDATION FAILED - IP: %s | Errors: %s\n",
+                date('Y-m-d H:i:s'),
+                $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+                implode(", ", $errors)
+            );
+            error_log($validation_log);
         }
-    } else {
-        $validation_errors = $errors;
     }
 }
+
+if (
+    isset($_GET['success'], $_SESSION['success_token'], $_SESSION['form_submitted']) &&
+    hash_equals($_SESSION['success_token'], $_GET['success'])
+) {
+    $success_message = "Terima kasih! Pesan Anda telah berhasil dikirim.";
+    unset($_SESSION['success_token'], $_SESSION['form_submitted']);
+}
+
+
+// ============================================
+// KEAMANAN LEVEL 9: SET SECURITY HEADERS
+// ============================================
+header('X-Content-Type-Options: nosniff');
+header('X-Frame-Options: DENY');
+header('X-XSS-Protection: 1; mode=block');
+header('Referrer-Policy: strict-origin-when-cross-origin');
+
+// Include header setelah semua pemrosesan
+include 'header.php';
 ?>
+
 <!doctype html>
 <html lang="id">
 <head>
     <meta charset="utf-8">
     <title>Kontak Kami - JDIH DPRD Kota Surakarta</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Security: Prevent auto-complete pada form -->
+    <meta name="autocomplete" content="off">
     
-
     <style>
         /* OVERRIDE UNTUK HALAMAN KONTAK */
         body {
@@ -434,6 +643,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             box-shadow: 0 8px 20px rgba(19, 84, 122, 0.3);
         }
         
+        /* HONEYPOT FIELD - Tersembunyi dari user normal */
+        .honeypot-field {
+            display: none !important;
+            position: absolute !important;
+            left: -9999px !important;
+            height: 0 !important;
+            width: 0 !important;
+            overflow: hidden !important;
+        }
+        
         /* RESPONSIVE */
         @media (max-width: 768px) {
             body {
@@ -589,7 +808,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         <?php if (!empty($success_message)): ?>
                         <div class="alert alert-success alert-dismissible fade show" role="alert">
                             <i class="bi bi-check-circle-fill me-2"></i>
-                            <?php echo htmlspecialchars($success_message); ?>
+                            <?php echo safe_output($success_message); ?>
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                         <?php endif; ?>
@@ -597,7 +816,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         <?php if (!empty($error_message)): ?>
                         <div class="alert alert-danger alert-dismissible fade show" role="alert">
                             <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                            <?php echo htmlspecialchars($error_message); ?>
+                            <?php echo safe_output($error_message); ?>
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                         <?php endif; ?>
@@ -608,22 +827,32 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             <strong>Perbaiki kesalahan berikut:</strong>
                             <ul class="mb-0 mt-2">
                                 <?php foreach ($validation_errors as $error): ?>
-                                <li><?php echo htmlspecialchars($error); ?></li>
+                                <li><?php echo safe_output($error); ?></li>
                                 <?php endforeach; ?>
                             </ul>
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                         <?php endif; ?>
                         
-                        <form id="contactForm" method="POST" action="">
+                        <form id="contactForm" method="POST" action="" autocomplete="off">
+                            <!-- CSRF Protection Token -->
+                            <input type="hidden" name="csrf_token" value="<?php echo safe_output($_SESSION['csrf_token']); ?>">
+                            
+                            <!-- Honeypot Field (untuk menangkap bot) -->
+                            <div class="honeypot-field">
+                                <label for="website">Website</label>
+                                <input type="text" id="website" name="honeypot" tabindex="-1" autocomplete="off">
+                            </div>
+                            
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="name" class="form-label">Nama Lengkap *</label>
                                         <input type="text" class="form-control" id="name" name="name" 
                                                placeholder="Masukkan nama lengkap" 
-                                               value="<?php echo isset($_POST['name']) ? htmlspecialchars($_POST['name']) : ''; ?>"
-                                               required>
+                                               value="<?php echo isset($clean_post['name']) ? safe_output($clean_post['name']) : ''; ?>"
+                                               required maxlength="100" pattern="^[a-zA-Z\s\.\-\']+$">
+                                        <div class="form-text">Hanya huruf, spasi, titik, tanda hubung, dan apostrof</div>
                                     </div>
                                 </div>
                                 
@@ -632,8 +861,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                         <label for="email" class="form-label">Alamat Email *</label>
                                         <input type="email" class="form-control" id="email" name="email" 
                                                placeholder="contoh@email.com" 
-                                               value="<?php echo isset($_POST['email']) ? htmlspecialchars($_POST['email']) : ''; ?>"
-                                               required>
+                                               value="<?php echo isset($clean_post['email']) ? safe_output($clean_post['email']) : ''; ?>"
+                                               required maxlength="100" pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$">
+                                        <div class="form-text">Contoh: nama@domain.com</div>
                                     </div>
                                 </div>
                             </div>
@@ -643,8 +873,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                     <div class="mb-3">
                                         <label for="phone" class="form-label">Nomor Telepon</label>
                                         <input type="tel" class="form-control" id="phone" name="phone" 
-                                               placeholder="08xxxxxxxxxx"
-                                               value="<?php echo isset($_POST['phone']) ? htmlspecialchars($_POST['phone']) : ''; ?>">
+                                               placeholder="08xxxxxxxxxx" maxlength="20"
+                                               value="<?php echo isset($clean_post['phone']) ? safe_output($clean_post['phone']) : ''; ?>"
+                                               pattern="^[\d\s\-\+\(\)]+$">
+                                        <div class="form-text">Contoh: 081234567890 atau +6281234567890</div>
                                     </div>
                                 </div>
                                 
@@ -653,11 +885,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                         <label for="subject" class="form-label">Jenis Pesan *</label>
                                         <select class="form-select" id="subject" name="subject" required>
                                             <option value="" selected disabled>Pilih jenis pesan</option>
-                                            <option value="informasi" <?php echo (isset($_POST['subject']) && $_POST['subject'] == 'informasi') ? 'selected' : ''; ?>>Permintaan Informasi</option>
-                                            <option value="saran" <?php echo (isset($_POST['subject']) && $_POST['subject'] == 'saran') ? 'selected' : ''; ?>>Saran dan Masukan</option>
-                                            <option value="konsultasi" <?php echo (isset($_POST['subject']) && $_POST['subject'] == 'konsultasi') ? 'selected' : ''; ?>>Konsultasi Hukum</option>
-                                            <option value="kerjasama" <?php echo (isset($_POST['subject']) && $_POST['subject'] == 'kerjasama') ? 'selected' : ''; ?>>Penawaran Kerjasama</option>
-                                            <option value="lainnya" <?php echo (isset($_POST['subject']) && $_POST['subject'] == 'lainnya') ? 'selected' : ''; ?>>Lainnya</option>
+                                            <option value="informasi" <?php echo (isset($clean_post['subject']) && $clean_post['subject'] == 'informasi') ? 'selected' : ''; ?>>Permintaan Informasi</option>
+                                            <option value="saran" <?php echo (isset($clean_post['subject']) && $clean_post['subject'] == 'saran') ? 'selected' : ''; ?>>Saran dan Masukan</option>
+                                            <option value="konsultasi" <?php echo (isset($clean_post['subject']) && $clean_post['subject'] == 'konsultasi') ? 'selected' : ''; ?>>Konsultasi Hukum</option>
+                                            <option value="kerjasama" <?php echo (isset($clean_post['subject']) && $clean_post['subject'] == 'kerjasama') ? 'selected' : ''; ?>>Penawaran Kerjasama</option>
+                                            <option value="lainnya" <?php echo (isset($clean_post['subject']) && $clean_post['subject'] == 'lainnya') ? 'selected' : ''; ?>>Lainnya</option>
                                         </select>
                                     </div>
                                 </div>
@@ -666,12 +898,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             <div class="mb-3">
                                 <label for="message" class="form-label">Isi Pesan *</label>
                                 <textarea class="form-control" id="message" name="message" 
-                                          placeholder="Tulis pesan Anda di sini..." rows="5" required><?php echo isset($_POST['message']) ? htmlspecialchars($_POST['message']) : ''; ?></textarea>
+                                          placeholder="Tulis pesan Anda di sini..." rows="5" required
+                                          minlength="10" maxlength="2000"><?php echo isset($clean_post['message']) ? safe_output($clean_post['message']) : ''; ?></textarea>
+                                <div class="form-text">Minimal 10 karakter, maksimal 2000 karakter</div>
                             </div>
                             
                             <div class="mb-3">
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="privacy" name="privacy" required <?php echo isset($_POST['privacy']) ? 'checked' : ''; ?>>
+                                    <input class="form-check-input" type="checkbox" id="privacy" name="privacy" required <?php echo isset($clean_post['privacy']) ? 'checked' : ''; ?>>
                                     <label class="form-check-label" for="privacy">
                                         Saya setuju dengan <a href="#" class="text-decoration-none">kebijakan privasi</a> 
                                         dan <a href="#" class="text-decoration-none">persyaratan layanan</a>
@@ -680,7 +914,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             </div>
                             
                             <div class="text-center mt-4">
-                                <button type="submit" class="submit-btn">
+                                <button type="submit" class="submit-btn" id="submitBtn">
                                     <i class="bi bi-send me-2"></i>Kirim Pesan
                                 </button>
                             </div>
@@ -694,7 +928,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <div class="col-12">
                     <div class="map-section">
                         <div class="map-container">
-                            <!-- Google Maps Embed -->
+                            <!-- Google Maps Embed dengan referrer policy strict -->
                             <iframe 
                                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3955.054274366597!2d110.81201097596528!3d-7.555634992473557!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e7a168b2d5ffac7%3A0x7aeab88436dd2d4e!2sDPRD%20Kota%20Surakarta!5e0!3m2!1sid!2sid!4v1702358400000!5m2!1sid!2sid" 
                                 width="100%" 
@@ -702,7 +936,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                 style="border:0;" 
                                 allowfullscreen="" 
                                 loading="lazy" 
-                                referrerpolicy="no-referrer-when-downgrade">
+                                referrerpolicy="strict-origin-when-cross-origin">
                             </iframe>
                         </div>
                         <div class="map-info">
@@ -714,7 +948,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                 Jawa Tengah, Indonesia
                             </p>
                             <a href="https://maps.google.com/maps?q=Sekretariat+DPRD+Kota+Surakarta" 
-                               target="_blank" class="direction-btn">
+                               target="_blank" rel="noopener noreferrer" class="direction-btn">
                                 <i class="bi bi-geo-alt"></i> Dapatkan Petunjuk Arah
                             </a>
                         </div>
@@ -888,13 +1122,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 e.target.value = value;
             });
             
-            // WhatsApp click handler
+            // WhatsApp click handler dengan rel="noopener noreferrer"
             const whatsappLinks = document.querySelectorAll('a[href*="whatsapp"], a[href*="6287872844090"]');
             whatsappLinks.forEach(link => {
                 link.addEventListener('click', function(e) {
                     e.preventDefault();
                     const message = encodeURIComponent('Halo, saya ingin bertanya tentang JDIH DPRD Surakarta');
-                    window.open(`https://wa.me/6287872844090?text=${message}`, '_blank');
+                    window.open(`https://wa.me/6287872844090?text=${message}`, '_blank', 'noopener,noreferrer');
                 });
             });
             
@@ -921,10 +1155,75 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 });
             }, 5000);
             
-            // Debug: Tampilkan error jika ada di console
-            <?php if (!empty($error_message)): ?>
-            console.error("PHP Error: <?php echo $error_message; ?>");
+            // Form submission rate limiting
+            const submitBtn = document.getElementById('submitBtn');
+            const contactForm = document.getElementById('contactForm');
+            
+            if (submitBtn && contactForm) {
+                contactForm.addEventListener('submit', function(e) {
+                    // Disable submit button to prevent double submission
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Mengirim...';
+                    
+                    // Add timestamp untuk mencegah form resubmission
+                    const timestamp = Date.now();
+                    const timestampField = document.createElement('input');
+                    timestampField.type = 'hidden';
+                    timestampField.name = 'timestamp';
+                    timestampField.value = timestamp;
+                    this.appendChild(timestampField);
+                });
+            }
+            
+            // Character counter untuk pesan
+            const messageTextarea = document.getElementById('message');
+            if (messageTextarea) {
+                const counter = document.createElement('div');
+                counter.className = 'form-text text-end';
+                counter.id = 'charCounter';
+                messageTextarea.parentNode.appendChild(counter);
+                
+                function updateCounter() {
+                    const length = messageTextarea.value.length;
+                    counter.textContent = `${length}/2000 karakter`;
+                    if (length > 1900) {
+                        counter.style.color = '#dc3545';
+                    } else if (length > 1500) {
+                        counter.style.color = '#ffc107';
+                    } else {
+                        counter.style.color = '#666';
+                    }
+                }
+                
+                messageTextarea.addEventListener('input', updateCounter);
+                updateCounter();
+            }
+            
+            // Spam detection pada client side
+            if (messageTextarea) {
+                messageTextarea.addEventListener('input', function() {
+                    const value = this.value.toLowerCase();
+                    const spamWords = ['viagra', 'cialis', 'casino', 'lottery', 'porn', 'xxx'];
+                    
+                    for (const word of spamWords) {
+                        if (value.includes(word)) {
+                            alert('Pesan Anda mengandung kata-kata yang tidak diizinkan.');
+                            this.value = '';
+                            break;
+                        }
+                    }
+                });
+            }
+            
+            // Debug logging hanya di development
+            <?php if (isset($_SERVER['HTTP_HOST']) && $_SERVER['HTTP_HOST'] === 'localhost'): ?>
+            console.log("Contact form loaded with CSRF token: <?php echo substr($_SESSION['csrf_token'] ?? '', 0, 10); ?>...");
             <?php endif; ?>
+            
+            // Log form submission attempts
+            contactForm.addEventListener('submit', function() {
+                console.log("Form submission attempt logged");
+            });
         });
     </script>
 

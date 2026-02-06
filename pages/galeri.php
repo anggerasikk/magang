@@ -1,39 +1,253 @@
 <?php
-// galeri.php - FRONTEND untuk pengunjung
-$pageTitle = 'Galeri Foto - JDIH DPRD Kota Surakarta';
-include 'header.php';
+// galeri.php - VERSI SIMPLE DENGAN SEARCH & TANPA SIDEBAR SEPERTI GRAFIS
 
-require_once 'a_db.php';
+// ============================================
+// KONFIGURASI KEAMANAN (tersembunyi)
+// ============================================
 
-// Set base URL untuk gambar
-$base_url = 'http://' . $_SERVER['HTTP_HOST'] . '/jdihcilacap_pasang/';
-$upload_base_path = 'C:/laragon/www/jdihcilacap_pasang/wb_admin/uploads/galeri/';
+// 1. Error Handling dan Logging
+error_reporting(E_ALL);
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
+ini_set('error_log', __DIR__ . '/logs/php_error.log');
 
-// Ambil parameter filter dari URL
-$filter = isset($_GET['filter']) ? $_GET['filter'] : 'all';
-$current_page = isset($_GET['pg']) ? (int)$_GET['pg'] : 1;
-if ($current_page < 1) $current_page = 1;
-
-$per_page = 9;
-$offset = ($current_page - 1) * $per_page;
-
-// Fungsi untuk membuat URL dengan parameter yang benar
-function buildUrl($params = []) {
-    $base_params = ['page' => 'galeri'];
-    $all_params = array_merge($base_params, $params);
-    return '?' . http_build_query($all_params);
+function log_security_event($event, $details = '') {
+    $log_file = __DIR__ . '/logs/security.log';
+    $timestamp = date('Y-m-d H:i:s');
+    $ip = $_SERVER['REMOTE_ADDR'] ?? 'UNKNOWN';
+    $log_entry = "[{$timestamp}] [IP: {$ip}] {$event}";
+    if (!empty($details)) {
+        $log_entry .= " - Details: {$details}";
+    }
+    $log_entry .= PHP_EOL;
+    
+    if (!file_exists(__DIR__ . '/logs')) {
+        mkdir(__DIR__ . '/logs', 0755, true);
+    }
+    
+    file_put_contents($log_file, $log_entry, FILE_APPEND | LOCK_EX);
 }
+
+set_error_handler(function($errno, $errstr, $errfile, $errline) {
+    log_security_event("PHP_ERROR", "{$errstr} in {$errfile} on line {$errline}");
+    return true;
+});
+
+set_exception_handler(function($exception) {
+    log_security_event("EXCEPTION", $exception->getMessage());
+    die("<div style='padding:20px;text-align:center;color:#721c24;background-color:#f8d7da;border:1px solid #f5c6cb;border-radius:5px;margin:20px;'>Terjadi kesalahan sistem. Silakan hubungi administrator.</div>");
+});
+
+// 2. Pengamanan Session
+session_start([
+    'cookie_httponly' => true,
+    'cookie_secure' => isset($_SERVER['HTTPS']),
+    'cookie_samesite' => 'Strict',
+    'use_strict_mode' => true,
+    'use_only_cookies' => true
+]);
+
+if (!isset($_SESSION['last_regeneration'])) {
+    $_SESSION['last_regeneration'] = time();
+} elseif (time() - $_SESSION['last_regeneration'] > 1800) {
+    session_regenerate_id(true);
+    $_SESSION['last_regeneration'] = time();
+}
+
+// 3. Validasi dan Sanitasi Input GET
+function sanitize_input($input) {
+    if (is_array($input)) {
+        return array_map('sanitize_input', $input);
+    }
+    
+    $input = urldecode($input);
+    $input = str_replace(chr(0), '', $input);
+    $input = strip_tags($input);
+    $input = htmlspecialchars($input, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    $input = trim($input);
+    
+    return $input;
+}
+
+function validate_search_query($query) {
+    if (strlen($query) > 100) {
+        return false;
+    }
+    
+    if (!preg_match('/^[a-zA-Z0-9\s\-_,.()@:;\'"\/]+$/u', $query)) {
+        return false;
+    }
+    
+    return true;
+}
+
+function validate_tab_parameter($tab) {
+    $allowed_tabs = ['album', 'foto'];
+    return in_array($tab, $allowed_tabs);
+}
+
+function validate_page_parameter($page) {
+    $allowed_pages = ['galeri'];
+    return in_array($page, $allowed_pages);
+}
+
+function validate_album_id($id) {
+    return is_numeric($id) && $id >= 0 && $id <= 9999999999;
+}
+
+// Proses input GET
+$search_query_raw = isset($_GET['search']) ? $_GET['search'] : '';
+$tab_raw = isset($_GET['tab']) ? $_GET['tab'] : 'album';
+$page_raw = isset($_GET['page']) ? $_GET['page'] : '';
+$album_id_raw = isset($_GET['album']) ? $_GET['album'] : '';
+
+$search_query_raw = sanitize_input($search_query_raw);
+$tab_raw = sanitize_input($tab_raw);
+$page_raw = sanitize_input($page_raw);
+$album_id_raw = sanitize_input($album_id_raw);
+
+if (!validate_page_parameter($page_raw)) {
+    header('HTTP/1.0 400 Bad Request');
+    die("Invalid request");
+}
+
+if (!validate_tab_parameter($tab_raw)) {
+    $tab_raw = 'album';
+}
+
+$search_query = '';
+if (!empty($search_query_raw)) {
+    if (validate_search_query($search_query_raw)) {
+        $search_query = $search_query_raw;
+    }
+}
+
+$tab = $tab_raw;
+$album_id = 0;
+if (!empty($album_id_raw) && validate_album_id($album_id_raw)) {
+    $album_id = (int)$album_id_raw;
+}
+
+// 4. INCLUDE KONEKSI DATABASE
+try {
+    require_once 'a_db.php';
+    
+    if (!$koneksi || !mysqli_ping($koneksi)) {
+        throw new Exception("Database connection failed");
+    }
+    
+    mysqli_set_charset($koneksi, 'utf8mb4');
+    
+} catch (Exception $e) {
+    die("<div style='padding:20px;text-align:center;color:#856404;background-color:#fff3cd;border:1px solid #ffeaa7;border-radius:5px;margin:20px;'>System maintenance in progress. Please try again later.</div>");
+}
+
+// ============================================
+// HANDLE SEARCH QUERY dengan Prepared Statements
+// ============================================
+$current_mode = 'album';
+$galeri_data = [];
+$total_album = 0;
+$total_foto = 0;
+$search_results_count = 0;
+$album_info = null;
+
+try {
+    if ($album_id > 0) {
+        // Mode: Melihat foto dalam album tertentu dengan prepared statement
+        $stmt = mysqli_prepare($koneksi, 
+            "SELECT * FROM galeri_foto 
+             WHERE tipe = 'foto' 
+             AND parent_id = ?
+             ORDER BY urutan, tanggal_dibuat DESC");
+        
+        mysqli_stmt_bind_param($stmt, 'i', $album_id);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+        $current_mode = 'foto';
+        
+        // Ambil info album dengan prepared statement
+        $stmt_album = mysqli_prepare($koneksi, 
+            "SELECT * FROM galeri_foto WHERE id = ? AND tipe = 'album'");
+        mysqli_stmt_bind_param($stmt_album, 'i', $album_id);
+        mysqli_stmt_execute($stmt_album);
+        $album_result = mysqli_stmt_get_result($stmt_album);
+        $album_info = $album_result ? mysqli_fetch_assoc($album_result) : null;
+        mysqli_stmt_close($stmt_album);
+        
+    } else {
+        // Mode: Melihat semua album
+        if (!empty($search_query)) {
+            $search_term = "%{$search_query}%";
+            $stmt = mysqli_prepare($koneksi, 
+                "SELECT * FROM galeri_foto 
+                 WHERE tipe = 'album'
+                 AND (judul LIKE ? OR deskripsi LIKE ?)
+                 ORDER BY is_cover DESC, urutan, tanggal_dibuat DESC");
+            
+            mysqli_stmt_bind_param($stmt, 'ss', $search_term, $search_term);
+        } else {
+            $stmt = mysqli_prepare($koneksi, 
+                "SELECT * FROM galeri_foto 
+                 WHERE tipe = 'album'
+                 ORDER BY is_cover DESC, urutan, tanggal_dibuat DESC");
+        }
+        
+        if ($stmt) {
+            mysqli_stmt_execute($stmt);
+            $result = mysqli_stmt_get_result($stmt);
+        }
+    }
+    
+    if ($result && mysqli_num_rows($result) > 0) {
+        while ($row = mysqli_fetch_assoc($result)) {
+            $galeri_data[] = $row;
+            
+            if ($current_mode == 'album') {
+                $total_album++;
+            } else {
+                $total_foto++;
+            }
+        }
+        $search_results_count = mysqli_num_rows($result);
+        mysqli_data_seek($result, 0);
+    }
+    
+    if (isset($stmt) && is_object($stmt)) {
+        mysqli_stmt_close($stmt);
+    }
+    
+} catch (Exception $e) {
+    log_security_event("DATABASE_ERROR", $e->getMessage());
+    $galeri_data = [];
+}
+
+// Query untuk menghitung total foto dalam album dengan prepared statement
+if ($current_mode == 'album' && !empty($galeri_data)) {
+    foreach ($galeri_data as &$album) {
+        $album_id = $album['id'];
+        $stmt_count = mysqli_prepare($koneksi, 
+            "SELECT COUNT(*) as total FROM galeri_foto WHERE tipe = 'foto' AND parent_id = ?");
+        
+        if ($stmt_count) {
+            mysqli_stmt_bind_param($stmt_count, 'i', $album_id);
+            mysqli_stmt_execute($stmt_count);
+            $count_result = mysqli_stmt_get_result($stmt_count);
+            $count_data = $count_result ? mysqli_fetch_assoc($count_result) : ['total' => 0];
+            $album['foto_count'] = $count_data['total'];
+            $total_foto += $count_data['total'];
+            mysqli_stmt_close($stmt_count);
+        }
+    }
+    unset($album);
+}
+
+// Fungsi untuk mendapatkan path gambar yang benar dengan validasi keamanan
 
 // Fungsi untuk mendapatkan path gambar yang benar
 function getImagePath($url_gambar) {
-    // PATH SERVER (UNTUK CEK FILE)
-    $server_base = $_SERVER['DOCUMENT_ROOT'] . '/jdihcilacap_pasang/wb_admin/uploads/galeri/';
-    
-    // URL WEB (UNTUK IMG SRC)
-    $web_base = '/jdihcilacap_pasang/wb_admin/uploads/galeri/';
-
     if (empty($url_gambar)) {
-        return null;
+        return 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80';
     }
 
     // Jika sudah URL absolut
@@ -41,976 +255,803 @@ function getImagePath($url_gambar) {
         return $url_gambar;
     }
 
+    // Hanya ambil nama file
     $filename = basename($url_gambar);
-    $server_path = $server_base . $filename;
-
-    if (file_exists($server_path)) {
-        return $web_base . $filename;
+    
+    // Path untuk web
+    $web_path = 'http://localhost/jdihcilacap_pasang_2026/panel_control/uploads/galeri/' . $filename;
+    
+    // Path fisik di server untuk pengecekan
+    $physical_path = $_SERVER['DOCUMENT_ROOT'] . '/jdihcilacap_pasang_2026/panel_control/uploads/galeri/' . $filename;
+    
+    // Cek apakah file benar-benar ada di server
+    if (file_exists($physical_path)) {
+        return $web_path;
+    } else {
+        // Jika tidak ada, return gambar default
+        return 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80';
     }
-
-    return null;
 }
 
-// Deklarasi variabel
-$album_info = null;
-$item_type = 'album';
-$total_data = 0;
-$items_data = [];
 
-if ($filter === 'all') {
-    // MODE ALBUM
-    $query_items = "
-        SELECT * FROM galeri_foto
-        WHERE tipe = 'album'
-        ORDER BY is_cover DESC, urutan, tanggal_dibuat DESC
-        LIMIT $per_page OFFSET $offset
-    ";
 
-    $query_count = "
-        SELECT COUNT(*) as total 
-        FROM galeri_foto 
-        WHERE tipe = 'album'
-    ";
-
-    $item_type = 'album';
-
-} else {
-    // MODE FOTO DALAM ALBUM
-    $album_id = (int)$filter;
-
-    // Ambil informasi album terlebih dahulu
-    $query_album_info = "SELECT * FROM galeri_foto WHERE id = $album_id AND tipe = 'album'";
-    $result_album_info = mysqli_query($koneksi, $query_album_info);
-    if ($result_album_info && mysqli_num_rows($result_album_info) > 0) {
-        $album_info = mysqli_fetch_assoc($result_album_info);
-    }
-
-    $query_items = "
-        SELECT f.*, a.judul AS album_judul
-        FROM galeri_foto f
-        JOIN galeri_foto a ON f.parent_id = a.id
-        WHERE f.tipe = 'foto' AND a.id = $album_id
-        ORDER BY f.urutan, f.tanggal_dibuat DESC
-        LIMIT $per_page OFFSET $offset
-    ";
-
-    $query_count = "
-        SELECT COUNT(*) as total
-        FROM galeri_foto
-        WHERE tipe = 'foto' AND parent_id = $album_id
-    ";
-
-    $item_type = 'foto';
-}
-
-// Eksekusi query items
-$result_items = mysqli_query($koneksi, $query_items);
-if (!$result_items) {
-    die("Query error: " . mysqli_error($koneksi));
-}
-
-// Hitung total data
-$result_count = mysqli_query($koneksi, $query_count);
-if ($result_count) {
-    $total_data_row = mysqli_fetch_assoc($result_count);
-    $total_data = $total_data_row['total'];
-} else {
-    $total_data = 0;
-}
-
-$total_pages = ceil($total_data / $per_page);
-
-// Query untuk mengambil semua album untuk filter dropdown
-$query_all_albums = "SELECT * FROM galeri_foto WHERE tipe = 'album' ORDER BY urutan";
-$result_all_albums = mysqli_query($koneksi, $query_all_albums);
-
-// Reset pointer result albums untuk digunakan lagi nanti
-if ($result_all_albums) {
-    mysqli_data_seek($result_all_albums, 0);
-}
+// ============================================
+// INCLUDE HEADER (TATALETAK ASLI)
+// ============================================
+$page_title = "Galeri Foto - JDIH DPRD Kota Surakarta";
+include "header.php";
 ?>
 
 <style>
-    /* VARIABEL CSS SESUAI HEADER.PHP - GRADIENT BIRU HIJAU */
-    :root {
-        --c: #13547a;       /* Biru tua */
-        --d: #80d0c7;       /* Hijau muda */
-        --bg: #f8f9fa;      /* Background light */
-        --w: #fff;          /* Putih */
-        --t: #212529;       /* Teks gelap */
-        --b: #e9ecef;       /* Border light */
-        --r: 14px;
-        --s: 0 8px 24px rgba(0,0,0,.08);
-    }
+<?php 
+// Include style utama dari file CSS
+include "style-keputusan-dprd.css";
+?>
 
-    * {
-        font-family: 'Montserrat', sans-serif;
-    }
+/* STYLE KHUSUS UNTUK HALAMAN GALERI */
+body {
+    background: var(--bg-gray);
+}
 
-    body {
-        background: var(--bg);
-    }
+/* Search Section */
+.search-section {
+    background: var(--bg-white);
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 30px;
+}
 
-    /* PAGE HEADER - SESUAI HEADER.PHP */
-    .page-header {
-        background: linear-gradient(135deg, var(--c) 0%, var(--d) 100%);
-        color: var(--w);
-        padding: 80px 0 60px;
-        text-align: center;
-        margin-bottom: 40px;
-    }
-    
-    .page-header h1 {
-        font-weight: 700;
-        font-size: 2.5rem;
-        margin-bottom: 15px;
-        font-family: 'Montserrat', sans-serif;
-    }
-    
-    .page-header .subtitle {
-        font-size: 1.1rem;
-        opacity: 0.9;
-        max-width: 600px;
-        margin: 0 auto;
-        font-family: 'Open Sans', sans-serif;
-    }
+.search-wrapper {
+    max-width: 600px;
+    margin: 0 auto;
+}
 
-    /* BREADCRUMB NAVIGATION */
-    .breadcrumb-nav {
-        background: var(--w);
-        border-radius: var(--r);
-        padding: 15px 25px;
-        margin-bottom: 30px;
-        box-shadow: var(--s);
-    }
-    
-    .breadcrumb-nav a {
-        color: var(--c);
-        text-decoration: none;
-        font-weight: 600;
-        transition: color 0.3s;
-    }
-    
-    .breadcrumb-nav a:hover {
-        color: var(--d);
-        text-decoration: underline;
-    }
-    
-    .breadcrumb-nav .separator {
-        margin: 0 10px;
-        color: #94a3b8;
-    }
-    
-    .breadcrumb-nav .current {
-        color: var(--t);
-        font-weight: 600;
-    }
+.search-input-group {
+    display: flex;
+    gap: 10px;
+}
 
-    /* ALBUM HEADER */
-    .album-header {
-        background: var(--w);
-        border-radius: var(--r);
-        padding: 30px;
-        margin-bottom: 40px;
-        box-shadow: var(--s);
-        text-align: center;
-    }
-    
-    .album-header h2 {
-        color: var(--c);
-        font-weight: 700;
-        margin-bottom: 15px;
-        font-size: 1.8rem;
-        font-family: 'Montserrat', sans-serif;
-    }
-    
-    .album-header p {
-        color: var(--t);
-        max-width: 800px;
-        margin: 0 auto 20px;
-        line-height: 1.6;
-        font-family: 'Open Sans', sans-serif;
-    }
-    
-    .album-header .album-info {
-        display: flex;
-        justify-content: center;
-        gap: 30px;
-        flex-wrap: wrap;
-        margin-top: 25px;
-    }
-    
-    .album-info-item {
-        display: flex;
-        align-items: center;
-        color: var(--c);
-        font-weight: 600;
-        font-size: 1.1rem;
-        font-family: 'Montserrat', sans-serif;
-    }
-    
-    .album-info-item i {
-        margin-right: 10px;
-        font-size: 1.3rem;
-    }
+.search-input {
+    flex: 1;
+    padding: 12px 20px;
+    border: 2px solid var(--border-light);
+    border-radius: 10px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
 
-    /* BACK BUTTON - SESUAI HEADER.PHP */
-    .back-to-albums {
-        background: linear-gradient(135deg, var(--c) 0%, var(--d) 100%);
-        border: none;
-        color: var(--w);
-        padding: 12px 30px;
-        border-radius: 30px;
-        font-weight: 600;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        transition: all 0.3s;
-        margin-top: 20px;
-        font-size: 1rem;
-        font-family: 'Montserrat', sans-serif;
-        box-shadow: 0 3px 8px rgba(19, 84, 122, 0.2);
-    }
-    
-    .back-to-albums:hover {
-        background: linear-gradient(135deg, #0f4266 0%, #6bc0b7 100%);
-        color: var(--w);
-        text-decoration: none;
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(19, 84, 122, 0.3);
-    }
-    
-    .back-to-albums i {
-        margin-right: 10px;
-    }
+.search-input:focus {
+    outline: none;
+    border-color: var(--primary-main);
+    box-shadow: 0 0 0 3px rgba(19, 84, 122, 0.15);
+}
 
-    /* FILTER SECTION */
-    .gallery-filter {
-        background: var(--w);
-        border-radius: var(--r);
-        box-shadow: var(--s);
-        padding: 25px;
-        margin-bottom: 40px;
+.search-btn {
+    background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+    color: var(--bg-white);
+    border: none;
+    padding: 12px 25px;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.search-btn:hover {
+    background: linear-gradient(135deg, var(--primary-dark), var(--primary-main));
+    box-shadow: 0 6px 16px rgba(19, 84, 122, 0.35);
+}
+
+.reset-btn {
+    background: var(--bg-white);
+    color: var(--text-medium);
+    border: 2px solid var(--border-light);
+    padding: 12px 25px;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.reset-btn:hover {
+    background: var(--bg-gray);
+    border-color: var(--text-light);
+}
+
+.search-results-info {
+    text-align: center;
+    margin-top: 15px;
+    color: var(--text-medium);
+    font-size: 0.9rem;
+}
+
+.search-results-info .badge {
+    margin-left: 5px;
+}
+
+/* Navigation Breadcrumb */
+.galeri-nav {
+    background: var(--bg-white);
+    padding: 15px 25px;
+    border-radius: 12px;
+    margin-bottom: 30px;
+    box-shadow: var(--shadow-sm);
+}
+
+.nav-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.nav-link {
+    color: var(--primary-main);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.3s;
+}
+
+.nav-link:hover {
+    color: var(--secondary-main);
+    text-decoration: underline;
+}
+
+.nav-separator {
+    color: var(--text-light);
+}
+
+.nav-current {
+    color: var(--text-dark);
+    font-weight: 600;
+}
+
+/* Back Button */
+.back-button {
+    background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+    color: var(--bg-white);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+}
+
+.back-button:hover {
+    background: linear-gradient(135deg, var(--primary-dark), var(--primary-main));
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(19, 84, 122, 0.35);
+    color: var(--bg-white);
+    text-decoration: none;
+}
+
+/* Album Header */
+.album-header {
+    background: var(--bg-white);
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.album-header h2 {
+    color: var(--primary-main);
+    font-weight: 700;
+    margin-bottom: 15px;
+    font-size: 1.8rem;
+}
+
+.album-header p {
+    color: var(--text-medium);
+    max-width: 800px;
+    margin: 0 auto 20px;
+    line-height: 1.6;
+}
+
+.album-stats {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--primary-main);
+    font-weight: 600;
+}
+
+.stat-item i {
+    font-size: 1.2rem;
+}
+
+/* Card untuk galeri */
+.galeri-card {
+    background: var(--bg-white);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    margin-bottom: 30px;
+    border: 1px solid transparent;
+}
+
+.galeri-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--secondary-light);
+}
+
+.galeri-image {
+    height: 250px;
+    position: relative;
+    background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+    overflow: hidden;
+}
+
+.galeri-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.galeri-card:hover .galeri-image img {
+    transform: scale(1.1) rotate(2deg);
+}
+
+/* Placeholder untuk galeri */
+.galeri-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--bg-white);
+    background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+    position: relative;
+}
+
+.galeri-placeholder i {
+    font-size: 3.5rem;
+    margin-bottom: 12px;
+    opacity: 0.9;
+}
+
+.galeri-placeholder p {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin: 0;
+    opacity: 0.95;
+}
+
+/* Image overlay badge */
+.image-overlay {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    z-index: 2;
+}
+
+.image-badge {
+    background: rgba(255, 255, 255, 0.95);
+    color: var(--primary-main);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Galeri content */
+.galeri-content {
+    padding: 25px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.galeri-title {
+    font-weight: 600;
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-bottom: 15px;
+    color: var(--text-dark);
+    display: -webkit-box;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 2.2em;
+}
+
+.galeri-description {
+    font-size: 0.9rem;
+    color: var(--text-light);
+    line-height: 1.6;
+    margin-bottom: 15px;
+    display: -webkit-box;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    flex-grow: 1;
+}
+
+/* Galeri meta */
+.galeri-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: auto;
+    padding-top: 15px;
+    border-top: 2px solid #f0f0f0;
+}
+
+.galeri-date {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.galeri-date i {
+    color: var(--secondary-main);
+}
+
+.galeri-count {
+    background: linear-gradient(135deg, #e6fffa, #b2f5ea);
+    color: var(--primary-dark);
+    padding: 5px 12px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Empty state */
+.empty-galeri {
+    text-align: center;
+    padding: 60px 20px;
+    background: var(--bg-white);
+    border-radius: 16px;
+    box-shadow: var(--shadow-sm);
+    margin: 30px 0;
+}
+
+.empty-galeri i {
+    font-size: 4rem;
+    color: var(--secondary-light);
+    margin-bottom: 20px;
+    opacity: 0.6;
+}
+
+.empty-galeri h4 {
+    color: var(--text-dark);
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.empty-galeri p {
+    color: var(--text-light);
+    font-size: 1rem;
+}
+
+/* Lightbox styles */
+.lightbox {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.95);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.lightbox-content {
+    max-width: 90%;
+    max-height: 90%;
+    position: relative;
+}
+
+.lightbox-img {
+    max-width: 100%;
+    max-height: 80vh;
+    border-radius: 10px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+}
+
+.lightbox-info {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 0 0 10px 10px;
+    padding: 25px;
+    margin-top: -5px;
+    color: var(--text-dark);
+}
+
+.lightbox-title {
+    color: var(--primary-main);
+    font-weight: 700;
+    margin-bottom: 15px;
+    font-size: 1.3rem;
+}
+
+.lightbox-desc {
+    color: var(--text-medium);
+    margin-bottom: 15px;
+    line-height: 1.6;
+}
+
+.lightbox-meta {
+    display: flex;
+    justify-content: space-between;
+    color: var(--text-light);
+    font-size: 0.9rem;
+}
+
+.lightbox-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    color: white;
+    font-size: 40px;
+    cursor: pointer;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.5);
+    transition: background 0.3s;
+}
+
+.lightbox-close:hover {
+    background: rgba(0,0,0,0.8);
+}
+
+.lightbox-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    color: white;
+    font-size: 50px;
+    cursor: pointer;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.5);
+    transition: background 0.3s;
+}
+
+.lightbox-nav:hover {
+    background: rgba(0,0,0,0.8);
+}
+
+.lightbox-prev {
+    left: 20px;
+}
+
+.lightbox-next {
+    right: 20px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .search-input-group {
+        flex-direction: column;
     }
     
-    .filter-title {
-        color: var(--c);
-        font-weight: 700;
+    .search-input,
+    .search-btn,
+    .reset-btn {
+        width: 100%;
+    }
+    
+    .album-stats {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .galeri-card {
         margin-bottom: 20px;
-        font-size: 1.3rem;
-        font-family: 'Montserrat', sans-serif;
-    }
-    
-    .filter-tags {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-    }
-    
-    .filter-btn {
-        background: var(--bg);
-        border: 2px solid #dee2e6;
-        color: var(--t);
-        padding: 10px 25px;
-        border-radius: 25px;
-        font-weight: 600;
-        transition: all 0.3s;
-        cursor: pointer;
-        text-decoration: none;
-        display: inline-block;
-        font-size: 0.95rem;
-        font-family: 'Montserrat', sans-serif;
-    }
-    
-    .filter-btn:hover,
-    .filter-btn.active {
-        background: linear-gradient(135deg, var(--c) 0%, var(--d) 100%);
-        color: var(--w);
-        border-color: transparent;
-        text-decoration: none;
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(19, 84, 122, 0.3);
-    }
-
-    /* ALBUM CARD */
-    .album-card {
-        background: var(--w);
-        border-radius: var(--r);
-        box-shadow: var(--s);
-        margin-bottom: 30px;
-        overflow: hidden;
-        transition: transform 0.3s, box-shadow 0.3s;
-        height: 100%;
-        border: 1px solid #dee2e6;
-    }
-    
-    .album-card:hover {
-        transform: translateY(-10px);
-        box-shadow: 0 15px 30px rgba(0,0,0,0.15);
-    }
-    
-    .album-cover {
-        height: 250px;
-        background-size: cover;
-        background-position: center;
-        position: relative;
-    }
-    
-    .album-info {
-        padding: 20px;
-    }
-    
-    .album-title {
-        color: var(--c);
-        font-weight: 600;
-        margin-bottom: 10px;
-        font-size: 1.2em;
-        line-height: 1.4;
-        font-family: 'Montserrat', sans-serif;
-    }
-    
-    .album-desc {
-        color: var(--t);
-        margin-bottom: 15px;
-        font-size: 0.95em;
-        line-height: 1.5;
-        height: 70px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        font-family: 'Open Sans', sans-serif;
-    }
-    
-    .album-meta {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-top: 15px;
-        padding-top: 15px;
-        border-top: 1px solid #dee2e6;
-    }
-    
-    .album-date {
-        color: #6c757d;
-        font-size: 0.85em;
-        font-family: 'Open Sans', sans-serif;
-    }
-    
-    .album-date i {
-        margin-right: 5px;
-    }
-    
-    .album-count {
-        color: var(--c);
-        font-weight: 600;
-        font-size: 0.95em;
-        font-family: 'Montserrat', sans-serif;
-    }
-    
-    .album-count i {
-        margin-right: 5px;
-    }
-    
-    .badge-cover {
-        position: absolute;
-        top: 15px;
-        right: 15px;
-        background: linear-gradient(135deg, var(--c) 0%, var(--d) 100%);
-        color: var(--w);
-        padding: 6px 15px;
-        border-radius: 20px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        z-index: 10;
-        font-family: 'Montserrat', sans-serif;
-    }
-
-    /* FOTO CARD */
-    .foto-card {
-        background: var(--w);
-        border-radius: var(--r);
-        box-shadow: var(--s);
-        overflow: hidden;
-        transition: transform 0.3s, box-shadow 0.3s;
-        height: 100%;
-        border: 1px solid #dee2e6;
-    }
-    
-    .foto-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 15px 30px rgba(0,0,0,0.15);
-    }
-    
-    .foto-img {
-        width: 100%;
-        height: 250px;
-        object-fit: cover;
-        cursor: pointer;
-        transition: transform 0.5s;
-    }
-    
-    .foto-card:hover .foto-img {
-        transform: scale(1.05);
-    }
-    
-    .foto-info {
-        padding: 20px;
-    }
-    
-    .foto-title {
-        color: var(--c);
-        font-weight: 600;
-        margin-bottom: 10px;
-        font-size: 1.1em;
-        line-height: 1.4;
-        font-family: 'Montserrat', sans-serif;
-    }
-    
-    .foto-desc {
-        color: var(--t);
-        margin-bottom: 15px;
-        font-size: 0.9em;
-        line-height: 1.5;
-        height: 65px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        font-family: 'Open Sans', sans-serif;
-    }
-    
-    .foto-meta {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-top: 15px;
-        padding-top: 15px;
-        border-top: 1px solid #dee2e6;
-    }
-    
-    .foto-date {
-        color: #6c757d;
-        font-size: 0.85em;
-        font-family: 'Open Sans', sans-serif;
-    }
-    
-    .foto-date i {
-        margin-right: 5px;
-    }
-    
-    .foto-album {
-        color: var(--c);
-        font-weight: 600;
-        font-size: 0.85em;
-        font-family: 'Montserrat', sans-serif;
-    }
-    
-    .foto-album i {
-        margin-right: 5px;
-    }
-
-    /* LIGHTBOX STYLES */
-    .lightbox {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.95);
-        z-index: 9999;
-        justify-content: center;
-        align-items: center;
-        padding: 20px;
-    }
-    
-    .lightbox-content {
-        max-width: 90%;
-        max-height: 90%;
-        position: relative;
-    }
-    
-    .lightbox-img {
-        max-width: 100%;
-        max-height: 80vh;
-        border-radius: 10px;
-        box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-    }
-    
-    .lightbox-info {
-        background: rgba(255, 255, 255, 0.95);
-        border-radius: 0 0 10px 10px;
-        padding: 25px;
-        margin-top: -5px;
-        color: var(--t);
-    }
-    
-    .lightbox-title {
-        color: var(--c);
-        font-weight: 700;
-        margin-bottom: 15px;
-        font-size: 1.3rem;
-        font-family: 'Montserrat', sans-serif;
-    }
-    
-    .lightbox-desc {
-        color: var(--t);
-        margin-bottom: 15px;
-        line-height: 1.6;
-        font-family: 'Open Sans', sans-serif;
-    }
-    
-    .lightbox-meta {
-        display: flex;
-        justify-content: space-between;
-        color: #6c757d;
-        font-size: 0.9rem;
-        font-family: 'Open Sans', sans-serif;
-    }
-    
-    .lightbox-close {
-        position: absolute;
-        top: 20px;
-        right: 20px;
-        color: var(--w);
-        font-size: 40px;
-        cursor: pointer;
-        width: 50px;
-        height: 50px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 50%;
-        background: rgba(0,0,0,0.5);
-        transition: background 0.3s;
-    }
-    
-    .lightbox-close:hover {
-        background: rgba(0,0,0,0.8);
     }
     
     .lightbox-nav {
-        position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
-        color: var(--w);
-        font-size: 50px;
-        cursor: pointer;
-        width: 60px;
-        height: 60px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 50%;
-        background: rgba(0,0,0,0.5);
-        transition: background 0.3s;
+        width: 50px;
+        height: 50px;
+        font-size: 40px;
     }
     
-    .lightbox-nav:hover {
-        background: rgba(0,0,0,0.8);
+    .lightbox-content {
+        max-width: 95%;
     }
-    
-    .lightbox-prev {
-        left: 20px;
-    }
-    
-    .lightbox-next {
-        right: 20px;
-    }
+}
 
-    /* PAGINATION - SESUAI HEADER.PHP */
-    .pagination {
-        justify-content: center;
-        margin-top: 40px;
+@media (max-width: 576px) {
+    .galeri-content {
+        padding: 20px;
     }
     
-    .page-item .page-link {
-        color: var(--c);
-        border: 2px solid #dee2e6;
-        margin: 0 5px;
-        border-radius: 25px;
-        font-weight: 600;
-        transition: all 0.3s;
-        padding: 8px 18px;
-        font-family: 'Montserrat', sans-serif;
+    .album-header {
+        padding: 20px;
     }
     
-    .page-item.active .page-link {
-        background: linear-gradient(135deg, var(--c) 0%, var(--d) 100%);
-        border-color: transparent;
-        color: var(--w);
-    }
-    
-    .page-item .page-link:hover {
-        background: var(--bg);
-        border-color: var(--c);
-        color: var(--c);
-        text-decoration: none;
-    }
-    
-    .page-item.disabled .page-link {
-        color: #adb5bd;
-        pointer-events: none;
-        background-color: var(--w);
-        border-color: #dee2e6;
-    }
-
-    .page-info {
-        text-align: center;
-        color: var(--t);
-        margin-top: 15px;
-        font-size: 0.95rem;
-        font-family: 'Open Sans', sans-serif;
-    }
-
-    /* NO DATA MESSAGE */
-    .no-data {
-        text-align: center;
-        padding: 60px 30px;
-        background: var(--w);
-        border-radius: var(--r);
-        box-shadow: var(--s);
-        margin: 30px 0;
-        border: 1px solid #dee2e6;
-    }
-    
-    .no-data i {
-        font-size: 4rem;
-        color: var(--c);
-        margin-bottom: 25px;
-        opacity: 0.8;
-    }
-    
-    .no-data h4 {
-        color: var(--c);
-        margin-bottom: 15px;
+    .album-header h2 {
         font-size: 1.5rem;
-        font-weight: 700;
-        font-family: 'Montserrat', sans-serif;
     }
     
-    .no-data p {
-        color: var(--t);
-        margin-bottom: 25px;
-        max-width: 500px;
-        margin-left: auto;
-        margin-right: auto;
-        line-height: 1.6;
-        font-family: 'Open Sans', sans-serif;
+    .lightbox-info {
+        padding: 15px;
     }
-
-    /* RESPONSIVE */
-    @media (max-width: 768px) {
-        .page-header {
-            padding: 60px 0 40px;
-        }
-        
-        .page-header h1 {
-            font-size: 2rem;
-        }
-        
-        .album-header {
-            padding: 20px;
-        }
-        
-        .album-header .album-info {
-            flex-direction: column;
-            gap: 15px;
-        }
-        
-        .filter-tags {
-            justify-content: center;
-        }
-        
-        .lightbox-nav {
-            width: 50px;
-            height: 50px;
-            font-size: 40px;
-        }
-        
-        .lightbox-content {
-            max-width: 95%;
-        }
-    }
-    
-    @media (max-width: 576px) {
-        .page-header h1 {
-            font-size: 1.8rem;
-        }
-        
-        .page-header .subtitle {
-            font-size: 1rem;
-        }
-        
-        .breadcrumb-nav {
-            padding: 12px 15px;
-            font-size: 0.9rem;
-        }
-        
-        .filter-btn {
-            padding: 8px 20px;
-            font-size: 0.9rem;
-        }
-        
-        .pagination .page-link {
-            padding: 6px 15px;
-            font-size: 0.9rem;
-            margin: 0 3px;
-        }
-    }
+}
 </style>
 
-<!-- PAGE HEADER -->
+<!-- ===============================
+     HEADER SECTION
+================================ -->
 <section class="page-header">
     <div class="container">
         <div class="row">
-            <div class="col-12">
+            <div class="col-12 text-center">
                 <h1>Galeri Foto</h1>
-                <p class="subtitle">
-                    Dokumentasi visual kegiatan dan acara JDIH DPRD Kota Surakarta
-                </p>
+                <p class="subtitle">Dokumentasi visual kegiatan dan acara JDIH DPRD Kota Surakarta</p>
+                
+                <!-- Breadcrumb -->
+                <nav aria-label="breadcrumb" class="mt-4">
+                    <ol class="breadcrumb justify-content-center">
+                        <li class="breadcrumb-item"><a href="index.php">Beranda</a></li>
+                        <li class="breadcrumb-item active">Galeri Foto</li>
+                    </ol>
+                </nav>
             </div>
         </div>
     </div>
 </section>
 
-<!-- BREADCRUMB NAVIGATION -->
-<div class="container">
-    <div class="breadcrumb-nav">
-        <?php if ($filter == 'all'): ?>
-            <span class="current">Semua Album</span>
-        <?php else: ?>
-            <a href="<?php echo buildUrl(['filter' => 'all', 'pg' => 1]); ?>">Semua Album</a>
-            <span class="separator">/</span>
-            <span class="current"><?php echo htmlspecialchars($album_info['judul'] ?? 'Album'); ?></span>
-        <?php endif; ?>
-    </div>
-</div>
-
-<!-- MAIN CONTENT -->
-<div class="container">
-    <?php if ($filter != 'all' && isset($album_info)): ?>
-        <!-- ALBUM HEADER (hanya tampil saat melihat foto dalam album) -->
-        <div class="album-header">
-            <h2><?php echo htmlspecialchars($album_info['judul']); ?></h2>
-            <?php if (!empty($album_info['deskripsi'])): ?>
-                <p><?php echo htmlspecialchars($album_info['deskripsi']); ?></p>
-            <?php endif; ?>
-            
-            <div class="album-info">
-                <div class="album-info-item">
-                    <i class="bi bi-images"></i>
-                    <span><?php echo $total_data; ?> Foto</span>
-                </div>
-                <div class="album-info-item">
-                    <i class="bi bi-calendar"></i>
-                    <span><?php echo date('d F Y', strtotime($album_info['tanggal_dibuat'])); ?></span>
-                </div>
-            </div>
-            
-            <a href="<?php echo buildUrl(['filter' => 'all', 'pg' => 1]); ?>" class="back-to-albums">
-                <i class="bi bi-arrow-left"></i> Kembali ke Semua Album
-            </a>
-        </div>
-    <?php endif; ?>
-    
-    <!-- FILTER SECTION (hanya tampil saat melihat semua album) -->
-    <?php if ($filter == 'all'): ?>
-        <div class="gallery-filter">
-            <h4 class="filter-title">Pilih Album</h4>
-            <div class="filter-tags">
-                <a href="<?php echo buildUrl(['filter' => 'all', 'pg' => 1]); ?>" class="filter-btn active">
-                    Semua Album
-                </a>
-                <?php 
-                if ($result_all_albums && mysqli_num_rows($result_all_albums) > 0):
-                    while ($album = mysqli_fetch_assoc($result_all_albums)): 
-                ?>
-                    <a href="<?php echo buildUrl(['filter' => $album['id'], 'pg' => 1]); ?>" class="filter-btn">
-                        <?php echo htmlspecialchars($album['judul']); ?>
-                    </a>
-                <?php 
-                    endwhile;
-                else:
-                ?>
-                    <span class="text-muted">Belum ada album</span>
+<!-- ===============================
+     MAIN CONTENT - FULL WIDTH
+================================ -->
+<section class="main-content">
+    <div class="container">
+        <!-- SEARCH SECTION -->
+        <div class="search-section">
+            <div class="search-wrapper">
+                <form method="GET" action="" class="search-form">
+                    <input type="hidden" name="page" value="galeri">
+                    <?php if ($album_id > 0): ?>
+                        <input type="hidden" name="album" value="<?php echo htmlspecialchars($album_id, ENT_QUOTES | ENT_HTML5, 'UTF-8'); ?>">
+                    <?php endif; ?>
+                    <div class="search-input-group">
+                        <input type="text" 
+                               name="search" 
+                               class="search-input" 
+                               placeholder="Cari album atau foto..." 
+                               value="<?php echo htmlspecialchars($search_query, ENT_QUOTES | ENT_HTML5, 'UTF-8'); ?>">
+                        <button type="submit" class="search-btn">
+                            <i class="bi bi-search"></i> Cari
+                        </button>
+                        <?php if (!empty($search_query)): ?>
+                            <a href="?page=galeri<?php echo $album_id > 0 ? '&album=' . htmlspecialchars($album_id, ENT_QUOTES | ENT_HTML5, 'UTF-8') : ''; ?>" class="reset-btn">
+                                <i class="bi bi-x"></i> Reset
+                            </a>
+                        <?php endif; ?>
+                    </div>
+                </form>
+                
+                <?php if (!empty($search_query)): ?>
+                    <div class="search-results-info">
+                        Hasil pencarian untuk: <strong>"<?php echo htmlspecialchars($search_query, ENT_QUOTES | ENT_HTML5, 'UTF-8'); ?>"</strong>
+                        <span class="badge bg-primary"><?php echo htmlspecialchars($search_results_count, ENT_QUOTES | ENT_HTML5, 'UTF-8'); ?> hasil ditemukan</span>
+                    </div>
                 <?php endif; ?>
             </div>
         </div>
-    <?php endif; ?>
-    
-    <!-- GALLERY GRID -->
-    <div class="row">
-        <?php if ($result_items && mysqli_num_rows($result_items) > 0): ?>
-            <?php 
-            $counter = 0;
-            $items_data = []; // Untuk menyimpan data untuk lightbox
+
+        <!-- NAVIGATION BREADCRUMB -->
+        <div class="galeri-nav">
+            <div class="nav-breadcrumb">
+                <a href="?page=galeri" class="nav-link">
+                    <i class="bi bi-images"></i> Semua Album
+                </a>
+                
+                <?php if ($album_id > 0 && isset($album_info)): ?>
+                    <span class="nav-separator">/</span>
+                    <span class="nav-current">
+                        <i class="bi bi-folder"></i> <?php echo htmlspecialchars($album_info['judul'] ?? '', ENT_QUOTES | ENT_HTML5, 'UTF-8'); ?>
+                    </span>
+                <?php endif; ?>
+            </div>
             
-            while ($item = mysqli_fetch_assoc($result_items)): 
-                $counter++;
-                $tanggal = date('d F Y', strtotime($item['tanggal_dibuat']));
+            <?php if ($album_id > 0): ?>
+                <div class="mt-3">
+                    <a href="?page=galeri" class="back-button">
+                        <i class="bi bi-arrow-left"></i> Kembali ke Semua Album
+                    </a>
+                </div>
+            <?php endif; ?>
+        </div>
+
+        <!-- ALBUM HEADER (jika sedang melihat album) -->
+        <?php if ($album_id > 0 && isset($album_info)): ?>
+            <div class="album-header">
+                <h2><?php echo htmlspecialchars($album_info['judul'] ?? '', ENT_QUOTES | ENT_HTML5, 'UTF-8'); ?></h2>
+                <?php if (!empty($album_info['deskripsi'])): ?>
+                    <p><?php echo htmlspecialchars($album_info['deskripsi'], ENT_QUOTES | ENT_HTML5, 'UTF-8'); ?></p>
+                <?php endif; ?>
                 
-                // Tentukan apakah ini album atau foto
-                $is_album = ($item_type == 'album');
+                <div class="album-stats">
+                    <div class="stat-item">
+                        <i class="bi bi-images"></i>
+                        <span><?php echo htmlspecialchars($total_foto, ENT_QUOTES | ENT_HTML5, 'UTF-8'); ?> Foto</span>
+                    </div>
+                    <div class="stat-item">
+                        <i class="bi bi-calendar"></i>
+                        <span><?php echo isset($album_info['tanggal_dibuat']) ? htmlspecialchars(date('d F Y', strtotime($album_info['tanggal_dibuat'])), ENT_QUOTES | ENT_HTML5, 'UTF-8') : ''; ?></span>
+                    </div>
+                </div>
+            </div>
+        <?php endif; ?>
+
+        <!-- GALLERY GRID -->
+        <div class="card-container">
+            <?php if (!empty($galeri_data)): ?>
+                <?php 
+                $items_data = []; // Untuk menyimpan data lightbox
+                $counter = 0;
                 
-                // Dapatkan path gambar yang benar
-                $url_gambar = getImagePath($item['url_gambar']);
+                foreach ($galeri_data as $item): 
+                    $tanggal = isset($item['tanggal_dibuat']) ? date('d F Y', strtotime($item['tanggal_dibuat'])) : '';
+                    $url_gambar = getImagePath($item['url_gambar'] ?? '');
+                    
+                    if ($current_mode == 'album'): 
+                        // MODE: TAMPILKAN ALBUM
+                        $foto_count = isset($item['foto_count']) ? $item['foto_count'] : 0;
+                ?>
                 
-                // Untuk foto, simpan data untuk lightbox
-                if (!$is_album) {
+                <?php
+                $albumToken = bin2hex(random_bytes(8));
+                $_SESSION['album_tokens'][$albumToken] = $item['id'];
+                ?>
+
+                <div class="galeri-card"
+                    onclick="window.location.href='?page=galeri&album=<?php echo htmlspecialchars($albumToken, ENT_QUOTES | ENT_HTML5, 'UTF-8'); ?>'">
+
+                    <div class="galeri-image">
+                        <?php if (!empty($url_gambar)): ?>
+                            <img src="<?php echo $url_gambar; ?>" 
+                                 alt="<?php echo htmlspecialchars($item['judul'] ?? '', ENT_QUOTES | ENT_HTML5, 'UTF-8'); ?>"
+                                 loading="lazy"
+                                 onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'galeri-placeholder\'><i class=\'bi bi-images\'></i><p>Album Foto</p></div>';">
+                        <?php else: ?>
+                            <div class="galeri-placeholder">
+                                <i class="bi bi-images"></i>
+                                <p>Album Foto</p>
+                            </div>
+                        <?php endif; ?>
+                        <?php if (isset($item['is_cover']) && $item['is_cover'] == 1): ?>
+                            <div class="image-overlay">
+                                <span class="image-badge">Album Utama</span>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                    
+                    <div class="galeri-content">
+                        <h3 class="galeri-title"><?php echo htmlspecialchars($item['judul'] ?? '', ENT_QUOTES | ENT_HTML5, 'UTF-8'); ?></h3>
+                        
+                        <?php if (!empty($item['deskripsi'])): ?>
+                            <p class="galeri-description"><?php echo htmlspecialchars($item['deskripsi'], ENT_QUOTES | ENT_HTML5, 'UTF-8'); ?></p>
+                        <?php endif; ?>
+                        
+                        <div class="galeri-meta">
+                            <div class="galeri-date">
+                                <i class="bi bi-calendar"></i> <?php echo htmlspecialchars($tanggal, ENT_QUOTES | ENT_HTML5, 'UTF-8'); ?>
+                            </div>
+                            <span class="galeri-count">
+                                <i class="bi bi-images"></i> <?php echo htmlspecialchars($foto_count, ENT_QUOTES | ENT_HTML5, 'UTF-8'); ?> Foto
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                
+                <?php else: // MODE: TAMPILKAN FOTO DALAM ALBUM 
+                    $counter++;
                     $items_data[] = [
                         'id' => $counter,
-                        'judul' => htmlspecialchars($item['judul']),
-                        'deskripsi' => htmlspecialchars($item['deskripsi']),
+                        'judul' => htmlspecialchars($item['judul'] ?? '', ENT_QUOTES | ENT_HTML5, 'UTF-8'),
+                        'deskripsi' => htmlspecialchars($item['deskripsi'] ?? '', ENT_QUOTES | ENT_HTML5, 'UTF-8'),
                         'url_gambar' => $url_gambar,
-                        'tanggal' => $tanggal,
-                        'album_judul' => isset($item['album_judul']) ? htmlspecialchars($item['album_judul']) : ''
+                        'tanggal' => htmlspecialchars($tanggal, ENT_QUOTES | ENT_HTML5, 'UTF-8'),
+                        'album_judul' => isset($album_info['judul']) ? htmlspecialchars($album_info['judul'], ENT_QUOTES | ENT_HTML5, 'UTF-8') : ''
                     ];
-                }
-            ?>
-            
-            <div class="col-lg-4 col-md-6 mb-4">
-                <?php if ($is_album): ?>
-                    <?php 
-                    // Hitung jumlah foto dalam album
-                    $album_id = $item['id'];
-                    $query_foto_count = "SELECT COUNT(*) as total FROM galeri_foto WHERE parent_id = $album_id";
-                    $result_foto_count = mysqli_query($koneksi, $query_foto_count);
-                    $foto_count_data = $result_foto_count ? mysqli_fetch_assoc($result_foto_count) : ['total' => 0];
-                    $foto_count = $foto_count_data['total'];
-                    ?>
+                ?>
+                
+                <div class="galeri-card">
+                    <div class="galeri-image">
+                        <?php if (!empty($url_gambar)): ?>
+                            <img src="<?php echo $url_gambar; ?>" 
+                                 alt="<?php echo htmlspecialchars($item['judul'] ?? '', ENT_QUOTES | ENT_HTML5, 'UTF-8'); ?>"
+                                 loading="lazy"
+                                 onclick="openLightbox(<?php echo $counter - 1; ?>)"
+                                 onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'galeri-placeholder\'><i class=\'bi bi-image\'></i><p>Foto</p></div>';">
+                        <?php else: ?>
+                            <div class="galeri-placeholder">
+                                <i class="bi bi-image"></i>
+                                <p>Foto</p>
+                            </div>
+                        <?php endif; ?>
+                    </div>
                     
-                    <!-- ALBUM CARD -->
-                    <div class="album-card" onclick="window.location.href='<?php echo buildUrl(['filter' => $item['id'], 'pg' => 1]); ?>'" style="cursor: pointer;">
-                        <div class="album-cover" style="background-image: url('<?php echo htmlspecialchars($url_gambar); ?>')">
-                            <?php if ($item['is_cover'] == 1): ?>
-                                <span class="badge-cover">Album Utama</span>
-                            <?php endif; ?>
-                        </div>
-                        <div class="album-info">
-                            <h3 class="album-title"><?php echo htmlspecialchars($item['judul']); ?></h3>
-                            <p class="album-desc"><?php echo htmlspecialchars(substr($item['deskripsi'], 0, 120) . (strlen($item['deskripsi']) > 120 ? '...' : '')); ?></p>
-                            <div class="album-meta">
-                                <div class="album-date">
-                                    <i class="bi bi-calendar"></i> <?php echo $tanggal; ?>
-                                </div>
-                                <div class="album-count">
-                                    <i class="bi bi-images"></i> <?php echo $foto_count; ?> Foto
-                                </div>
+                    <div class="galeri-content">
+                        <h3 class="galeri-title"><?php echo htmlspecialchars($item['judul'] ?? '', ENT_QUOTES | ENT_HTML5, 'UTF-8'); ?></h3>
+                        
+                        <?php if (!empty($item['deskripsi'])): ?>
+                            <p class="galeri-description"><?php echo htmlspecialchars($item['deskripsi'], ENT_QUOTES | ENT_HTML5, 'UTF-8'); ?></p>
+                        <?php endif; ?>
+                        
+                        <div class="galeri-meta">
+                            <div class="galeri-date">
+                                <i class="bi bi-calendar"></i> <?php echo htmlspecialchars($tanggal, ENT_QUOTES | ENT_HTML5, 'UTF-8'); ?>
                             </div>
                         </div>
                     </div>
-                    
-                <?php else: ?>
-                    
-                    <!-- FOTO CARD -->
-                    <div class="foto-card">
-                        <img src="<?php echo htmlspecialchars($url_gambar); ?>" 
-                             alt="<?php echo htmlspecialchars($item['judul']); ?>"
-                             class="foto-img"
-                             onclick="openLightbox(<?php echo $counter - 1; ?>)"
-                             onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80'">
-                        <div class="foto-info">
-                            <h4 class="foto-title"><?php echo htmlspecialchars($item['judul']); ?></h4>
-                            <p class="foto-desc"><?php echo htmlspecialchars(substr($item['deskripsi'], 0, 100) . (strlen($item['deskripsi']) > 100 ? '...' : '')); ?></p>
-                            <div class="foto-meta">
-                                <div class="foto-date">
-                                    <i class="bi bi-calendar"></i> <?php echo $tanggal; ?>
-                                </div>
-                                <?php if (isset($item['album_judul'])): ?>
-                                    <div class="foto-album">
-                                        <i class="bi bi-folder"></i> <?php echo htmlspecialchars($item['album_judul']); ?>
-                                    </div>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                    </div>
-                    
-                <?php endif; ?>
-            </div>
+                </div>
+                
+                <?php endif; endforeach; ?>
+                
+            <?php else: // Tidak ada data ?>
             
-            <?php endwhile; ?>
-        <?php else: ?>
-            <div class="col-12">
-                <div class="no-data">
-                    <?php if ($filter == 'all'): ?>
-                        <i class="bi bi-images"></i>
-                        <h4>Tidak ada album ditemukan</h4>
-                        <p>Belum ada album yang dibuat. Silakan kembali lagi nanti.</p>
-                    <?php else: ?>
+                <div class="empty-galeri">
+                    <?php if ($album_id > 0): ?>
                         <i class="bi bi-image"></i>
                         <h4>Tidak ada foto dalam album ini</h4>
                         <p>Belum ada foto yang diunggah untuk album ini.</p>
-                        <a href="<?php echo buildUrl(['filter' => 'all', 'pg' => 1]); ?>" class="back-to-albums">
-                            <i class="bi bi-arrow-left"></i> Kembali ke Semua Album
-                        </a>
+                    <?php else: ?>
+                        <i class="bi bi-images"></i>
+                        <h4>Belum ada album tersedia</h4>
+                        <p>Album akan segera ditambahkan</p>
                     <?php endif; ?>
                 </div>
-            </div>
-        <?php endif; ?>
-    </div>
-    
-    <!-- PAGINATION -->
-    <?php if ($total_pages > 1): ?>
-        <nav aria-label="Page navigation">
-            <ul class="pagination">
-                <!-- Previous Button -->
-                <li class="page-item <?php echo $current_page == 1 ? 'disabled' : ''; ?>">
-                    <a class="page-link" 
-                       href="<?php echo buildUrl(['filter' => $filter, 'pg' => max(1, $current_page - 1)]); ?>" 
-                       aria-label="Previous">
-                        <i class="bi bi-chevron-left"></i>
-                    </a>
-                </li>
                 
-                <!-- Page Numbers -->
-                <?php 
-                // Tampilkan maksimal 5 halaman di sekitar halaman aktif
-                $start_page = max(1, $current_page - 2);
-                $end_page = min($total_pages, $start_page + 4);
-                if ($end_page - $start_page < 4) {
-                    $start_page = max(1, $end_page - 4);
-                }
-                
-                for ($i = $start_page; $i <= $end_page; $i++): ?>
-                    <li class="page-item <?php echo $i == $current_page ? 'active' : ''; ?>">
-                        <a class="page-link" href="<?php echo buildUrl(['filter' => $filter, 'pg' => $i]); ?>">
-                            <?php echo $i; ?>
-                        </a>
-                    </li>
-                <?php endfor; ?>
-                
-                <!-- Next Button -->
-                <li class="page-item <?php echo $current_page >= $total_pages ? 'disabled' : ''; ?>">
-                    <a class="page-link" 
-                       href="<?php echo buildUrl(['filter' => $filter, 'pg' => min($total_pages, $current_page + 1)]); ?>" 
-                       aria-label="Next">
-                        <i class="bi bi-chevron-right"></i>
-                    </a>
-                </li>
-            </ul>
-        </nav>
-        
-        <!-- Page Info -->
-        <div class="page-info">
-            <?php 
-            $start_item = ($current_page - 1) * $per_page + 1;
-            $end_item = min($current_page * $per_page, $total_data);
-            ?>
-            Menampilkan <?php echo $start_item; ?> - <?php echo $end_item; ?> dari <?php echo $total_data; ?> 
-            <?php echo ($filter == 'all') ? 'album' : 'foto'; ?>
+            <?php endif; ?>
         </div>
-    <?php endif; ?>
-</div>
+    </div>
+</section>
 
 <!-- LIGHTBOX -->
 <div class="lightbox" id="lightbox">
+    <span class="lightbox-close" onclick="closeLightbox()">&times;</span>
+    <div class="lightbox-nav lightbox-prev" onclick="changeLightboxImage(-1)">
+        <i class="bi bi-chevron-left"></i>
+    </div>
+    <div class="lightbox-nav lightbox-next" onclick="changeLightboxImage(1)">
+        <i class="bi bi-chevron-right"></i>
+    </div>
     <div class="lightbox-content">
-        <span class="lightbox-close" onclick="closeLightbox()">&times;</span>
-        <div class="lightbox-nav lightbox-prev" onclick="changeLightboxImage(-1)">
-            <i class="bi bi-chevron-left"></i>
-        </div>
-        <div class="lightbox-nav lightbox-next" onclick="changeLightboxImage(1)">
-            <i class="bi bi-chevron-right"></i>
-        </div>
-        <img id="lightbox-img" class="lightbox-img" src="">
+        <img id="lightbox-img" class="lightbox-img" src="" alt="">
         <div class="lightbox-info">
             <h3 id="lightbox-title" class="lightbox-title"></h3>
             <p id="lightbox-desc" class="lightbox-desc"></p>
@@ -1022,26 +1063,60 @@ if ($result_all_albums) {
     </div>
 </div>
 
+<?php include "footer.php"; ?>
+
 <script>
-// Data untuk lightbox
-const itemsData = <?php echo json_encode($items_data); ?>;
+// ============================================
+// JAVASCRIPT FUNCTIONS UNTUK LIGHTBOX
+// ============================================
+const itemsData = <?php echo isset($items_data) ? json_encode($items_data, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) : '[]'; ?>;
 let currentLightboxIndex = 0;
 
 // Fungsi untuk membuka lightbox
 function openLightbox(index) {
     if (itemsData.length === 0) return;
     
+    // Validasi index
+    if (index < 0 || index >= itemsData.length) return;
+    
     currentLightboxIndex = index;
     const item = itemsData[currentLightboxIndex];
     
-    document.getElementById('lightbox-img').src = item.url_gambar;
-    document.getElementById('lightbox-title').textContent = item.judul;
-    document.getElementById('lightbox-desc').textContent = item.deskripsi;
-    document.getElementById('lightbox-date').innerHTML = `<i class="bi bi-calendar"></i> ${item.tanggal}`;
-    document.getElementById('lightbox-album').innerHTML = item.album_judul ? `<i class="bi bi-folder"></i> ${item.album_judul}` : '';
+    // Validasi URL gambar
+    function isValidImageUrl(url) {
+        return url && url.startsWith('http') && (url.endsWith('.jpg') || url.endsWith('.jpeg') || url.endsWith('.png') || url.endsWith('.gif') || url.endsWith('.webp') || url.includes('unsplash'));
+    }
+    
+    // Preload gambar sebelum ditampilkan
+    const img = new Image();
+    img.onload = function() {
+        document.getElementById('lightbox-img').src = item.url_gambar;
+    };
+    img.onerror = function() {
+        document.getElementById('lightbox-img').src = 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80';
+    };
+    
+    // Set src dengan validasi
+    if (isValidImageUrl(item.url_gambar)) {
+        img.src = item.url_gambar;
+    } else {
+        img.src = 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80';
+    }
+    
+    // Sanitasi output untuk mencegah XSS
+    function sanitizeHTML(str) {
+        const temp = document.createElement('div');
+        temp.textContent = str;
+        return temp.innerHTML;
+    }
+    
+    document.getElementById('lightbox-title').textContent = sanitizeHTML(item.judul);
+    document.getElementById('lightbox-desc').textContent = sanitizeHTML(item.deskripsi);
+    document.getElementById('lightbox-date').innerHTML = `<i class="bi bi-calendar"></i> ${sanitizeHTML(item.tanggal)}`;
+    document.getElementById('lightbox-album').innerHTML = item.album_judul ? `<i class="bi bi-folder"></i> ${sanitizeHTML(item.album_judul)}` : '';
     
     document.getElementById('lightbox').style.display = 'flex';
-    document.body.style.overflow = 'hidden'; // Mencegah scroll
+    document.body.style.overflow = 'hidden';
 }
 
 // Fungsi untuk menutup lightbox
@@ -1085,6 +1160,13 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
+// Close lightbox ketika klik di luar gambar
+document.getElementById('lightbox').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeLightbox();
+    }
+});
+
 // Fungsi untuk swipe di mobile
 let touchStartX = 0;
 let touchEndX = 0;
@@ -1110,16 +1192,100 @@ function handleSwipe() {
     }
 }
 
-// Close lightbox ketika klik di luar gambar
-document.getElementById('lightbox').addEventListener('click', function(e) {
-    if (e.target === this) {
-        closeLightbox();
+// Search form validation
+document.addEventListener('DOMContentLoaded', function() {
+    const searchForm = document.querySelector('.search-form');
+    if (searchForm) {
+        searchForm.addEventListener('submit', function(e) {
+            const searchInput = this.querySelector('input[name="search"]');
+            if (searchInput) {
+                const value = searchInput.value.trim();
+                if (value.length < 2 && value.length > 0) {
+                    alert('Masukkan minimal 2 karakter untuk pencarian');
+                    e.preventDefault();
+                    return false;
+                }
+                
+                // Validasi input untuk mencegah XSS
+                if (/[<>]/g.test(value)) {
+                    alert('Input mengandung karakter yang tidak diizinkan');
+                    e.preventDefault();
+                    return false;
+                }
+            }
+        });
     }
+    
+    // Preload gambar untuk performa yang lebih baik
+    if (itemsData && itemsData.length > 0) {
+        itemsData.forEach(function(item) {
+            if (item.url_gambar) {
+                const img = new Image();
+                img.src = item.url_gambar;
+            }
+        });
+    }
+    
+    // Error handling untuk gambar
+    document.querySelectorAll('.galeri-image img').forEach(function(img) {
+        img.addEventListener('error', function() {
+            this.style.display = 'none';
+            const placeholder = this.closest('.galeri-image').querySelector('.galeri-placeholder');
+            if (!placeholder) {
+                const newPlaceholder = document.createElement('div');
+                newPlaceholder.className = 'galeri-placeholder';
+                newPlaceholder.innerHTML = '<i class="bi bi-image"></i><p>Foto</p>';
+                this.parentElement.appendChild(newPlaceholder);
+            }
+        });
+    });
+});
+
+// Rate limiting untuk lightbox (mencegah spam klik)
+let lastLightboxClick = 0;
+const LIGHTBOX_CLICK_DELAY = 300; // 300ms delay
+
+function throttleLightbox(func) {
+    const now = Date.now();
+    if (now - lastLightboxClick > LIGHTBOX_CLICK_DELAY) {
+        lastLightboxClick = now;
+        func();
+    }
+}
+
+// Update event listeners untuk throttle
+document.querySelectorAll('[onclick*="openLightbox"]').forEach(function(element) {
+    const originalOnClick = element.getAttribute('onclick');
+    element.removeAttribute('onclick');
+    element.addEventListener('click', function() {
+        throttleLightbox(function() {
+            eval(originalOnClick);
+        });
+    });
 });
 </script>
 
 <?php 
-// Tutup koneksi database
-mysqli_close($koneksi);
-include 'footer.php'; 
+// ============================================
+// CLEANUP DENGAN ERROR HANDLING
+// ============================================
+try {
+    // Cleanup resources
+    if (isset($result)) {
+        mysqli_free_result($result);
+    }
+    if (isset($album_result)) {
+        mysqli_free_result($album_result);
+    }
+    if (isset($count_result)) {
+        mysqli_free_result($count_result);
+    }
+    
+    // Close database connection
+    if (isset($koneksi)) {
+        mysqli_close($koneksi);
+    }
+} catch (Exception $e) {
+    log_security_event("CLEANUP_ERROR", $e->getMessage());
+}
 ?>

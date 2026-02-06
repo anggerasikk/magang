@@ -566,7 +566,7 @@
                     </ul>
 
                     <!-- TOMBOL LOGIN - DI LUAR UL NAVBAR -->
-                    <a href="http://localhost/jdihcilacap_pasang/wb_admin/index.php" 
+                    <a href="http://localhost/jdihcilacap_pasang_2026/panel_control/index.php" 
                     class="btn-login" 
                     target="_blank">
                         <i class="bi bi-box-arrow-in-right"></i> Login

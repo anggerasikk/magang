@@ -1,570 +1,1220 @@
 <?php
-// grafis.php
+// grafis.php - VERSI SIMPLE DENGAN SEARCH & TANPA SIDEBAR
 
-require_once 'a_db.php'; // Pastikan file koneksi database ada
-include "header.php";
-// Query data dari database
-$sql = "SELECT * FROM grafis WHERE status = 'aktif' ORDER BY tanggal_dibuat DESC";
-$result = $koneksi->query($sql);
+// ============================================
+// KONFIGURASI KEAMANAN (tersembunyi)
+// ============================================
 
-// Pisahkan data berdasarkan tipe
-$videografis = [];
-$infografis = [];
+// 1. Error Handling dan Logging
+error_reporting(E_ALL);
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
+ini_set('error_log', __DIR__ . '/logs/php_error.log');
 
-if ($result->num_rows > 0) {
-    while($row = $result->fetch_assoc()) {
-        if ($row['tipe'] == 'videografis') {
-            $videografis[] = $row;
-        } else {
-            $infografis[] = $row;
-        }
+function log_security_event($event, $details = '') {
+    $log_file = __DIR__ . '/logs/security.log';
+    $timestamp = date('Y-m-d H:i:s');
+    $ip = $_SERVER['REMOTE_ADDR'] ?? 'UNKNOWN';
+    $log_entry = "[{$timestamp}] [IP: {$ip}] {$event}";
+    if (!empty($details)) {
+        $log_entry .= " - Details: {$details}";
+    }
+    $log_entry .= PHP_EOL;
+    
+    if (!file_exists(__DIR__ . '/logs')) {
+        mkdir(__DIR__ . '/logs', 0755, true);
+    }
+    
+    file_put_contents($log_file, $log_entry, FILE_APPEND | LOCK_EX);
+}
+
+set_error_handler(function($errno, $errstr, $errfile, $errline) {
+    log_security_event("PHP_ERROR", "{$errstr} in {$errfile} on line {$errline}");
+    return true;
+});
+
+set_exception_handler(function($exception) {
+    log_security_event("EXCEPTION", $exception->getMessage());
+    die("<div style='padding:20px;text-align:center;color:#721c24;background-color:#f8d7da;border:1px solid #f5c6cb;border-radius:5px;margin:20px;'>Terjadi kesalahan sistem. Silakan hubungi administrator.</div>");
+});
+
+// 2. Pengamanan Session
+session_start([
+    'cookie_httponly' => true,
+    'cookie_secure' => isset($_SERVER['HTTPS']),
+    'cookie_samesite' => 'Strict',
+    'use_strict_mode' => true,
+    'use_only_cookies' => true
+]);
+
+if (!isset($_SESSION['last_regeneration'])) {
+    $_SESSION['last_regeneration'] = time();
+} elseif (time() - $_SESSION['last_regeneration'] > 1800) {
+    session_regenerate_id(true);
+    $_SESSION['last_regeneration'] = time();
+}
+
+// 3. Validasi dan Sanitasi Input GET
+function sanitize_input($input) {
+    if (is_array($input)) {
+        return array_map('sanitize_input', $input);
+    }
+    
+    $input = urldecode($input);
+    $input = str_replace(chr(0), '', $input);
+    $input = strip_tags($input);
+    $input = htmlspecialchars($input, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    $input = trim($input);
+    
+    return $input;
+}
+
+function validate_search_query($query) {
+    if (strlen($query) > 100) {
+        return false;
+    }
+    
+    if (!preg_match('/^[a-zA-Z0-9\s\-_,.()@:;\'"\/]+$/u', $query)) {
+        return false;
+    }
+    
+    return true;
+}
+
+function validate_tab_parameter($tab) {
+    $allowed_tabs = ['infografis', 'videografis'];
+    return in_array($tab, $allowed_tabs);
+}
+
+// Proses input GET
+$search_query_raw = isset($_GET['search']) ? $_GET['search'] : '';
+$tab_raw = isset($_GET['tab']) ? $_GET['tab'] : 'infografis';
+$page_raw = isset($_GET['page']) ? $_GET['page'] : '';
+
+$search_query_raw = sanitize_input($search_query_raw);
+$tab_raw = sanitize_input($tab_raw);
+$page_raw = sanitize_input($page_raw);
+
+if ($page_raw !== 'grafis' && $page_raw !== 'infografis') {
+    header('HTTP/1.0 400 Bad Request');
+    die("Invalid request");
+}
+
+if (!validate_tab_parameter($tab_raw)) {
+    $tab_raw = 'infografis';
+}
+
+$search_query = '';
+if (!empty($search_query_raw)) {
+    if (validate_search_query($search_query_raw)) {
+        $search_query = $search_query_raw;
     }
 }
+
+$tab = $tab_raw;
+
+// 4. INCLUDE KONEKSI DATABASE
+try {
+    require_once 'a_db.php';
+    
+    if (!$koneksi || !mysqli_ping($koneksi)) {
+        throw new Exception("Database connection failed");
+    }
+    
+    mysqli_set_charset($koneksi, 'utf8mb4');
+    
+} catch (Exception $e) {
+    die("<div style='padding:20px;text-align:center;color:#856404;background-color:#fff3cd;border:1px solid #ffeaa7;border-radius:5px;margin:20px;'>System maintenance in progress. Please try again later.</div>");
+}
+
+// 5. QUERY DATABASE AMAN
+$grafis_data = [];
+$total_infografis = 0;
+$total_videografis = 0;
+$search_results_count = 0;
+
+// VARIABEL BARU: untuk menghitung hasil search per tab
+$infografis_search_count = 0;
+$videografis_search_count = 0;
+
+try {
+    if (!empty($search_query)) {
+        $search_term = "%{$search_query}%";
+        $stmt = mysqli_prepare($koneksi, 
+            "SELECT * FROM grafis 
+             WHERE status = 'aktif' 
+             AND (judul LIKE ? OR deskripsi LIKE ? OR tipe LIKE ?)
+             ORDER BY tanggal_dibuat DESC");
+        
+        if ($stmt) {
+            mysqli_stmt_bind_param($stmt, 'sss', $search_term, $search_term, $search_term);
+            mysqli_stmt_execute($stmt);
+            $result = mysqli_stmt_get_result($stmt);
+        } else {
+            $result = mysqli_query($koneksi, 
+                "SELECT * FROM grafis WHERE status = 'aktif' ORDER BY tanggal_dibuat DESC");
+        }
+    } else {
+        $result = mysqli_query($koneksi, 
+            "SELECT * FROM grafis WHERE status = 'aktif' ORDER BY tanggal_dibuat DESC");
+    }
+    
+    if ($result && mysqli_num_rows($result) > 0) {
+        while ($row = mysqli_fetch_assoc($result)) {
+            $grafis_data[] = $row;
+            
+            if ($row['tipe'] == 'videografis') {
+                $total_videografis++;
+                // Hitung untuk search
+                if (!empty($search_query)) {
+                    $videografis_search_count++;
+                }
+            } else {
+                $total_infografis++;
+                // Hitung untuk search
+                if (!empty($search_query)) {
+                    $infografis_search_count++;
+                }
+            }
+        }
+        $search_results_count = mysqli_num_rows($result);
+        mysqli_data_seek($result, 0);
+    }
+    
+} catch (Exception $e) {
+    $grafis_data = [];
+}
+
+// ============================================
+// INCLUDE HEADER
+// ============================================
+$page_title = "Infografis & Videografis - JDIH DPRD Kota Surakarta";
+include "header.php";
 ?>
 
-<!doctype html>
-<html lang="id">
-<head>
-    <meta charset="utf-8">
-    <title>Infografis & Videografis - JDIH DPRD Kota Surakarta</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+<?php 
+// Include style utama dari file CSS
+include "style-keputusan-dprd.css";
+?>
+
+/* STYLE KHUSUS UNTUK HALAMAN GRAFIS */
+body {
+    background: var(--bg-gray);
+}
+
+/* Search Section */
+.search-section {
+    background: var(--bg-white);
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 30px;
+}
+
+.search-wrapper {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.search-input-group {
+    display: flex;
+    gap: 10px;
+}
+
+.search-input {
+    flex: 1;
+    padding: 12px 20px;
+    border: 2px solid var(--border-light);
+    border-radius: 10px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: var(--primary-main);
+    box-shadow: 0 0 0 3px rgba(19, 84, 122, 0.15);
+}
+
+.search-btn {
+    background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+    color: var(--bg-white);
+    border: none;
+    padding: 12px 25px;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.search-btn:hover {
+    background: linear-gradient(135deg, var(--primary-dark), var(--primary-main));
+    box-shadow: 0 6px 16px rgba(19, 84, 122, 0.35);
+}
+
+.reset-btn {
+    background: var(--bg-white);
+    color: var(--text-medium);
+    border: 2px solid var(--border-light);
+    padding: 12px 25px;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.reset-btn:hover {
+    background: var(--bg-gray);
+    border-color: var(--text-light);
+}
+
+.search-results-info {
+    text-align: center;
+    margin-top: 15px;
+    color: var(--text-medium);
+    font-size: 0.9rem;
+}
+
+.search-results-info .badge {
+    margin-left: 5px;
+}
+
+/* Tabs Section */
+.tabs-section {
+    background: var(--bg-white);
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 30px;
+}
+
+.nav-tabs {
+    border-bottom: 3px solid var(--border-light);
+    background: transparent;
+    margin-bottom: 0;
+}
+
+.nav-tabs .nav-link {
+    border: none;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    color: var(--text-medium);
+    padding: 12px 30px;
+    border-radius: 8px 8px 0 0;
+    margin-right: 5px;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+    background: var(--bg-gray);
+}
+
+.nav-tabs .nav-link:hover {
+    color: var(--primary-main);
+    background: var(--bg-white);
+}
+
+.nav-tabs .nav-link.active {
+    background: var(--bg-white);
+    color: var(--primary-main);
+    border-bottom: 3px solid var(--primary-main);
+}
+
+/* Card untuk grafis */
+.grafis-card {
+    background: var(--bg-white);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    margin-bottom: 30px;
+}
+
+.grafis-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-lg);
+}
+
+.grafis-image {
+    height: 200px;
+    position: relative;
+    background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+    overflow: hidden;
+}
+
+.grafis-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.grafis-card:hover .grafis-image img {
+    transform: scale(1.1) rotate(2deg);
+}
+
+/* Placeholder untuk grafis */
+.grafis-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--bg-white);
+    background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+    position: relative;
+}
+
+.grafis-placeholder i {
+    font-size: 3.5rem;
+    margin-bottom: 12px;
+    opacity: 0.9;
+}
+
+.grafis-placeholder p {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin: 0;
+    opacity: 0.95;
+}
+
+/* Image overlay badge */
+.image-overlay {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    z-index: 2;
+}
+
+.image-badge {
+    background: rgba(255, 255, 255, 0.95);
+    color: var(--primary-main);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Video play button */
+.video-play-btn {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.8);
+    width: 60px;
+    height: 60px;
+    background: rgba(19, 84, 122, 0.9);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 24px;
+    transition: all 0.3s;
+    cursor: pointer;
+    opacity: 0;
+}
+
+.grafis-card:hover .video-play-btn {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+.video-play-btn:hover {
+    background: rgba(19, 84, 122, 1);
+    transform: translate(-50%, -50%) scale(1.1);
+}
+
+/* Grafis content */
+.grafis-content {
+    padding: 25px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.grafis-number {
+    color: var(--secondary-main);
+    font-weight: 700;
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.grafis-title {
+    font-weight: 600;
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-bottom: 15px;
+    color: var(--text-dark);
+    display: -webkit-box;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 3.2em;
+}
+
+.grafis-description {
+    font-size: 0.9rem;
+    color: var(--text-light);
+    line-height: 1.6;
+    margin-bottom: 15px;
+    display: -webkit-box;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    flex-grow: 1;
+}
+
+/* Grafis meta */
+.grafis-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: auto;
+    padding-top: 15px;
+    border-top: 2px solid #f0f0f0;
+}
+
+.grafis-date {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.grafis-date i {
+    color: var(--secondary-main);
+}
+
+.grafis-type {
+    background: linear-gradient(135deg, #e6fffa, #b2f5ea);
+    color: var(--primary-dark);
+    padding: 5px 12px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.grafis-type.infografis {
+    background: linear-gradient(135deg, #e6f7ff, #b3e0ff);
+    color: #0066cc;
+}
+
+.grafis-type.videografis {
+    background: linear-gradient(135deg, #ffe6f2, #ffb3d9);
+    color: #cc0066;
+}
+
+/* Grafis actions */
+.grafis-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.grafis-btn {
+    flex: 1;
+    padding: 12px 16px;
+    border-radius: 10px;
+    text-align: center;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-view {
+    background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+    color: var(--bg-white);
+    box-shadow: 0 4px 12px rgba(19, 84, 122, 0.25);
+}
+
+.btn-view:hover {
+    background: linear-gradient(135deg, var(--primary-dark), var(--primary-main));
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(19, 84, 122, 0.35);
+    color: var(--bg-white);
+}
+
+/* Empty state */
+.empty-grafis {
+    text-align: center;
+    padding: 60px 20px;
+    background: var(--bg-white);
+    border-radius: 16px;
+    box-shadow: var(--shadow-sm);
+    margin: 30px 0;
+}
+
+.empty-grafis i {
+    font-size: 4rem;
+    color: var(--secondary-light);
+    margin-bottom: 20px;
+    opacity: 0.6;
+}
+
+.empty-grafis h4 {
+    color: var(--text-dark);
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.empty-grafis p {
+    color: var(--text-light);
+    font-size: 1rem;
+}
+
+/* Modal styles */
+.modal-video {
+    width: 100%;
+    height: 400px;
+    border: none;
+    border-radius: 10px;
+}
+
+/* Full width untuk konten utama */
+.full-width-content {
+    width: 100%;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .search-input-group {
+        flex-direction: column;
+    }
     
-    <!-- CSS FILES -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Open+Sans&display=swap" rel="stylesheet">
-                        
+    .search-input,
+    .search-btn,
+    .reset-btn {
+        width: 100%;
+    }
     
-    <!-- NAVBAR CSS -->
+    .nav-tabs .nav-link {
+        padding: 10px 15px;
+        font-size: 0.9rem;
+        width: 100%;
+        margin-bottom: 5px;
+    }
+    
+    .grafis-card {
+        margin-bottom: 20px;
+    }
+    
+    .grafis-actions {
+        flex-direction: column;
+    }
+    
+    .grafis-btn {
+        width: 100%;
+    }
+    
+    .modal-video {
+        height: 300px;
+    }
+}
 
-    <style>
-        /* OVERRIDE UNTUK HALAMAN INFOGRAFIS */
-        body {
-            padding-top: 80px;
-            background: #f0f8ff;
-        }
-        
-        /* PAGE HEADER */
-        .page-header {
-            background: linear-gradient(135deg, #13547a 0%, #80d0c7 100%);
-            color: white;
-            padding: 80px 0 60px;
-            text-align: center;
-            margin-bottom: px;
-        }
-        
-        .page-title {
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 700;
-            font-size: 2.8rem;
-            margin-bottom: 20px;
-        }
-        
-        .page-subtitle {
-            font-size: 1.2rem;
-            opacity: 0.9;
-            max-width: 600px;
-            margin: 0 auto;
-        }
-        
-        /* MAIN CONTENT */
-        .main-content {
-            padding: 40px 0 80px;
-        }
-        
-        .section-title {
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 700;
-            color: #13547a;
-            margin-bottom: 30px;
-            padding-bottom: 15px;
-            border-bottom: 3px solid #80d0c7;
-            position: relative;
-        }
-        
-        .section-title::after {
-            content: '';
-            position: absolute;
-            bottom: -3px;
-            left: 0;
-            width: 100px;
-            height: 3px;
-            background: #ff7e5f;
-        }
-        
+@media (max-width: 576px) {
+    .grafis-content {
+        padding: 20px;
+    }
+    
+    .modal-video {
+        height: 200px;
+    }
+}
+</style>
 
-        
-        /* INFOGRAFIS GRID */
-        .infographic-card {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-            overflow: hidden;
-            transition: all 0.3s ease;
-            margin-bottom: 30px;
-            height: 100%;
-        }
-        
-        .infographic-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
-        }
-        
-        .infographic-image {
-            width: 100%;
-            height: 250px;
-            object-fit: cover;
-        }
-        
-        .infographic-content {
-            padding: 25px;
-        }
-        
-        .infographic-category {
-            display: inline-block;
-            background: linear-gradient(135deg, #13547a 0%, #80d0c7 100%);
-            color: white;
-            padding: 5px 15px;
-            border-radius: 50px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            margin-bottom: 15px;
-        }
-        
-        .infographic-title {
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 600;
-            color: #13547a;
-            margin-bottom: 15px;
-            font-size: 1.2rem;
-            line-height: 1.4;
-        }
-        
-        .infographic-description {
-            color: #666;
-            margin-bottom: 15px;
-            font-size: 0.95rem;
-            line-height: 1.6;
-        }
-        
-        .infographic-date {
-            color: #888;
-            font-size: 0.9rem;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-        }
-        
-        .infographic-date i {
-            margin-right: 8px;
-        }
-        
-        /* VIDEO GALLERY */
-        .video-card {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-            overflow: hidden;
-            transition: all 0.3s ease;
-            margin-bottom: 30px;
-            height: 100%;
-        }
-        
-        .video-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
-        }
-        
-        .video-thumbnail {
-            position: relative;
-            width: 100%;
-            height: 200px;
-            overflow: hidden;
-        }
-        
-        .video-thumbnail img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.3s;
-        }
-        
-        .video-card:hover .video-thumbnail img {
-            transform: scale(1.05);
-        }
-        
-        .video-play-btn {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 60px;
-            height: 60px;
-            background: rgba(19, 84, 122, 0.9);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 24px;
-            transition: all 0.3s;
-            cursor: pointer;
-            text-decoration: none;
-            z-index: 2;
-        }
-        
-        .video-play-btn:hover {
-            background: rgba(19, 84, 122, 1);
-            transform: translate(-50%, -50%) scale(1.1);
-        }
-        
-        .video-content {
-            padding: 20px;
-        }
-        
-        .video-title {
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 600;
-            color: #13547a;
-            margin-bottom: 10px;
-            font-size: 1.1rem;
-            line-height: 1.4;
-        }
-        
-        .video-description {
-            color: #666;
-            font-size: 0.9rem;
-            margin-bottom: 15px;
-            line-height: 1.5;
-        }
-        
-        .video-meta {
-            color: #888;
-            font-size: 0.85rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        
-        /* MODAL STYLES */
-        .modal-video {
-            width: 100%;
-            height: 400px;
-            border: none;
-            border-radius: 10px;
-        }
-        
-        @media (max-width: 768px) {
-            .modal-video {
-                height: 300px;
-            }
-        }
-        
-        @media (max-width: 576px) {
-            .modal-video {
-                height: 200px;
-            }
-        }
-        
-        /* EMPTY STATE */
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-        }
-        
-        .empty-state i {
-            font-size: 4rem;
-            color: #ddd;
-            margin-bottom: 20px;
-        }
-        
-        .empty-state h3 {
-            color: #888;
-            margin-bottom: 10px;
-        }
-        
-        /* RESPONSIVE */
-        @media (max-width: 768px) {
-            .page-header {
-                padding: 60px 0 40px;
-            }
-            
-            .page-title {
-                font-size: 2.2rem;
-            }
-            
-            .nav-tabs .nav-link {
-                padding: 10px 20px;
-                margin: 0 5px 10px;
-                font-size: 0.9rem;
-            }
-        }
-        
-        @media (max-width: 576px) {
-            .page-title {
-                font-size: 1.8rem;
-            }
-            
-            .page-subtitle {
-                font-size: 1rem;
-            }
-            
-            .infographic-content,
-            .video-content {
-                padding: 15px;
-            }
-        }
-    </style>
-</head>
-
-<body id="top">
-
-    <!-- NAVBAR SAMA DENGAN BERANDA -->
-    <!-- ... (salin navbar dari beranda.php) ... -->
-
-    <!-- PAGE HEADER -->
-    <section class="page-header">
-        <div class="container">
-            <div class="row">
-                <div class="col-12">
-                    <h1 class="page-title">Infografis & Videografis</h1>
-                    <p class="page-subtitle">
-                        Informasi hukum dalam bentuk visual yang menarik dan mudah dipahami
-                    </p>
-                </div>
+<!-- ===============================
+     HEADER SECTION
+================================ -->
+<section class="page-header">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h1>Infografis & Videografis</h1>
+                <p class="subtitle">Informasi hukum dalam bentuk visual yang menarik dan mudah dipahami</p>
+                
+                <!-- Breadcrumb -->
+                <nav aria-label="breadcrumb" class="mt-4">
+                    <ol class="breadcrumb justify-content-center">
+                        <li class="breadcrumb-item"><a href="index.php">Beranda</a></li>
+                        <li class="breadcrumb-item active">Infografis & Videografis</li>
+                    </ol>
+                </nav>
             </div>
         </div>
-    </section>
+    </div>
+</section>
 
-    <!-- MAIN CONTENT -->
-    <section class="main-content">
-        <div class="container">
-            <!-- TABS -->
-            <ul class="nav nav-tabs" id="myTab" role="tablist">
+<!-- ===============================
+     MAIN CONTENT - FULL WIDTH
+================================ -->
+<section class="main-content">
+    <div class="container">
+        <!-- SEARCH SECTION -->
+        <div class="search-section">
+            <div class="search-wrapper">
+                <form method="GET" action="" class="search-form">
+                    <input type="hidden" name="page" value="infografis">
+                    <?php if (!empty($tab) && $tab != 'infografis'): ?>
+                    <input type="hidden" name="tab" value="<?php echo htmlspecialchars($tab); ?>">
+                    <?php endif; ?>
+                    <div class="search-input-group">
+                        <input type="text" 
+                               name="search" 
+                               class="search-input" 
+                               placeholder="Cari infografis atau videografis..." 
+                               value="<?php echo htmlspecialchars($search_query); ?>">
+                        <button type="submit" class="search-btn">
+                            <i class="bi bi-search"></i> Cari
+                        </button>
+                        <?php if (!empty($search_query)): ?>
+                            <a href="?page=infografis<?php echo !empty($tab) && $tab != 'infografis' ? '&tab=' . htmlspecialchars($tab) : ''; ?>" class="reset-btn">
+                                <i class="bi bi-x"></i> Reset
+                            </a>
+                        <?php endif; ?>
+                    </div>
+                </form>
+                
+                <?php if (!empty($search_query)): ?>
+                    <div class="search-results-info">
+                        Hasil pencarian untuk: <strong>"<?php echo htmlspecialchars($search_query); ?>"</strong>
+                        <span class="badge bg-primary"><?php echo $search_results_count; ?> hasil ditemukan</span>
+                        <?php if (!empty($search_query)): ?>
+                            <div style="margin-top: 5px; font-size: 0.8rem;">
+                                <span class="badge bg-info">Infografis: <?php echo $infografis_search_count; ?></span>
+                                <span class="badge bg-warning ms-1">Videografis: <?php echo $videografis_search_count; ?></span>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <!-- TABS SECTION -->
+        <div class="tabs-section">
+            <ul class="nav nav-tabs" id="grafisTab" role="tablist">
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="infografis-tab" data-bs-toggle="tab" 
-                            data-bs-target="#infografis" type="button" role="tab">
+                    <button class="nav-link <?php echo ($tab == 'infografis' || empty($tab)) ? 'active' : ''; ?>" 
+                            id="infografis-tab" 
+                            data-bs-toggle="tab" 
+                            data-bs-target="#infografis-tab-pane" 
+                            type="button" 
+                            role="tab"
+                            onclick="updateTab('infografis')">
                         <i class="bi bi-bar-chart me-2"></i>Infografis
+                        <span class="badge bg-primary ms-2">
+                            <?php echo !empty($search_query) ? $infografis_search_count : $total_infografis; ?>
+                        </span>
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="videografis-tab" data-bs-toggle="tab" 
-                            data-bs-target="#videografis" type="button" role="tab">
+                    <button class="nav-link <?php echo ($tab == 'videografis') ? 'active' : ''; ?>" 
+                            id="videografis-tab" 
+                            data-bs-toggle="tab" 
+                            data-bs-target="#videografis-tab-pane" 
+                            type="button" 
+                            role="tab"
+                            onclick="updateTab('videografis')">
                         <i class="bi bi-camera-video me-2"></i>Videografis
+                        <span class="badge bg-primary ms-2">
+                            <?php echo !empty($search_query) ? $videografis_search_count : $total_videografis; ?>
+                        </span>
                     </button>
                 </li>
             </ul>
+        </div>
+
+        <!-- TAB CONTENT - FULL WIDTH -->
+        <div class="tab-content mt-4 full-width-content" id="grafisTabContent">
             
-            <!-- TAB CONTENT -->
-            <div class="tab-content" id="myTabContent">
-                <!-- INFOGRAFIS TAB -->
-                <div class="tab-pane fade show active" id="infografis" role="tabpanel">
-                    <div class="row mb-5">
-                        <div class="col-12">
-                            <h2 class="section-title">Koleksi Infografis</h2>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <?php if (count($infografis) > 0): ?>
-                            <?php foreach ($infografis as $item): ?>
-                            <div class="col-lg-4 col-md-6 mb-4">
-                                <div class="infographic-card">
-                                    <?php if (!empty($item['thumbnail'])): ?>
-                                        <img src="<?php echo htmlspecialchars($item['thumbnail']); ?>" 
-                                             alt="<?php echo htmlspecialchars($item['judul']); ?>" 
-                                             class="infographic-image">
+            <!-- INFOGRAFIS TAB -->
+            <div class="tab-pane fade <?php echo ($tab == 'infografis' || empty($tab)) ? 'show active' : ''; ?>" 
+                 id="infografis-tab-pane" 
+                 role="tabpanel">
+                
+                <h2 class="section-title">Koleksi Infografis</h2>
+                
+                <div class="card-container">
+                    <?php 
+                    $infografis_displayed = 0;
+                    if ($total_infografis > 0 || (!empty($search_query) && $infografis_search_count > 0)): 
+                        foreach ($grafis_data as $item): 
+                            if ($item['tipe'] != 'videografis'): 
+                                // Filter berdasarkan search jika ada
+                                if (!empty($search_query)) {
+                                    $search_match = false;
+                                    $search_lower = strtolower($search_query);
+                                    
+                                    // Cek di judul
+                                    if (strpos(strtolower($item['judul']), $search_lower) !== false) {
+                                        $search_match = true;
+                                    }
+                                    // Cek di deskripsi
+                                    elseif (!empty($item['deskripsi']) && strpos(strtolower($item['deskripsi']), $search_lower) !== false) {
+                                        $search_match = true;
+                                    }
+                                    // Cek di tipe
+                                    elseif (strpos(strtolower($item['tipe']), $search_lower) !== false) {
+                                        $search_match = true;
+                                    }
+                                    
+                                    // Jika tidak match dengan search query, skip
+                                    if (!$search_match) {
+                                        continue;
+                                    }
+                                }
+                                
+                                $tanggal = date('d F Y', strtotime($item['tanggal_dibuat']));
+                                $infografis_displayed++;
+                                
+                                // INFOGRAFIS: thumbnail dari panel_control/
+                                $thumbnail_path = '';
+                                if (!empty($item['thumbnail'])) {
+                                    // Validasi file infografis
+                                    $file_path = 'panel_control/' . $item['thumbnail'];
+                                    $allowed_extensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+                                    $file_extension = strtolower(pathinfo($item['thumbnail'], PATHINFO_EXTENSION));
+                                    
+                                    if (in_array($file_extension, $allowed_extensions) && file_exists($file_path)) {
+                                        $thumbnail_path = $file_path;
+                                    }
+                                }
+                    ?>
+                        <div class="grafis-card">
+                            <div class="grafis-image">
+                                <?php if (!empty($thumbnail_path)): ?>
+                                        <img src="<?php echo htmlspecialchars($thumbnail_path); ?>"
+                                         alt="<?php echo htmlspecialchars($item['judul']); ?>"
+                                         loading="lazy">
+                                <?php else: ?>
+                                    <div class="grafis-placeholder">
+                                        <i class="bi bi-bar-chart"></i>
+                                        <p>Infografis</p>
+                                    </div>
+                                <?php endif; ?>
+                                <div class="image-overlay">
+                                    <span class="image-badge">Infografis</span>
+                                </div>
+                            </div>
+                            
+                            <div class="grafis-content">
+                                <div class="grafis-number">INF-<?php echo htmlspecialchars($item['id']); ?></div>
+                                <h3 class="grafis-title"><?php echo htmlspecialchars($item['judul']); ?></h3>
+                                
+                                <?php if (!empty($item['deskripsi'])): ?>
+                                    <p class="grafis-description"><?php echo htmlspecialchars($item['deskripsi']); ?></p>
+                                <?php endif; ?>
+                                
+                                <div class="grafis-meta">
+                                    <div class="grafis-date">
+                                        <i class="bi bi-calendar"></i> <?php echo htmlspecialchars($tanggal); ?>
+                                    </div>
+                                    <span class="grafis-type infografis">Infografis</span>
+                                </div>
+                                
+                                <div class="grafis-actions">
+                                    <?php if (!empty($thumbnail_path)): ?>
+                                    <button type="button"
+                                            class="grafis-btn btn-view"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#infografisModal<?php echo htmlspecialchars($item['id']); ?>">
+                                        <i class="bi bi-eye me-2"></i>Lihat Infografis
+                                    </button>
                                     <?php else: ?>
-                                        <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" 
-                                             alt="Default Thumbnail" class="infographic-image">
+                                    <button class="grafis-btn btn-view disabled" disabled>
+                                        <i class="bi bi-exclamation-triangle me-2"></i>Infografis Tidak Tersedia
+                                    </button>
                                     <?php endif; ?>
-                                    <div class="infographic-content">
-                                        <span class="infographic-category">Infografis</span>
-                                        <h3 class="infographic-title"><?php echo htmlspecialchars($item['judul']); ?></h3>
-                                        <?php if (!empty($item['deskripsi'])): ?>
-                                            <p class="infographic-description"><?php echo htmlspecialchars($item['deskripsi']); ?></p>
-                                        <?php endif; ?>
-                                        <div class="infographic-date">
-                                            <i class="bi bi-calendar"></i>
-                                            <?php echo date('d F Y', strtotime($item['tanggal_dibuat'])); ?>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Infografis Modal -->
+                        <?php if (!empty($thumbnail_path)): ?>
+                        <div class="modal fade" id="infografisModal<?php echo htmlspecialchars($item['id']); ?>" tabindex="-1">
+                            <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+                                <div class="modal-content">
+                                    <div class="modal-header bg-gradient text-white">
+                                        <h5 class="modal-title">
+                                            <i class="bi bi-bar-chart me-2"></i>
+                                            <?php echo htmlspecialchars($item['judul']); ?>
+                                        </h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                    </div>
+
+                                    <div class="modal-body p-4">
+                                        <div class="text-center">
+                                            <img src="<?php echo htmlspecialchars($thumbnail_path); ?>"
+                                                 alt="<?php echo htmlspecialchars($item['judul']); ?>"
+                                                 class="img-fluid rounded shadow mb-3"
+                                                 style="max-height: 70vh; object-fit: contain;">
                                         </div>
+                                        
+                                        <?php if (!empty($item['deskripsi'])): ?>
+                                            <div class="mt-4">
+                                                <h6 class="text-primary">
+                                                    <i class="bi bi-info-circle me-2"></i>Deskripsi
+                                                </h6>
+                                                <p class="text-muted">
+                                                    <?php echo nl2br(htmlspecialchars($item['deskripsi'])); ?>
+                                                </p>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+
+                                    <div class="modal-footer">
                                         <?php if (!empty($item['sumber'])): ?>
-                                            <a href="<?php echo htmlspecialchars($item['sumber']); ?>" 
-                                               target="_blank" 
-                                               class="download-btn">
-                                                <i class="bi bi-download me-2"></i>Lihat Infografis
+                                            <a href="panel_control/<?php echo htmlspecialchars($item['sumber']); ?>" 
+                                                target="_blank" 
+                                                class="btn btn-outline-primary">
+                                                <i class="bi bi-box-arrow-up-right me-1"></i>Buka Sumber Asli
                                             </a>
                                         <?php endif; ?>
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                            <i class="bi bi-x-lg me-1"></i>Tutup
+                                        </button>
                                     </div>
                                 </div>
                             </div>
-                            <?php endforeach; ?>
-                        <?php else: ?>
-                            <div class="col-12">
-                                <div class="empty-state">
-                                    <i class="bi bi-bar-chart"></i>
-                                    <h3>Belum ada infografis tersedia</h3>
-                                    <p>Infografis akan segera ditambahkan</p>
-                                </div>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                </div>
-                
-                <!-- VIDEOGRAFIS TAB -->
-                <div class="tab-pane fade" id="videografis" role="tabpanel">
-                    <div class="row mb-5">
-                        <div class="col-12">
-                            <h2 class="section-title">Koleksi Videografis</h2>
                         </div>
-                    </div>
-                    
-                    <div class="row">
-                        <?php if (count($videografis) > 0): ?>
-                            <?php foreach ($videografis as $item): ?>
-                            <div class="col-lg-4 col-md-6 mb-4">
-                                <div class="video-card">
-                                    <div class="video-thumbnail">
-                                        <?php if (!empty($item['thumbnail'])): ?>
-                                            <img src="<?php echo htmlspecialchars($item['thumbnail']); ?>" 
-                                                 alt="<?php echo htmlspecialchars($item['judul']); ?>">
-                                        <?php else: ?>
-                                            <img src="https://images.unsplash.com/photo-1573164713714-d95e436ab2d6?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" 
-                                                 alt="Default Thumbnail">
-                                        <?php endif; ?>
-                                        <a href="#" class="video-play-btn" 
-                                           data-bs-toggle="modal" 
-                                           data-bs-target="#videoModal<?php echo $item['id']; ?>">
-                                            <i class="bi bi-play-fill"></i>
-                                        </a>
-                                    </div>
-                                    <div class="video-content">
-                                        <h4 class="video-title"><?php echo htmlspecialchars($item['judul']); ?></h4>
-                                        <?php if (!empty($item['deskripsi'])): ?>
-                                            <p class="video-description"><?php echo htmlspecialchars($item['deskripsi']); ?></p>
-                                        <?php endif; ?>
-                                        <div class="video-meta">
-                                            <span><i class="bi bi-calendar"></i> <?php echo date('d M Y', strtotime($item['tanggal_dibuat'])); ?></span>
-                                            <span>Videografis</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <?php endforeach; ?>
-                        <?php else: ?>
-                            <div class="col-12">
-                                <div class="empty-state">
-                                    <i class="bi bi-camera-video"></i>
-                                    <h3>Belum ada videografis tersedia</h3>
-                                    <p>Video akan segera ditambahkan</p>
-                                </div>
+                        <?php endif; ?>
+                        <?php endif; endforeach; ?>
+                        
+                        <?php if ($infografis_displayed == 0): ?>
+                            <div class="empty-grafis">
+                                <i class="bi bi-bar-chart"></i>
+                                <?php if (!empty($search_query)): ?>
+                                    <h4>Tidak ada infografis ditemukan</h4>
+                                    <p>Tidak ada infografis yang sesuai dengan pencarian "<?php echo htmlspecialchars($search_query); ?>"</p>
+                                <?php else: ?>
+                                    <h4>Belum ada infografis tersedia</h4>
+                                    <p>Infografis akan segera ditambahkan</p>
+                                <?php endif; ?>
                             </div>
                         <?php endif; ?>
-                    </div>
+                    <?php else: ?>
+                        <div class="empty-grafis">
+                            <i class="bi bi-bar-chart"></i>
+                            <?php if (!empty($search_query)): ?>
+                                <h4>Tidak ada infografis ditemukan</h4>
+                                <p>Tidak ada infografis yang sesuai dengan pencarian "<?php echo htmlspecialchars($search_query); ?>"</p>
+                            <?php else: ?>
+                                <h4>Belum ada infografis tersedia</h4>
+                                <p>Infografis akan segera ditambahkan</p>
+                            <?php endif; ?>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
-        </div>
-    </section>
-
-    <!-- VIDEO MODALS -->
-    <?php foreach ($videografis as $item): ?>
-    <div class="modal fade" id="videoModal<?php echo $item['id']; ?>" tabindex="-1">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"><?php echo htmlspecialchars($item['judul']); ?></h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="ratio ratio-16x9">
-                        <?php
-                        // Extract YouTube video ID from URL
-                        $youtubeUrl = $item['sumber'];
-                        if (strpos($youtubeUrl, 'youtube.com') !== false || strpos($youtubeUrl, 'youtu.be') !== false) {
-                            // If it's already an embed URL, use it directly
-                            if (strpos($youtubeUrl, 'embed') !== false) {
-                                $embedUrl = $youtubeUrl;
-                            } else {
-                                // Convert regular YouTube URL to embed URL
-                                if (preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/', $youtubeUrl, $matches)) {
-                                    $videoId = $matches[1];
-                                    $embedUrl = "https://www.youtube.com/embed/{$videoId}";
-                                } else {
-                                    $embedUrl = $youtubeUrl;
+            
+            <!-- VIDEOGRAFIS TAB -->
+            <div class="tab-pane fade <?php echo ($tab == 'videografis') ? 'show active' : ''; ?>" 
+                 id="videografis-tab-pane" 
+                 role="tabpanel">
+                
+                <h2 class="section-title">Koleksi Videografis</h2>
+                
+                <div class="card-container">
+                    <?php 
+                    $videografis_displayed = 0;
+                    if ($total_videografis > 0 || (!empty($search_query) && $videografis_search_count > 0)): 
+                        foreach ($grafis_data as $item): 
+                            if ($item['tipe'] == 'videografis'): 
+                                // Filter berdasarkan search jika ada
+                                if (!empty($search_query)) {
+                                    $search_match = false;
+                                    $search_lower = strtolower($search_query);
+                                    
+                                    // Cek di judul
+                                    if (strpos(strtolower($item['judul']), $search_lower) !== false) {
+                                        $search_match = true;
+                                    }
+                                    // Cek di deskripsi
+                                    elseif (!empty($item['deskripsi']) && strpos(strtolower($item['deskripsi']), $search_lower) !== false) {
+                                        $search_match = true;
+                                    }
+                                    // Cek di tipe
+                                    elseif (strpos(strtolower($item['tipe']), $search_lower) !== false) {
+                                        $search_match = true;
+                                    }
+                                    
+                                    // Jika tidak match dengan search query, skip
+                                    if (!$search_match) {
+                                        continue;
+                                    }
                                 }
-                            }
-                        } else {
-                            $embedUrl = $youtubeUrl;
-                        }
-                        ?>
-                        <iframe src="<?php echo htmlspecialchars($embedUrl); ?>" 
-                                title="<?php echo htmlspecialchars($item['judul']); ?>" 
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                                allowfullscreen
-                                class="modal-video"></iframe>
-                    </div>
-                    <?php if (!empty($item['deskripsi'])): ?>
-                        <div class="mt-3">
-                            <p><strong>Deskripsi:</strong></p>
-                            <p><?php echo nl2br(htmlspecialchars($item['deskripsi'])); ?></p>
+                                
+                                $tanggal = date('d M Y', strtotime($item['tanggal_dibuat']));
+                                $videografis_displayed++;
+                                
+                                // VIDEOGRAFIS: thumbnail langsung dari input admin
+                                $thumbnail_path = '';
+                                if (!empty($item['thumbnail'])) {
+                                    $thumbnail_path = htmlspecialchars($item['thumbnail']);
+                                }
+                                
+                                // Extract video embed URL
+                                $video_url = $item['sumber'] ?? '';
+                                $embed_url = '';
+                                
+                                if (!empty($video_url)) {
+                                    // YouTube URLs
+                                    if (strpos($video_url, 'youtube.com') !== false || strpos($video_url, 'youtu.be') !== false) {
+                                        // Jika sudah embed URL
+                                        if (strpos($video_url, 'embed') !== false) {
+                                            $embed_url = htmlspecialchars($video_url);
+                                        } 
+                                        // Jika link YouTube biasa
+                                        else if (preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/', $video_url, $matches)) {
+                                            $video_id = $matches[1];
+                                            $embed_url = "https://www.youtube.com/embed/{$video_id}";
+                                        }
+                                    }
+                                    // Link lainnya
+                                    else {
+                                        $embed_url = htmlspecialchars($video_url);
+                                    }
+                                }
+                    ?>
+                        <div class="grafis-card">
+                            <div class="grafis-image">
+                                <?php if (!empty($thumbnail_path)): ?>
+                                    <img src="<?php echo $thumbnail_path; ?>" 
+                                         alt="<?php echo htmlspecialchars($item['judul']); ?>"
+                                         loading="lazy">
+                                <?php else: ?>
+                                    <div class="grafis-placeholder">
+                                        <i class="bi bi-camera-video"></i>
+                                        <p>Videografis</p>
+                                    </div>
+                                <?php endif; ?>
+                                <div class="image-overlay">
+                                    <span class="image-badge">Videografis</span>
+                                </div>
+                                <?php if (!empty($embed_url)): ?>
+                                <div class="video-play-btn" 
+                                     data-bs-toggle="modal" 
+                                     data-bs-target="#videoModal<?php echo htmlspecialchars($item['id']); ?>">
+                                    <i class="bi bi-play-fill"></i>
+                                </div>
+                                <?php endif; ?>
+                            </div>
+                            
+                            <div class="grafis-content">
+                                <div class="grafis-number">VID-<?php echo htmlspecialchars($item['id']); ?></div>
+                                <h3 class="grafis-title"><?php echo htmlspecialchars($item['judul']); ?></h3>
+                                
+                                <?php if (!empty($item['deskripsi'])): ?>
+                                    <p class="grafis-description"><?php echo htmlspecialchars($item['deskripsi']); ?></p>
+                                <?php endif; ?>
+                                
+                                <div class="grafis-meta">
+                                    <div class="grafis-date">
+                                        <i class="bi bi-calendar"></i> <?php echo htmlspecialchars($tanggal); ?>
+                                    </div>
+                                    <span class="grafis-type videografis">Videografis</span>
+                                </div>
+                                
+                                <div class="grafis-actions">
+                                    <?php if (!empty($embed_url)): ?>
+                                    <button type="button" 
+                                            class="grafis-btn btn-view" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#videoModal<?php echo htmlspecialchars($item['id']); ?>">
+                                        <i class="bi bi-play-circle me-2"></i>Tonton Video
+                                    </button>
+                                    <?php else: ?>
+                                    <button class="grafis-btn btn-view disabled" disabled>
+                                        <i class="bi bi-exclamation-triangle me-2"></i>Video Tidak Tersedia
+                                    </button>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Video Modal -->
+                        <?php if (!empty($embed_url)): ?>
+                        <div class="modal fade" id="videoModal<?php echo htmlspecialchars($item['id']); ?>" tabindex="-1">
+                            <div class="modal-dialog modal-lg modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header bg-gradient text-white">
+                                        <h5 class="modal-title">
+                                            <i class="bi bi-camera-video me-2"></i>
+                                            <?php echo htmlspecialchars($item['judul']); ?>
+                                        </h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body p-4">
+                                        <div class="ratio ratio-16x9 mb-3">
+                                            <iframe src="<?php echo $embed_url; ?>" 
+                                                    title="<?php echo htmlspecialchars($item['judul']); ?>" 
+                                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                                    allowfullscreen
+                                                    class="modal-video"></iframe>
+                                        </div>
+                                        <?php if (!empty($item['deskripsi'])): ?>
+                                            <div class="mt-3">
+                                                <h6 class="text-primary"><i class="bi bi-info-circle me-2"></i>Deskripsi</h6>
+                                                <p class="text-muted"><?php echo nl2br(htmlspecialchars($item['deskripsi'])); ?></p>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <?php if (!empty($video_url)): ?>
+                                            <a href="<?php echo htmlspecialchars($video_url); ?>" 
+                                               target="_blank" 
+                                               class="btn btn-outline-primary">
+                                                <i class="bi bi-box-arrow-up-right me-1"></i>Buka di YouTube
+                                            </a>
+                                        <?php endif; ?>
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <?php endif; ?>
+                        <?php endif; endforeach; ?>
+                        
+                        <?php if ($videografis_displayed == 0): ?>
+                            <div class="empty-grafis">
+                                <i class="bi bi-camera-video"></i>
+                                <?php if (!empty($search_query)): ?>
+                                    <h4>Tidak ada videografis ditemukan</h4>
+                                    <p>Tidak ada videografis yang sesuai dengan pencarian "<?php echo htmlspecialchars($search_query); ?>"</p>
+                                <?php else: ?>
+                                    <h4>Belum ada videografis tersedia</h4>
+                                    <p>Video akan segera ditambahkan</p>
+                                <?php endif; ?>
+                            </div>
+                        <?php endif; ?>
+                    <?php else: ?>
+                        <div class="empty-grafis">
+                            <i class="bi bi-camera-video"></i>
+                            <?php if (!empty($search_query)): ?>
+                                <h4>Tidak ada videografis ditemukan</h4>
+                                <p>Tidak ada videografis yang sesuai dengan pencarian "<?php echo htmlspecialchars($search_query); ?>"</p>
+                            <?php else: ?>
+                                <h4>Belum ada videografis tersedia</h4>
+                                <p>Video akan segera ditambahkan</p>
+                            <?php endif; ?>
                         </div>
                     <?php endif; ?>
                 </div>
             </div>
         </div>
     </div>
-    <?php endforeach; ?>
+</section>
 
-    <!-- FOOTER SAMA DENGAN BERANDA -->
-    <!-- ... (salin footer dari beranda.php) ... -->
+<?php include "footer.php"; ?>
 
-    <!-- JAVASCRIPT FILES -->
-
+<script>
+// ============================================
+// JAVASCRIPT FUNCTIONS
+// ============================================
+document.addEventListener('DOMContentLoaded', function() {
+    // Tab functionality
+    const triggerTabList = [].slice.call(document.querySelectorAll('#grafisTab button'));
+    triggerTabList.forEach(function (triggerEl) {
+        const tabTrigger = new bootstrap.Tab(triggerEl);
+        
+        triggerEl.addEventListener('click', function (event) {
+            event.preventDefault();
+            tabTrigger.show();
+        });
+    });
     
-    <script>
-        // Tab functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            const triggerTabList = [].slice.call(document.querySelectorAll('#myTab button'));
-            triggerTabList.forEach(function (triggerEl) {
-                const tabTrigger = new bootstrap.Tab(triggerEl);
-                
-                triggerEl.addEventListener('click', function (event) {
-                    event.preventDefault();
-                    tabTrigger.show();
-                });
-            });
-            
-            // Navbar scroll effect
-            const navbar = document.querySelector('.navbar-custom');
-            if (navbar) {
-                window.addEventListener('scroll', function() {
-                    if (window.scrollY > 50) {
-                        navbar.classList.add('scrolled');
-                    } else {
-                        navbar.classList.remove('scrolled');
-                    }
-                });
-            }
-            
-            // Close modal when clicking outside
-            const videoModals = document.querySelectorAll('.modal');
-            videoModals.forEach(function(modal) {
-                modal.addEventListener('show.bs.modal', function() {
-                    // Pause all videos when opening a new modal
-                    const iframes = document.querySelectorAll('.modal-video');
-                    iframes.forEach(function(iframe) {
-                        iframe.src = iframe.src; // Reload iframe to stop video
-                    });
-                });
+    // Close modal when clicking outside
+    const videoModals = document.querySelectorAll('.modal');
+    videoModals.forEach(function(modal) {
+        modal.addEventListener('show.bs.modal', function() {
+            // Pause all videos when opening a new modal
+            const iframes = document.querySelectorAll('.modal-video');
+            iframes.forEach(function(iframe) {
+                iframe.src = iframe.src; // Reload iframe to stop video
             });
         });
-    </script>
+    });
+    
+    // Video play button click to open modal
+    document.querySelectorAll('.video-play-btn').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const card = this.closest('.grafis-card');
+            const watchBtn = card.querySelector('.btn-view');
+            if (watchBtn) {
+                watchBtn.click();
+            }
+        });
+    });
+    
+    // Search form validation
+    const searchForm = document.querySelector('.search-form');
+    if (searchForm) {
+        searchForm.addEventListener('submit', function(e) {
+            const searchInput = this.querySelector('input[name="search"]');
+            if (searchInput && searchInput.value.trim().length < 2 && searchInput.value.trim() !== '') {
+                alert('Masukkan minimal 2 karakter untuk pencarian');
+                e.preventDefault();
+                return false;
+            }
+        });
+    }
+    
+    // Check URL for tab parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const tabParam = urlParams.get('tab');
+    if (tabParam) {
+        const tabElement = document.getElementById(tabParam + '-tab');
+        if (tabElement) {
+            const tabTrigger = new bootstrap.Tab(tabElement);
+            tabTrigger.show();
+        }
+    }
+});
 
-</body>
-</html>
+// Function to update URL with tab parameter
+function updateTab(tabName) {
+    const url = new URL(window.location);
+    const searchQuery = url.searchParams.get('search') || '';
+    
+    // Build new URL
+    let newUrl = '?page=infografis';
+    if (searchQuery) {
+        newUrl += '&search=' + encodeURIComponent(searchQuery);
+    }
+    if (tabName !== 'infografis') {
+        newUrl += '&tab=' + tabName;
+    }
+    
+    window.history.pushState({}, '', newUrl);
+}
+</script>
 
-<?php
-include "footer.php";
-// Tutup koneksi database
-$koneksi->close();
+<?php 
+// ============================================
+// CLEANUP
+// ============================================
+// Cleanup resources
+if (isset($result)) mysqli_free_result($result);
+
+// Close database connection
+if (isset($koneksi)) mysqli_close($koneksi);
 ?>

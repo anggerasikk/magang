@@ -90,8 +90,8 @@ function searchFileEverywhere($filename = null) {
     $locations_to_search = [
         $root . '/uploads',
         $root . '/uploads/pdf',
-        $root . '/wb_admin/uploads',
-        $root . '/wb_admin/uploads/pdf',
+        $root . '/panel_control/uploads',
+        $root . '/panel_control/uploads/pdf',
         $current_dir . '/../uploads',
         $current_dir . '/../uploads/pdf',
         'C:/xampp/htdocs/jdihcilacap_pasang/uploads',

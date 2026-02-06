@@ -566,24 +566,12 @@
 
     /* Instagram Section */
     .instagram-section {
-        background: linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 100%);
+        background: linear-gradient(135deg, #ffffff 0%, #ffffff 100%);
         border-radius: 15px;
         padding: 40px 25px;
         margin-top: 40px;
     }
 
-    .instagram-card {
-        background: white;
-        border-radius: 10px;
-        overflow: hidden;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-        transition: all 0.3s ease;
-    }
-
-    .instagram-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-    }
 
     .btn-instagram {
         display: inline-flex;

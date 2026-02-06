@@ -1,0 +1,1010 @@
+<?php
+// keputusan-dprd.php
+session_start();
+include_once "a_db.php";
+include_once "a_functions.php"; // TAMBAHKAN INI
+
+// ============================================
+// KONFIGURASI PATH (SESUAIKAN DENGAN STRUKTUR ANDA)
+// ============================================
+$base_upload_path = "C:/xampp8/htdocs/jdihcilacap_pasang_2026/jdihcilacap_pasang_2026/panel_control/uploads/";
+$web_image_path = "/jdihcilacap_pasang_2026/jdihcilacap_pasang_2026/panel_control/uploads/images/";
+$pdf_base_path = "C:/xampp8/htdocs/jdihcilacap_pasang_2026/jdihcilacap_pasang_2026/panel_control/uploads/";
+
+// ============================================
+// FUNGSI BANTU UNTUK FILE
+// ============================================
+
+// Fungsi untuk menemukan file PDF di server (menggunakan logika yang sama dengan detail page)
+function findFileOnServer($filename) {
+    $root = $_SERVER['DOCUMENT_ROOT'];
+    $current_dir = __DIR__;
+    $base_dir = dirname(__DIR__);
+    
+    // Bersihkan nama file
+    $filename = basename($filename);
+    $clean_filename = preg_replace('/(\.pdf)+$/i', '.pdf', $filename);
+    
+    // Daftar semua variasi nama file
+    $filename_variations = [$filename, $clean_filename];
+    
+    // Tambahkan variasi tanpa spasi/karakter khusus
+    $no_spaces = str_replace([' ', '(', ')', '[', ']'], ['_', '', '', '', ''], $clean_filename);
+    if ($no_spaces !== $clean_filename) {
+        $filename_variations[] = $no_spaces;
+    }
+    
+    // Lokasi yang mungkin (semua kombinasi)
+    $possible_locations = [];
+    
+    // Daftar base directories
+    $base_dirs = [
+        $root,
+        $base_dir,
+        $current_dir,
+        'C:/xampp8/htdocs',
+        'C:/xampp8/htdocs/jdihcilacap_pasang_2026',
+        'C:/xampp/htdocs',
+        'C:/xampp/htdocs/jdihcilacap_pasang',
+        '/var/www/html'
+    ];
+    
+    // Daftar subdirectories
+    $sub_dirs = [
+        '/uploads/pdf',
+        '/uploads',
+        '/panel_control/uploads/pdf',
+        '/panel_control/uploads',
+        '/admin/uploads/pdf',
+        '/admin/uploads',
+        '/jdih/uploads/pdf',
+        '/jdih/uploads'
+    ];
+    
+    // Buat semua kombinasi
+    foreach ($base_dirs as $base) {
+        foreach ($sub_dirs as $sub) {
+            foreach ($filename_variations as $variation) {
+                $possible_locations[] = $base . $sub . '/' . $variation;
+                
+                // Tambahkan dengan backslash untuk Windows
+                if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+                    $possible_locations[] = str_replace('/', '\\', $base . $sub . '\\' . $variation);
+                }
+            }
+        }
+    }
+    
+    // Tambahkan lokasi khusus untuk struktur baru
+    $special_locations = [
+        'C:/xampp8/htdocs/jdihcilacap_pasang_2026/jdihcilacap_pasang_2026/panel_control/uploads/pdf/' . $filename,
+        'C:/xampp8/htdocs/jdihcilacap_pasang_2026/jdihcilacap_pasang_2026/panel_control/uploads/' . $filename,
+        $_SERVER['DOCUMENT_ROOT'] . '/jdihcilacap_pasang_2026/jdihcilacap_pasang_2026/panel_control/uploads/pdf/' . $filename,
+        $_SERVER['DOCUMENT_ROOT'] . '/jdihcilacap_pasang_2026/jdihcilacap_pasang_2026/panel_control/uploads/' . $filename,
+    ];
+    
+    $possible_locations = array_merge($possible_locations, $special_locations);
+    
+    // Hilangkan duplikat
+    $possible_locations = array_unique($possible_locations);
+    
+    // Cek setiap lokasi
+    foreach ($possible_locations as $location) {
+        if (file_exists($location) && is_file($location) && is_readable($location)) {
+            // Verifikasi bahwa ini file PDF
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            $mime_type = finfo_file($finfo, $location);
+            finfo_close($finfo);
+            
+            if (strpos($mime_type, 'pdf') !== false || strpos($mime_type, 'application/pdf') !== false) {
+                return [
+                    'path' => $location,
+                    'size' => filesize($location),
+                    'time' => filemtime($location),
+                    'mime' => $mime_type
+                ];
+            }
+        }
+    }
+    
+    return null;
+}
+
+// Fungsi untuk mengambil data file dari database
+function findDocumentFile($data) {
+    $file_fields = ['pdf_path', 'fileDownload', 'file_path', 'fileUpload', 'file_name'];
+    
+    foreach ($file_fields as $field) {
+        if (!empty($data[$field]) && trim($data[$field]) !== '') {
+            $path = trim($data[$field]);
+            // Hapus parameter query string jika ada
+            $path = preg_replace('/\?.*$/', '', $path);
+            return $path;
+        }
+    }
+    return null;
+}
+
+// Fungsi untuk generate URL file dari path fisik
+function generateFileUrl($file_path) {
+    $root = $_SERVER['DOCUMENT_ROOT'];
+    $root = str_replace('\\', '/', $root);
+    $file_path = str_replace('\\', '/', $file_path);
+    
+    // Jika file ada dalam DOCUMENT_ROOT
+    if (strpos($file_path, $root) === 0) {
+        $url_path = substr($file_path, strlen($root));
+        if (strpos($url_path, '/') !== 0) {
+            $url_path = '/' . $url_path;
+        }
+        return $url_path;
+    }
+    
+    // Untuk XAMPP absolute path baru
+    if (strpos($file_path, 'C:/xampp8/htdocs') === 0) {
+        $url_path = substr($file_path, strlen('C:/xampp8/htdocs'));
+        if (strpos($url_path, '/') !== 0) {
+            $url_path = '/' . $url_path;
+        }
+        return $url_path;
+    }
+    
+    // Untuk XAMPP lama
+    if (strpos($file_path, 'C:/xampp/htdocs') === 0) {
+        $url_path = substr($file_path, strlen('C:/xampp/htdocs'));
+        if (strpos($url_path, '/') !== 0) {
+            $url_path = '/' . $url_path;
+        }
+        return $url_path;
+    }
+    
+    // Untuk Linux absolute path
+    if (strpos($file_path, '/var/www/html') === 0) {
+        $url_path = substr($file_path, strlen('/var/www/html'));
+        if (strpos($url_path, '/') !== 0) {
+            $url_path = '/' . $url_path;
+        }
+        return $url_path;
+    }
+    
+    // Jika tidak bisa dikonversi, return path relatif
+    return $file_path;
+}
+$query = "SELECT 
+            idData, 
+            tahun_pengundangan,
+            tanggal_pengundangan,
+            tanggal_penetapan,
+            jenis,
+            noPeraturan,
+            judul,
+            singkatanJenis,
+            status,
+            fileDownload,
+            pdf_path,
+            image_name,
+            image_path,
+            uploaded_at
+          FROM uploads 
+          WHERE jenis = 'Keputusan_DPRD' 
+          ORDER BY idData DESC";
+$result = mysqli_query($koneksi, $query);
+
+if (!$result) {
+    die("Query error: " . mysqli_error($koneksi));
+}
+
+// ============================================
+// TOTAL DOKUMEN
+// ============================================
+$total_query = "SELECT COUNT(*) as total 
+                FROM uploads 
+                WHERE jenis = 'Keputusan_DPRD'";
+$total_result = mysqli_query($koneksi, $total_query);
+$total_dokumen = mysqli_fetch_assoc($total_result)['total'];
+
+// ============================================
+// STATISTIK PER TAHUN
+// ============================================
+$year_stats_query = "
+    SELECT tahun_pengundangan, COUNT(*) as jumlah
+    FROM uploads
+    WHERE jenis = 'Keputusan_DPRD'
+    GROUP BY tahun_pengundangan
+    ORDER BY tahun_pengundangan DESC
+    LIMIT 5";
+$year_stats_result = mysqli_query($koneksi, $year_stats_query);
+
+// ============================================
+// DOKUMEN TERBARU
+// ============================================
+$popular_query = "
+    SELECT idData, noPeraturan, judul, tanggal_penetapan
+    FROM uploads
+    WHERE jenis = 'Keputusan_DPRD'
+    ORDER BY tanggal_pengundangan DESC
+    LIMIT 5";
+$popular_result = mysqli_query($koneksi, $popular_query);
+
+// ============================================
+// TAHUN FILTER
+// ============================================
+$years_query = "
+    SELECT DISTINCT tahun_pengundangan
+    FROM uploads
+    WHERE jenis = 'Keputusan_DPRD'
+    ORDER BY tahun_pengundangan DESC";
+$years_result = mysqli_query($koneksi, $years_query);
+
+$years = [];
+while ($row = mysqli_fetch_assoc($years_result)) {
+    $years[] = $row['tahun_pengundangan'];
+}
+
+// ============================================
+// SEARCH FUNCTIONALITY
+// ============================================
+$search_query = isset($_GET['search']) ? trim($_GET['search']) : '';
+$search_results = [];
+
+if (!empty($search_query)) {
+    // Escape untuk keamanan
+    $search_safe = mysqli_real_escape_string($koneksi, $search_query);
+    
+    // Query mencari di judul, noPeraturan, dan subjek
+    $search_sql = "
+        SELECT idData, noPeraturan, judul, tanggal_penetapan, singkatanJenis, image_path, image_name, pdf_path, fileDownload, status
+        FROM uploads 
+        WHERE jenis = 'Keputusan_DPRD' 
+        AND (
+            judul LIKE '%$search_safe%' 
+            OR noPeraturan LIKE '%$search_safe%'
+            OR subjek LIKE '%$search_safe%'
+        )
+        ORDER BY tanggal_penetapan DESC
+        LIMIT 20";
+    
+    $search_result = mysqli_query($koneksi, $search_sql);
+    if ($search_result) {
+        while ($row = mysqli_fetch_assoc($search_result)) {
+            $search_results[] = $row;
+        }
+    }
+}
+
+// ============================================
+// HEADER
+// ============================================
+$page_title = "Keputusan DPRD - JDIH DPRD Kota Surakarta";
+$page_description = "Kumpulan Keputusan Dewan Perwakilan Rakyat Daerah Kota Surakarta";
+
+include "header.php";
+?>
+
+<!-- ===============================
+     STYLE
+================================ -->
+<style>
+<?php include "style-keputusan-dprd.css"; ?>
+
+/* STYLE KHUSUS UNTUK GAMBAR */
+.card-image {
+    position: relative;
+    width: 100%;
+    height: 200px;
+    overflow: hidden;
+    border-radius: 8px 8px 0 0;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.card-image:hover img {
+    transform: scale(1.05);
+}
+
+.placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    text-align: center;
+}
+
+.placeholder i {
+    font-size: 48px;
+    margin-bottom: 15px;
+    opacity: 0.9;
+}
+
+.placeholder p {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0;
+    line-height: 1.4;
+}
+
+.image-overlay {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 2;
+}
+
+.image-badge {
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+/* TOMBOL DOWNLOAD */
+.download-btn {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.download-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.download-btn.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .card-image {
+        height: 180px;
+    }
+    
+    .document-card {
+        flex-direction: column;
+    }
+}
+
+/* Debug info */
+.debug-info {
+    font-size: 11px;
+    border-left: 3px solid #dc3545;
+}
+
+/* Download Status */
+.download-status {
+    font-size: 11px;
+    margin-top: 5px;
+}
+.download-status.available {
+    color: #28a745;
+}
+.download-status.unavailable {
+    color: #dc3545;
+}
+</style>
+
+<!-- ===============================
+     HEADER SECTION
+================================ -->
+<section class="page-header">
+    <div class="container">
+        <h1 class="text-white">KEPUTUSAN DPRD</h1>
+        <p class="subtitle">Keputusan Dewan Perwakilan Rakyat Daerah Kota Surakarta</p>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="index.php">Beranda</a></li>
+                <li class="breadcrumb-item"><a href="?page=perundangan">Perundang-Undangan</a></li>
+                <li class="breadcrumb-item active">Keputusan DPRD</li>
+            </ol>
+        </nav>
+    </div>
+</section>
+
+<!-- ===============================
+     MAIN CONTENT
+================================ -->
+<section class="main-content">
+<div class="container">
+<div class="row">
+
+<!-- ===== KONTEN UTAMA ===== -->
+<div class="col-lg-8">
+
+<!-- SEARCH BAR -->
+<div class="search-box" style="margin-bottom: 30px;">
+    <form method="GET" action="?" class="d-flex gap-2">
+        <input type="hidden" name="page" value="keputusan-dprd">
+        <div class="flex-grow-1">
+            <input type="text" 
+                   name="search" 
+                   class="form-control form-control-lg" 
+                   placeholder="Cari berdasarkan nomor, judul, atau deskripsi..." 
+                   value="<?= htmlspecialchars($search_query) ?>"
+                   style="border: 2px solid #80d0c7; border-radius: 25px; padding: 12px 20px;">
+        </div>
+        <button type="submit" class="btn btn-primary btn-lg" style="border-radius: 25px; padding: 12px 30px;">
+            <i class="bi bi-search"></i> Cari
+        </button>
+        <?php if (!empty($search_query)): ?>
+            <a href="?page=keputusan-dprd" class="btn btn-secondary btn-lg" style="border-radius: 25px; padding: 12px 30px;">
+                <i class="bi bi-x"></i> Reset
+            </a>
+        <?php endif; ?>
+    </form>
+</div>
+
+<!-- HASIL SEARCH -->
+<?php if (!empty($search_query)): ?>
+    <?php if (!empty($search_results)): ?>
+        <h3 class="section-title">Hasil Pencarian: "<?= htmlspecialchars($search_query) ?>" (<?= count($search_results) ?> dokumen)</h3>
+        <div class="card-container">
+            <?php 
+            foreach ($search_results as $item): 
+                $tanggal = date('d F Y', strtotime($item['tanggal_penetapan']));
+                $encrypted_id = encode_id($item['idData']);
+                
+                // ============================================
+                // CARI FILE PDF
+                // ============================================
+                $file_found = false;
+                $actual_file_path = null;
+                $download_url = '#';
+                
+                $file_path_db = findDocumentFile($item);
+                
+                if (!empty($file_path_db)) {
+                    $file_name_only = basename($file_path_db);
+                    $file_info = findFileOnServer($file_name_only);
+                    
+                    if ($file_info) {
+                        $file_found = true;
+                        $actual_file_path = $file_info['path'];
+                        $download_url = generateFileUrl($actual_file_path);
+                        $download_url .= '?t=' . time();
+                    }
+                }
+                
+                // ============================================
+                // CARI GAMBAR
+                // ============================================
+                $image_url = '';
+                $image_found = false;
+                
+                if (!empty($item['image_path']) && file_exists($item['image_path'])) {
+                    $image_url = $item['image_path'];
+                    $image_found = true;
+                } elseif (!empty($item['image_name'])) {
+                    $possible_paths = [
+                        $base_upload_path . 'images/' . $item['image_name'],
+                        $base_upload_path . $item['image_name'],
+                        $_SERVER['DOCUMENT_ROOT'] . $web_image_path . $item['image_name'],
+                        'uploads/images/' . $item['image_name'],
+                        'uploads/' . $item['image_name'],
+                        'C:/xampp8/htdocs/jdihcilacap_pasang_2026/jdihcilacap_pasang_2026/panel_control/uploads/images/' . $item['image_name'],
+                    ];
+                    
+                    foreach ($possible_paths as $path) {
+                        if (file_exists($path)) {
+                            if (strpos($path, $_SERVER['DOCUMENT_ROOT']) === 0) {
+                                $image_url = str_replace($_SERVER['DOCUMENT_ROOT'], '', $path);
+                            } else {
+                                $image_url = str_replace('C:/xampp8/htdocs', '', $path);
+                            }
+                            $image_found = true;
+                            break;
+                        }
+                    }
+                }
+                
+                if (!empty($image_url) && !preg_match('/^https?:\/\//', $image_url)) {
+                    if (strpos($image_url, '/') !== 0) {
+                        $image_url = '/' . $image_url;
+                    }
+                }
+            ?>
+            <div class="document-card" data-id="<?= $item['idData']; ?>">
+                <div class="card-image">
+                    <?php if ($image_found && !empty($image_url)): ?>
+                        <img src="<?= htmlspecialchars($image_url) ?>" 
+                             alt="<?= htmlspecialchars($item['judul']) ?>"
+                             loading="lazy"
+                             onerror="this.onerror=null; this.style.display='none'; this.parentElement.querySelector('.placeholder').style.display='flex';">
+                        <div class="placeholder" style="display: none;">
+                            <i class="bi bi-file-earmark-medical"></i>
+                            <p><?= htmlspecialchars($item['singkatanJenis']) ?><br>
+                            <small><?= htmlspecialchars($item['noPeraturan']) ?></small></p>
+                        </div>
+                    <?php else: ?>
+                        <div class="placeholder">
+                            <i class="bi bi-file-earmark-medical"></i>
+                            <p><?= htmlspecialchars($item['singkatanJenis']) ?><br>
+                            <small><?= htmlspecialchars($item['noPeraturan']) ?></small></p>
+                        </div>
+                    <?php endif; ?>
+                    <div class="image-overlay">
+                        <span class="image-badge"><?= htmlspecialchars($item['singkatanJenis']) ?></span>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="card-number"><?= htmlspecialchars($item['noPeraturan']) ?></div>
+                    <h3 class="card-title"><?= htmlspecialchars($item['judul']) ?></h3>
+                    <div class="card-meta">
+                        <div class="card-date">
+                            <i class="bi bi-calendar"></i> <?= date('d F Y', strtotime($item['tanggal_penetapan'])); ?>
+                        </div>
+                        <?php if (!empty($item['status'])): ?>
+                            <div class="card-status"><?= htmlspecialchars($item['status']) ?></div>
+                        <?php endif; ?>
+                    </div>
+                    <div class="download-status <?= $file_found ? 'available' : 'unavailable' ?>">
+                        <i class="bi bi-<?= $file_found ? 'check-circle' : 'x-circle' ?>"></i>
+                        <?= $file_found ? 'File PDF tersedia' : 'File PDF tidak tersedia' ?>
+                    </div>
+                    <div class="card-actions" style="margin-top: 15px;">
+                        <a href="?page=detail-keputusan&token=<?= urlencode($encrypted_id); ?>" class="card-btn btn-view">
+                            <i class="bi bi-eye"></i> Lihat Detail
+                        </a>
+                        <?php if ($file_found): ?>
+                            <a href="<?= htmlspecialchars($download_url); ?>" 
+                               class="card-btn btn-download download-btn" 
+                               data-id="<?= $item['idData']; ?>"
+                               data-token="<?= $encrypted_id ?>"
+                               data-filename="<?= basename($actual_file_path) ?>"
+                               download>
+                                <i class="bi bi-download"></i> Download PDF
+                            </a>
+                        <?php else: ?>
+                            <a href="#" 
+                               class="card-btn btn-download disabled" 
+                               onclick="event.preventDefault(); showFileNotFoundAlert('<?= htmlspecialchars($item['noPeraturan']) ?>');"
+                               title="File PDF tidak tersedia">
+                                <i class="bi bi-download"></i> Download PDF
+                            </a>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+            <?php endforeach; ?>
+        </div>
+    <?php else: ?>
+        <div class="alert alert-warning" role="alert">
+            <i class="bi bi-info-circle"></i> Tidak ada dokumen yang sesuai dengan pencarian "<strong><?= htmlspecialchars($search_query) ?></strong>".
+        </div>
+    <?php endif; ?>
+<?php endif; // End search results section ?>
+
+<?php if (empty($search_query)): // Tampilkan filter dan daftar normal jika tidak ada search ?>
+
+<!-- FILTER TAHUN -->
+<div class="year-filter">
+    <h5><i class="bi bi-calendar"></i> Filter Berdasarkan Tahun</h5>
+    <div class="year-buttons">
+        <button class="year-btn active" data-year="semua">Semua</button>
+        <?php foreach ($years as $year): ?>
+            <button class="year-btn" data-year="<?= $year ?>"><?= $year ?></button>
+        <?php endforeach; ?>
+    </div>
+</div>
+
+<h3 class="section-title">Daftar Keputusan DPRD Kota Surakarta</h3>
+
+<?php if (mysqli_num_rows($result) > 0): ?>
+<div class="card-container">
+<?php while ($row = mysqli_fetch_assoc($result)):
+
+    $tanggal = date('d F Y', strtotime($row['tanggal_penetapan']));
+    
+    // ============================================
+    // GENERATE TOKEN ID YANG DIENKRIPSI
+    // ============================================
+    $encrypted_id = encode_id($row['idData']);
+    
+    // ============================================
+    // CARI FILE PDF
+    // ============================================
+    $file_found = false;
+    $actual_file_path = null;
+    $download_url = '#';
+    $file_name_display = '';
+    
+    // Cari file menggunakan fungsi yang sama dengan detail page
+    $file_path_db = findDocumentFile($row);
+    
+    if (!empty($file_path_db)) {
+        $file_name_only = basename($file_path_db);
+        $file_info = findFileOnServer($file_name_only);
+        
+        if ($file_info) {
+            $file_found = true;
+            $actual_file_path = $file_info['path'];
+            $file_name_display = basename($actual_file_path);
+            
+            // Gunakan fungsi generateFileUrl untuk konversi path yang benar
+            $download_url = generateFileUrl($actual_file_path);
+            // Tambahkan timestamp untuk cache busting
+            $download_url .= '?t=' . time();
+        }
+    }
+    
+    // ============================================
+    // CARI GAMBAR
+    // ============================================
+    $image_url = '';
+    $image_found = false;
+    
+    // 1. Pertama, cek dari kolom image_path di database
+    if (!empty($row['image_path']) && file_exists($row['image_path'])) {
+        $image_url = $row['image_path'];
+        $image_found = true;
+    }
+    // 2. Jika tidak, coba dari image_name + base path
+    elseif (!empty($row['image_name'])) {
+        $possible_paths = [
+            $base_upload_path . 'images/' . $row['image_name'],
+            $base_upload_path . $row['image_name'],
+            $_SERVER['DOCUMENT_ROOT'] . $web_image_path . $row['image_name'],
+            'uploads/images/' . $row['image_name'],
+            'uploads/' . $row['image_name'],
+            // Dengan struktur folder baru
+            'C:/xampp8/htdocs/jdihcilacap_pasang_2026/jdihcilacap_pasang_2026/panel_control/uploads/images/' . $row['image_name'],
+        ];
+        
+        foreach ($possible_paths as $path) {
+            if (file_exists($path)) {
+                // Konversi ke URL yang tepat
+                if (strpos($path, $_SERVER['DOCUMENT_ROOT']) === 0) {
+                    $image_url = str_replace($_SERVER['DOCUMENT_ROOT'], '', $path);
+                } else {
+                    $image_url = str_replace('C:/xampp8/htdocs', '', $path);
+                }
+                $image_found = true;
+                break;
+            }
+        }
+        
+        if (!$image_found) {
+            $web_test_path = $web_image_path . $row['image_name'];
+            $full_test_path = $_SERVER['DOCUMENT_ROOT'] . $web_test_path;
+            if (file_exists($full_test_path)) {
+                $image_url = $web_test_path;
+                $image_found = true;
+            }
+        }
+    }
+    // 3. Jika masih tidak ada, coba cari berdasarkan ID
+    if (!$image_found) {
+        $image_extensions = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+        foreach ($image_extensions as $ext) {
+            $test_filename = $row['idData'] . '.' . $ext;
+            $test_path = $base_upload_path . 'images/' . $test_filename;
+            
+            if (file_exists($test_path)) {
+                $image_url = $web_image_path . $test_filename;
+                $image_found = true;
+                break;
+            }
+        }
+    }
+    
+    if (!empty($image_url) && !preg_match('/^https?:\/\//', $image_url)) {
+        if (strpos($image_url, '/') !== 0) {
+            $image_url = '/' . $image_url;
+        }
+    }
+    
+    // Gunakan ID terenkripsi untuk halaman detail
+    $detail = "index.php?page=detail-keputusan&token=" . urlencode($encrypted_id);
+?>
+
+<div class="document-card" data-tahun="<?= $row['tahun_pengundangan']; ?>" data-id="<?= $row['idData']; ?>">
+    <div class="card-image">
+        <?php if ($image_found && !empty($image_url)): ?>
+            <img src="<?= htmlspecialchars($image_url) ?>" 
+                 alt="<?= htmlspecialchars($row['judul']) ?>"
+                 loading="lazy"
+                 onerror="this.onerror=null; this.style.display='none'; this.parentElement.querySelector('.placeholder').style.display='flex';">
+            <div class="placeholder" style="display: none;">
+                <i class="bi bi-file-earmark-medical"></i>
+                <p><?= htmlspecialchars($row['singkatanJenis']) ?><br>
+                <small><?= htmlspecialchars($row['noPeraturan']) ?></small></p>
+            </div>
+        <?php else: ?>
+            <div class="placeholder">
+                <i class="bi bi-file-earmark-medical"></i>
+                <p><?= htmlspecialchars($row['singkatanJenis']) ?><br>
+                <small><?= htmlspecialchars($row['noPeraturan']) ?></small></p>
+            </div>
+        <?php endif; ?>
+        <div class="image-overlay">
+            <span class="image-badge"><?= htmlspecialchars($row['singkatanJenis']) ?></span>
+        </div>
+    </div>
+
+    <div class="card-content">
+        <div class="card-number"><?= htmlspecialchars($row['noPeraturan']) ?></div>
+        <h3 class="card-title"><?= htmlspecialchars($row['judul']) ?></h3>
+
+        <div class="card-meta">
+            <div class="card-date">
+                <i class="bi bi-calendar"></i> <?= $tanggal ?>
+            </div>
+            <?php if (!empty($row['status'])): ?>
+                <div class="card-status"><?= htmlspecialchars($row['status']) ?></div>
+            <?php endif; ?>
+        </div>
+
+        <div class="download-status <?= $file_found ? 'available' : 'unavailable' ?>">
+            <i class="bi bi-<?= $file_found ? 'check-circle' : 'x-circle' ?>"></i>
+            <?= $file_found ? 'File PDF tersedia' : 'File PDF tidak tersedia' ?>
+        </div>
+
+        <div class="card-actions">
+            <a href="<?= $detail ?>" class="card-btn btn-view">
+                <i class="bi bi-eye"></i> Lihat Detail
+            </a>
+            
+            <!-- TOMBOL DOWNLOAD YANG MENGGUNAKAN TOKEN -->
+            <?php if ($file_found): ?>
+                <a href="<?= htmlspecialchars($download_url) ?>" 
+                   class="card-btn btn-download download-btn" 
+                   data-id="<?= $row['idData']; ?>"
+                   data-token="<?= $encrypted_id ?>"
+                   data-filename="<?= basename($actual_file_path) ?>"
+                   download>
+                    <i class="bi bi-download"></i> Download PDF
+                </a>
+            <?php else: ?>
+                <a href="#" 
+                   class="card-btn btn-download disabled" 
+                   onclick="event.preventDefault(); showFileNotFoundAlert('<?= htmlspecialchars($row['noPeraturan']) ?>');"
+                   title="File PDF tidak tersedia">
+                    <i class="bi bi-download"></i> Download PDF
+                </a>
+            <?php endif; ?>
+        </div>
+        
+        <?php if (isset($_GET['debug'])): ?>
+        <div class="debug-info mt-2 p-2 bg-light rounded">
+            <small class="text-muted">
+                <strong>Debug Info:</strong><br>
+                ID: <?= $row['idData'] ?><br>
+                Image Name: <?= htmlspecialchars($row['image_name']) ?><br>
+                Image Path DB: <?= htmlspecialchars($row['image_path']) ?><br>
+                Image Found: <?= $image_found ? 'Ya' : 'Tidak' ?><br>
+                Image URL: <?= htmlspecialchars($image_url) ?><br>
+                Base Path: <?= htmlspecialchars($base_upload_path) ?><br>
+                Web Image Path: <?= htmlspecialchars($web_image_path) ?><br>
+                Encrypted ID: <?= $encrypted_id ?><br>
+                File from DB: <?= htmlspecialchars($file_from_db) ?><br>
+                File Found: <?= $file_found ? 'Ya' : 'Tidak' ?><br>
+                Actual Path: <?= htmlspecialchars($actual_file_path) ?><br>
+                Download URL: <?= htmlspecialchars($download_url) ?><br>
+                Server Root: <?= $_SERVER['DOCUMENT_ROOT'] ?>
+            </small>
+        </div>
+        <?php endif; ?>
+    </div>
+</div>
+
+<?php endwhile; ?>
+</div>
+<?php else: ?>
+<div class="no-data">
+    <i class="bi bi-files"></i>
+    <h4>Tidak Ada Data</h4>
+    <p class="text-muted mb-0">
+        Tidak ada keputusan DPRD yang tersedia.
+    </p>
+</div>
+<?php endif; // End mysqli_num_rows check
+endif; // End empty search_query check
+?>
+</div>
+
+<!-- ===== SIDEBAR ===== -->
+<div class="col-lg-4">
+
+<!-- MENU PERUNDANGAN -->
+<div class="sidebar-menu">
+<h4><i class="bi bi-list"></i> Legislation Menu</h4>
+<ul>
+<li><a href="?page=perundangan"><i class="bi bi-grid"></i> Semua Kategori</a></li>
+<li><a href="?page=keputusan-sekretariat"><i class="bi bi-file-earmark-text"></i> Keputusan Sekretaris</a></li>
+<li><a href="?page=keputusan-pimpinan"><i class="bi bi-file-earmark-ruled"></i> Keputusan Pimpinan</a></li>
+<li class="active"><a href="#"><i class="bi bi-translate"></i> Keputusan DPRD</a></li>
+<li><a href="?page=peraturan-dprd"><i class="bi bi-journal-text"></i> Peraturan DPRD</a></li>
+<li><a href="?page=perda"><i class="bi bi-journal-bookmark"></i> Peraturan Daerah</a></li>
+<li><a href="?page=english-legal"><i class="bi bi-file-earmark-medical"></i> English Legal Product</a></li>
+</ul>
+</div>
+
+
+<div class="sidebar-menu">
+<h4><i class="bi bi-bar-chart"></i> Statistik</h4>
+<ul>
+<li>Total: <strong><?= $total_dokumen ?> dokumen</strong></li>
+<?php while ($stat = mysqli_fetch_assoc($year_stats_result)): ?>
+<li><?= $stat['tahun_pengundangan'] ?> : <strong><?= $stat['jumlah'] ?></strong> dokumen</li>
+<?php endwhile; ?>
+</ul>
+</div>
+
+<div class="sidebar-menu">
+<h4><i class="bi bi-fire"></i> Dokumen Terbaru</h4>
+<ul>
+<?php while ($pop = mysqli_fetch_assoc($popular_result)): 
+    $pop_encrypted_id = encode_id($pop['idData']);
+?>
+<li>
+<a href="index.php?page=detail-keputusan&token=<?= urlencode($pop_encrypted_id) ?>">
+<i class="bi bi-file-text"></i> <?= htmlspecialchars($pop['noPeraturan']) ?>
+</a>
+<small class="text-muted d-block"><?= htmlspecialchars($pop['judul']) ?></small>
+<small class="text-muted"><?= date('d M Y', strtotime($pop['tanggal_penetapan'])) ?></small>
+</li>
+<?php endwhile; ?>
+</ul>
+</div>
+
+</div>
+</div>
+</div>
+</section>
+
+<?php include "footer.php"; ?>
+
+<script>
+// ============================================
+// FILTER BERDASARKAN TAHUN
+// ============================================
+document.querySelectorAll(".year-btn").forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll(".year-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        const selectedYear = btn.dataset.year;
+        
+        document.querySelectorAll(".document-card").forEach(card => {
+            if (selectedYear === "semua" || card.dataset.tahun === selectedYear) {
+                card.style.display = "flex";
+            } else {
+                card.style.display = "none";
+            }
+        });
+    });
+});
+
+// ============================================
+// FUNGSI UNTUK NOTIFIKASI
+// ============================================
+function showFileNotFoundAlert(noPeraturan) {
+    // Gunakan SweetAlert jika ada, atau alert biasa
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            icon: 'warning',
+            title: 'File Tidak Tersedia',
+            html: `File PDF untuk dokumen <strong>${noPeraturan}</strong> tidak ditemukan di server.`,
+            confirmButtonText: 'Mengerti'
+        });
+    } else {
+        alert(`File PDF untuk dokumen ${noPeraturan} tidak ditemukan di server.`);
+    }
+}
+
+function showDownloadStarted(filename) {
+    // Gunakan SweetAlert jika ada, atau alert biasa
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            icon: 'info',
+            title: 'Download Dimulai',
+            html: `File <strong>${filename}</strong> sedang didownload...`,
+            timer: 2000,
+            showConfirmButton: false
+        });
+    } else {
+        console.log(`Download started: ${filename}`);
+    }
+}
+
+// ============================================
+// HANDLING DOWNLOAD BUTTON
+// ============================================
+document.addEventListener('DOMContentLoaded', function() {
+    // Untuk tombol download yang aktif
+    const downloadButtons = document.querySelectorAll('.download-btn:not(.disabled)');
+    
+    downloadButtons.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            const id = this.getAttribute('data-id');
+            const token = this.getAttribute('data-token');
+            const filename = this.getAttribute('data-filename');
+            
+            // Tampilkan notifikasi
+            showDownloadStarted(filename);
+            
+            // Optional: Log ke console untuk debugging
+            console.log('Download clicked:', {
+                id: id,
+                token: token,
+                filename: filename,
+                href: this.href
+            });
+        });
+    });
+    
+    // Untuk tombol download yang disabled
+    const disabledButtons = document.querySelectorAll('.btn-download.disabled');
+    disabledButtons.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const card = this.closest('.document-card');
+            const noPeraturan = card.querySelector('.card-number').textContent;
+            showFileNotFoundAlert(noPeraturan);
+        });
+    });
+    
+    // ============================================
+    // ERROR HANDLING UNTUK GAMBAR
+    // ============================================
+    const images = document.querySelectorAll('.card-image img');
+    
+    images.forEach(img => {
+        // Cek jika gambar sudah error
+        if (img.complete && img.naturalHeight === 0) {
+            const placeholder = img.parentElement.querySelector('.placeholder');
+            if (placeholder) {
+                img.style.display = 'none';
+                placeholder.style.display = 'flex';
+            }
+        }
+        
+        // Event listener untuk error gambar
+        img.addEventListener('error', function() {
+            this.style.display = 'none';
+            const placeholder = this.parentElement.querySelector('.placeholder');
+            if (placeholder) {
+                placeholder.style.display = 'flex';
+            }
+        });
+    });
+});
+</script>
+
+<?php 
+// ============================================
+// DEBUG INFO TAMBAHAN
+// ============================================
+if (isset($_GET['debug'])) {
+    echo "<!-- ========== DEBUG INFO ========== -->\n";
+    echo "<!-- PHP Version: " . PHP_VERSION . " -->\n";
+    echo "<!-- Script: " . $_SERVER['PHP_SELF'] . " -->\n";
+    echo "<!-- Document Root: " . $_SERVER['DOCUMENT_ROOT'] . " -->\n";
+    echo "<!-- PDF Base Path: " . $pdf_base_path . " -->\n";
+    
+    // Cek apakah folder PDF ada dan bisa diakses
+    if (is_dir($pdf_base_path)) {
+        echo "<!-- PDF folder exists -->\n";
+    } else {
+        echo "<!-- WARNING: PDF folder NOT found -->\n";
+    }
+    
+    echo "<!-- ========== END DEBUG INFO ========== -->\n";
+}
+
+mysqli_close($koneksi); 
+?>

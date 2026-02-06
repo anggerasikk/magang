@@ -1,211 +1,172 @@
 <?php
-/**
- * DETAIL YURISPRUDENSI
- * File: detail-yurisprudensi.php
- * Fungsi: Menampilkan detail lengkap putusan yurisprudensi
- * Desain: Mirip dengan detail_keputusan.php
- */
+// detail-yurisprudensi.php - VERSION FIXED WITH ENCRYPTED TOKEN
 
+// ============================================
+// KEAMANAN: ERROR HANDLING
+// ============================================
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+ini_set('log_errors', 1);
+ini_set('error_log', __DIR__ . '/logs/php_errors.log');
+
+// ============================================
+// KEAMANAN: SESSION START
+// ============================================
 session_start();
 
 // ============================================
-// KONEKSI DATABASE
+// KEAMANAN: INCLUDE REQUIRED FILES
 // ============================================
-$host = "localhost";
-$username = "root";
-$password = "";
-$database = "jdihdprd";
+// Database
+include_once "a_db.php";
 
-$koneksi = mysqli_connect($host, $username, $password, $database);
-
-if (!$koneksi) {
-    die("Koneksi database gagal: " . mysqli_connect_error());
-}
-
-mysqli_set_charset($koneksi, "utf8");
-
-// ============================================
-// VALIDASI ID
-// ============================================
-$id = isset($_GET['id']) ? intval($_GET['id']) : 0;
-if ($id <= 0) {
-    header("Location: yurisprudensi.php");
-    exit;
-}
-
-// ============================================
-// FUNGSI BANTU
-// ============================================
-function tgl($tgl) {
-    if (empty($tgl) || $tgl == '0000-00-00') return '-';
-    
-    $bulan = array(
-        'January' => 'Januari',
-        'February' => 'Februari',
-        'March' => 'Maret',
-        'April' => 'April',
-        'May' => 'Mei',
-        'June' => 'Juni',
-        'July' => 'Juli',
-        'August' => 'Agustus',
-        'September' => 'September',
-        'October' => 'Oktober',
-        'November' => 'November',
-        'December' => 'Desember'
-    );
-    
-    $english_date = date('d F Y', strtotime($tgl));
-    return str_replace(array_keys($bulan), array_values($bulan), $english_date);
-}
-
-function findDocumentFile($data) {
-    $file_fields = ['lampiran_path', 'fileDownload', 'file_path', 'fileUpload', 'file_name', 'pdf_path'];
-    
-    foreach ($file_fields as $field) {
-        if (!empty($data[$field]) && trim($data[$field]) !== '') {
-            $path = trim($data[$field]);
-            $path = preg_replace('/\?.*$/', '', $path);
-            return $path;
+// Functions - SAMA dengan yang ada di yurisprudensi.php
+if (!function_exists('decode_yurisprudensi_token')) {
+    function decode_yurisprudensi_token($token) {
+        if (empty($token)) return 0;
+        
+        // Decode URL encoding dulu
+        $token = urldecode($token);
+        
+        // Decode base64
+        $decoded = base64_decode($token);
+        
+        if (!$decoded) {
+            return 0;
         }
+        
+        // Format: 'jdih_yuri_<id>_<timestamp>'
+        $parts = explode('_', $decoded);
+        
+        if (count($parts) >= 4 && $parts[0] === 'jdih' && $parts[1] === 'yuri') {
+            $id = (int)$parts[2];
+            return $id > 0 ? $id : 0;
+        }
+        
+        return 0;
     }
-    return null;
 }
 
-function findFileOnServer($filename) {
-    $root = $_SERVER['DOCUMENT_ROOT'];
-    $current_dir = __DIR__;
-    $base_dir = dirname(__DIR__);
+// ============================================
+// GET & VALIDATE TOKEN/ID - HANYA TOKEN SAJA
+// ============================================
+$id = 0;
+$debug_mode = isset($_GET['debug']);
+
+// HANYA TERIMA TOKEN, TIDAK TERIMA ID LANGSUNG
+if (isset($_GET['token']) && !empty($_GET['token'])) {
+    $token = $_GET['token'];
     
-    $filename = basename($filename);
-    $clean_filename = preg_replace('/(\.pdf)+$/i', '.pdf', $filename);
-    
-    $filename_variations = [$filename, $clean_filename];
-    
-    $no_spaces = str_replace([' ', '(', ')', '[', ']'], ['_', '', '', '', ''], $clean_filename);
-    if ($no_spaces !== $clean_filename) {
-        $filename_variations[] = $no_spaces;
+    if ($debug_mode) {
+        error_log("Token received: " . $token);
+        echo "<!-- DEBUG: Token received: $token -->\n";
     }
     
-    $possible_locations = [];
+    $id = decode_yurisprudensi_token($token);
     
-    $base_dirs = [
-        $root,
-        $base_dir,
-        $current_dir,
-        'C:/xampp/htdocs',
-        'C:/xampp/htdocs/jdihcilacap_pasang',
-        '/var/www/html'
-    ];
+    if ($debug_mode) {
+        error_log("Decoded ID from token: " . $id);
+        echo "<!-- DEBUG: Decoded ID: $id -->\n";
+    }
     
-    $sub_dirs = [
-        '/uploads/yurisprudensi/pdf',
-        '/uploads/yurisprudensi',
-        '/uploads/pdf',
-        '/uploads',
-        '/wb_admin/uploads/yurisprudensi/pdf',
-        '/wb_admin/uploads/yurisprudensi',
-        '/wb_admin/uploads/pdf',
-        '/wb_admin/uploads',
-        '/admin/uploads/yurisprudensi/pdf',
-        '/admin/uploads/yurisprudensi',
-        '/admin/uploads/pdf',
-        '/admin/uploads',
-        '/jdih/uploads/yurisprudensi/pdf',
-        '/jdih/uploads/yurisprudensi',
-        '/jdih/uploads/pdf',
-        '/jdih/uploads'
-    ];
-    
-    foreach ($base_dirs as $base) {
-        foreach ($sub_dirs as $sub) {
-            foreach ($filename_variations as $variation) {
-                $possible_locations[] = $base . $sub . '/' . $variation;
-                
-                if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-                    $possible_locations[] = str_replace('/', '\\', $base . $sub . '\\' . $variation);
+    // Jika decode gagal, coba langsung decode base64
+    if ($id <= 0) {
+        $decoded = base64_decode(urldecode($token));
+        if ($debug_mode) {
+            error_log("Direct decode: " . $decoded);
+        }
+        
+        if ($decoded && strpos($decoded, 'jdih_yuri_') === 0) {
+            $parts = explode('_', $decoded);
+            if (isset($parts[2]) && is_numeric($parts[2])) {
+                $id = (int)$parts[2];
+                if ($debug_mode) {
+                    error_log("Extracted ID from decoded string: " . $id);
                 }
             }
         }
     }
+}
+
+// Validasi ID
+if ($id <= 0) {
+    if ($debug_mode) {
+        echo "<!-- ERROR: Invalid token -->\n";
+        echo "<script>alert('Token tidak valid atau sudah kadaluarsa');</script>";
+    }
     
-    $special_locations = [
-        'C:/xampp/htdocs/jdihcilacap_pasang/uploads/yurisprudensi/pdf/' . $filename,
-        'C:/xampp/htdocs/jdihcilacap_pasang/uploads/yurisprudensi/' . $filename,
-        'C:/xampp/htdocs/uploads/yurisprudensi/pdf/' . $filename,
-        'C:/xampp/htdocs/uploads/yurisprudensi/' . $filename,
-        'C:/xampp/htdocs/jdihcilacap_pasang/uploads/pdf/' . $filename,
-        'C:/xampp/htdocs/jdihcilacap_pasang/uploads/' . $filename,
+    // Redirect ke halaman yurisprudensi dengan error message
+    header("Location: yurisprudensi.php?error=invalid_token");
+    exit;
+}
+
+// ============================================
+// FUNGSI BANTU UNTUK FILE
+// ============================================
+function findYurisprudensiPDF($filename, $id = null) {
+    $document_root = str_replace('\\', '/', $_SERVER['DOCUMENT_ROOT']);
+    $base_path = $document_root . "/jdihcilacap_pasang_2026/panel_control/uploads/yurisprudensi/";
+    
+    // Fallback paths
+    if (!is_dir($base_path)) {
+        $possible_paths = [
+            $document_root . "/panel_control/uploads/yurisprudensi/",
+            $document_root . "/uploads/yurisprudensi/",
+            dirname(__DIR__) . "/panel_control/uploads/yurisprudensi/",
+            "C:/xampp/htdocs/jdihcilacap_pasang_2026/panel_control/uploads/yurisprudensi/",
+            "C:/laragon/www/jdihcilacap_pasang_2026/panel_control/uploads/yurisprudensi/",
+            "C:/xampp/htdocs/jdihcilacap_pasang/wb_admin/uploads/yurisprudensi/"
+        ];
         
-        '/var/www/html/jdihcilacap_pasang/uploads/yurisprudensi/pdf/' . $filename,
-        '/var/www/html/jdihcilacap_pasang/uploads/yurisprudensi/' . $filename,
-        '/var/www/html/uploads/yurisprudensi/pdf/' . $filename,
-        '/var/www/html/uploads/yurisprudensi/' . $filename,
-        '/var/www/html/jdihcilacap_pasang/uploads/pdf/' . $filename,
-        '/var/www/html/jdihcilacap_pasang/uploads/' . $filename,
-        
-        $current_dir . '/uploads/yurisprudensi/pdf/' . $filename,
-        $current_dir . '/uploads/yurisprudensi/' . $filename,
-        $current_dir . '/uploads/pdf/' . $filename,
-        $current_dir . '/uploads/' . $filename,
-        $current_dir . '/../uploads/yurisprudensi/pdf/' . $filename,
-        $current_dir . '/../uploads/yurisprudensi/' . $filename,
-        $current_dir . '/../uploads/pdf/' . $filename,
-        $current_dir . '/../uploads/' . $filename,
-    ];
-    
-    $possible_locations = array_merge($possible_locations, $special_locations);
-    $possible_locations = array_unique($possible_locations);
-    
-    foreach ($possible_locations as $location) {
-        if (file_exists($location) && is_file($location) && is_readable($location)) {
-            $finfo = finfo_open(FILEINFO_MIME_TYPE);
-            $mime_type = finfo_file($finfo, $location);
-            finfo_close($finfo);
-            
-            if (stripos($mime_type, 'pdf') !== false || stripos($mime_type, 'application/pdf') !== false) {
-                return [
-                    'path' => $location,
-                    'size' => filesize($location),
-                    'time' => filemtime($location),
-                    'mime' => $mime_type
-                ];
+        foreach ($possible_paths as $path) {
+            if (is_dir($path)) {
+                $base_path = $path;
+                break;
             }
         }
     }
     
-    return findSimilarFile($filename, 'yurisprudensi');
-}
-
-function findSimilarFile($filename, $type = 'yurisprudensi') {
-    $root = $_SERVER['DOCUMENT_ROOT'];
-    $search_dirs = [
-        $root . '/uploads/' . $type,
-        $root . '/uploads/' . $type . '/pdf',
-        $root . '/wb_admin/uploads/' . $type,
-        'C:/xampp/htdocs/jdihcilacap_pasang/uploads/' . $type,
-        'C:/xampp/htdocs/jdihcilacap_pasang/uploads/' . $type . '/pdf'
-    ];
+    $debug_mode = isset($GLOBALS['debug_mode']) && $GLOBALS['debug_mode'];
     
-    $clean_search = preg_replace('/[^a-z0-9]/i', '', strtolower($filename));
+    if ($debug_mode) {
+        error_log("Searching PDF for filename: $filename, ID: $id");
+        error_log("Base path: $base_path");
+    }
     
-    foreach ($search_dirs as $dir) {
-        if (!is_dir($dir)) continue;
+    // Cari berdasarkan filename dari database
+    if (!empty($filename)) {
+        $clean_name = basename($filename);
+        $test_path = $base_path . $clean_name;
         
-        $files = scandir($dir);
-        foreach ($files as $file) {
-            if ($file === '.' || $file === '..') continue;
+        if ($debug_mode) error_log("Testing path: $test_path");
+        
+        if (file_exists($test_path) && is_file($test_path) && is_readable($test_path)) {
+            $mime = mime_content_type($test_path);
+            if (stripos($mime, 'pdf') !== false) {
+                return $test_path;
+            }
+        }
+    }
+    
+    // Cari berdasarkan ID
+    if ($id) {
+        $patterns = [
+            $id . '.pdf',
+            $id . '.PDF',
+            'yurisprudensi_' . $id . '.pdf',
+            'YURISPRUDENSI_' . $id . '.pdf',
+            'putusan_' . $id . '.pdf',
+            'PUTUSAN_' . $id . '.pdf',
+        ];
+        
+        foreach ($patterns as $pattern) {
+            $test_path = $base_path . $pattern;
+            if ($debug_mode) error_log("Testing ID path: $test_path");
             
-            $clean_file = preg_replace('/[^a-z0-9]/i', '', strtolower($file));
-            
-            if ($clean_search === $clean_file) {
-                $full_path = $dir . '/' . $file;
-                if (is_readable($full_path)) {
-                    return [
-                        'path' => $full_path,
-                        'size' => filesize($full_path),
-                        'time' => filemtime($full_path),
-                        'mime' => mime_content_type($full_path)
-                    ];
+            if (file_exists($test_path) && is_file($test_path) && is_readable($test_path)) {
+                $mime = mime_content_type($test_path);
+                if (stripos($mime, 'pdf') !== false) {
+                    return $test_path;
                 }
             }
         }
@@ -226,61 +187,67 @@ function formatFileSize($bytes) {
     }
 }
 
-function generateFileUrl($file_path) {
-    $root = $_SERVER['DOCUMENT_ROOT'];
-    $root = str_replace('\\', '/', $root);
-    $file_path = str_replace('\\', '/', $file_path);
+function path_to_url($physical_path) {
+    $doc_root = str_replace('\\', '/', $_SERVER['DOCUMENT_ROOT']);
+    $physical_path = str_replace('\\', '/', $physical_path);
     
-    if (strpos($file_path, $root) === 0) {
-        $url_path = substr($file_path, strlen($root));
+    if (strpos($physical_path, $doc_root) === 0) {
+        $url_path = substr($physical_path, strlen($doc_root));
+        if (strpos($url_path, '/') !== 0) {
+            $url_path = '/' . $url_path;
+        }
         return $url_path;
     }
     
-    if (strpos($file_path, 'C:/xampp/htdocs') === 0) {
-        $url_path = substr($file_path, strlen('C:/xampp/htdocs'));
-        return $url_path;
+    return $physical_path;
+}
+
+function safe_date_format($date_string) {
+    // Check for null, empty, or invalid date formats
+    if (empty($date_string) || $date_string === null || $date_string === '0000-00-00 00:00:00' || $date_string === '0000-00-00') {
+        return '-';
     }
-    
-    if (strpos($file_path, '/var/www/html') === 0) {
-        $url_path = substr($file_path, strlen('/var/www/html'));
-        return $url_path;
+
+    // Try to parse the date
+    $timestamp = strtotime($date_string);
+
+    // Check if strtotime failed (returns false for invalid dates)
+    if ($timestamp === false) {
+        return '-';
     }
-    
-    return $file_path;
+
+    // Format the date
+    return date('d/m/Y H:i', $timestamp);
+}
+
+function tgl($tgl) {
+    if (empty($tgl) || $tgl == '0000-00-00' || $tgl === null) return '-';
+
+    $bulan = array(
+        'January' => 'Januari',
+        'February' => 'Februari',
+        'March' => 'Maret',
+        'April' => 'April',
+        'May' => 'Mei',
+        'June' => 'Juni',
+        'July' => 'Juli',
+        'August' => 'Agustus',
+        'September' => 'September',
+        'October' => 'Oktober',
+        'November' => 'November',
+        'December' => 'Desember'
+    );
+
+    $english_date = date('d F Y', strtotime((string)$tgl));
+    return str_replace(array_keys($bulan), array_values($bulan), $english_date);
 }
 
 // ============================================
-// AMBIL DATA YURISPRUDENSI
+// QUERY DATABASE
 // ============================================
-$query = "SELECT 
-            id_yurisprudensi,
-            tipe_dokumen,
-            judul,
-            slug,
-            teu_badan,
-            nomor_putusan,
-            jenis_peradilan,
-            singkatan_jenis_peradilan,
-            tempat_peradilan,
-            tanggal_dibacakan,
-            sumber,
-            subjek,
-            status_putusan,
-            bahasa,
-            bidang_hukum_jenis_perkara,
-            lokasi,
-            cover_path,
-            lampiran_path,
-            tahun_putusan,
-            kata_kunci,
-            deskripsi,
-            created_at,
-            updated_at
-          FROM yurisprudensi 
-          WHERE id_yurisprudensi = ? 
-          LIMIT 1";
-
+$query = "SELECT * FROM yurisprudensi WHERE id_yurisprudensi = ? LIMIT 1";
 $stmt = mysqli_prepare($koneksi, $query);
+
 if (!$stmt) {
     die("Error: Gagal menyiapkan query database");
 }
@@ -290,7 +257,13 @@ mysqli_stmt_execute($stmt);
 $result = mysqli_stmt_get_result($stmt);
 
 if (!$result || mysqli_num_rows($result) === 0) {
-    header("Location: yurisprudensi.php");
+    mysqli_stmt_close($stmt);
+    
+    if ($debug_mode) {
+        echo "<!-- ERROR: No yurisprudensi found with ID: $id -->\n";
+    }
+    
+    header("Location: yurisprudensi.php?error=doc_not_found");
     exit;
 }
 
@@ -298,115 +271,129 @@ $data = mysqli_fetch_assoc($result);
 mysqli_stmt_close($stmt);
 
 // ============================================
-// PROSES PENCARIAN FILE
+// CEK FILE PDF
 // ============================================
-$debug_mode = isset($_GET['debug']);
-$file_found = false;
-$file_info = null;
-$file_url = '';
-$file_size_formatted = '0 MB';
-$file_name_display = '';
-
-$file_path_db = findDocumentFile($data);
-
-if (!empty($file_path_db)) {
-    $file_name_only = basename($file_path_db);
-    $file_info = findFileOnServer($file_name_only);
-    
-    if ($file_info) {
-        $file_found = true;
-        $actual_file_path = $file_info['path'];
-        $file_size_formatted = formatFileSize($file_info['size']);
-        $file_name_display = basename($actual_file_path);
-        
-        $file_url = generateFileUrl($actual_file_path);
-        $file_url .= '?t=' . time();
-    }
-}
+$pdf_file = $data['lampiran_path'] ?? '';
+$actual_pdf_path = findYurisprudensiPDF($pdf_file, $data['id_yurisprudensi']);
+$pdf_found = ($actual_pdf_path && file_exists($actual_pdf_path));
+$pdf_url = $pdf_found ? path_to_url($actual_pdf_path) . '?t=' . time() : '';
+$file_size = $pdf_found ? formatFileSize(filesize($actual_pdf_path)) : '0 MB';
 
 // ============================================
-// SET PAGE HEADER
+// TAMPILKAN HALAMAN
 // ============================================
-$page_title = $data['judul'] . " - Yurisprudensi JDIH DPRD Kota Surakarta";
+$page_title = htmlspecialchars($data['judul']) . " - Yurisprudensi JDIH DPRD";
 include "header.php";
 ?>
 
-<!-- ============================================
-     STYLE KHUSUS (Disesuaikan dengan detail_keputusan)
-============================================ -->
+<!-- STYLE UPDATE UNTUK SERAGAM -->
 <style>
-/* Style mengikuti detail_keputusan.php */
-.table-detail td {
-    padding: 8px 12px;
-    vertical-align: top;
+/* Style utama dari detail-keputusan */
+.card-header.fw-bold {
+    background-color: #f8f9fa !important;
+    color: #495057 !important;
+    border-bottom: 1px solid #dee2e6 !important;
+    font-size: 1.1rem !important;
 }
 
-.table-detail tr:nth-child(even) {
-    background-color: #f8f9fa;
-}
-
-.badge-status {
-    font-size: 0.85em;
-    padding: 5px 10px;
-}
-
-.file-icon-large {
-    font-size: 4rem;
-    color: #dc3545;
-}
-
-.btn-download-custom {
-    padding: 10px 20px;
+.table-bordered td:first-child {
     font-weight: 600;
+    background-color: #f8f9fa;
+    width: 30%;
 }
 
-.preview-modal iframe {
+.badge {
+    font-size: 0.85em;
+    padding: 0.4em 0.8em;
+}
+
+.btn-group .btn {
+    padding: 0.375rem 0.75rem;
+}
+
+.file-icon-large i {
+    font-size: 4rem;
+}
+
+.pdf-preview {
     width: 100%;
     height: 600px;
     border: none;
+    background: #525659;
 }
 
-.sidebar-card {
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
-    overflow: hidden;
-    margin-bottom: 20px;
+.modal-xl {
+    max-width: 1200px;
 }
 
-.sidebar-card .card-header {
-    padding: 12px 15px;
-    font-weight: 600;
+/* Style khusus untuk yurisprudensi */
+.keyword-badge {
+    display: inline-block;
+    background: #e9ecef;
+    color: #495057;
+    padding: 4px 10px;
+    border-radius: 20px;
+    margin-right: 5px;
+    margin-bottom: 5px;
+    font-size: 12px;
 }
 
-.sidebar-card .card-body {
-    padding: 15px;
+.abstract-content {
+    line-height: 1.8;
+    font-size: 16px;
 }
 
-.list-group-item {
-    border-left: none;
-    border-right: none;
-    padding: 10px 0;
+/* Shadow untuk card seperti di detail-keputusan */
+.shadow-sm {
+    box-shadow: 0 .125rem .25rem rgba(0,0,0,.075)!important;
 }
 
-.list-group-item:first-child {
-    border-top: none;
+/* Warna konsisten */
+.bg-primary {
+    background-color: #0d6efd !important;
 }
 
-.list-group-item:last-child {
-    border-bottom: none;
+.bg-success {
+    background-color: #198754 !important;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-    .file-icon-large {
-        font-size: 3rem;
-        margin-bottom: 10px;
-    }
-    
-    .btn-download-custom {
-        width: 100%;
-        margin-bottom: 10px;
-    }
+.bg-info {
+    background-color: #0dcaf0 !important;
+}
+
+.bg-danger {
+    background-color: #dc3545 !important;
+}
+
+.bg-warning {
+    background-color: #ffc107 !important;
+}
+
+/* Button styles konsisten */
+.btn-success {
+    background-color: #198754;
+    border-color: #198754;
+}
+
+.btn-primary {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.btn-info {
+    background-color: #0dcaf0;
+    border-color: #0dcaf0;
+    color: #000;
+}
+
+.btn-outline-primary {
+    color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.btn-outline-secondary {
+    color: #6c757d;
+    border-color: #6c757d;
 }
 </style>
 
@@ -422,66 +409,87 @@ include "header.php";
 
     <!-- BACK BUTTON -->
     <a href="yurisprudensi.php" class="btn btn-light mb-3">
-        <i class="fas fa-arrow-left"></i> Kembali ke Daftar Yurisprudensi
+        <i class="fas fa-arrow-left"></i> Kembali ke Yurisprudensi
     </a>
 
-    <!-- DEBUG INFO -->
     <?php if($debug_mode): ?>
     <div class="alert alert-info mb-4">
         <h5><i class="fas fa-bug"></i> Debug Information</h5>
         <div class="row">
             <div class="col-md-6">
                 <table class="table table-sm table-bordered">
-                    <tr><th>Database Path</th><td><code><?= htmlspecialchars($file_path_db ?? 'NULL') ?></code></td></tr>
-                    <tr><th>Filename</th><td><code><?= htmlspecialchars($file_name_only ?? 'N/A') ?></code></td></tr>
-                    <tr><th>File Found</th><td><?= $file_found ? '<span class="badge bg-success">YES</span>' : '<span class="badge bg-danger">NO</span>' ?></td></tr>
+                    <tr><th>ID Putusan</th><td><?= $id ?></td></tr>
+                    <tr><th>Token</th><td><?= htmlspecialchars($_GET['token'] ?? 'N/A') ?></td></tr>
+                    <tr><th>PDF Found</th><td><?= $pdf_found ? '<span class="badge bg-success">YES</span>' : '<span class="badge bg-danger">NO</span>' ?></td></tr>
                 </table>
             </div>
             <div class="col-md-6">
                 <table class="table table-sm table-bordered">
                     <tr><th>Document Root</th><td><code><?= $_SERVER['DOCUMENT_ROOT'] ?></code></td></tr>
                     <tr><th>Current Dir</th><td><code><?= __DIR__ ?></code></td></tr>
-                    <tr><th>Putusan ID</th><td><?= $id ?></td></tr>
                 </table>
             </div>
         </div>
-        <?php if($file_found): ?>
+        <?php if($pdf_found): ?>
         <table class="table table-sm table-bordered mt-2">
-            <tr><th>Actual Path</th><td><code><?= htmlspecialchars($file_info['path']) ?></code></td></tr>
-            <tr><th>File URL</th><td><code><?= htmlspecialchars($file_url) ?></code></td></tr>
-            <tr><th>File Size</th><td><?= $file_size_formatted ?></td></tr>
-            <tr><th>MIME Type</th><td><?= $file_info['mime'] ?></td></tr>
+            <tr><th>Actual Path</th><td><code><?= htmlspecialchars($actual_pdf_path) ?></code></td></tr>
+            <tr><th>File URL</th><td><code><?= htmlspecialchars($pdf_url) ?></code></td></tr>
+            <tr><th>File Size</th><td><?= $file_size ?></td></tr>
         </table>
         <?php endif; ?>
     </div>
     <?php endif; ?>
 
     <div class="row">
-        <!-- KONTEN UTAMA -->
         <div class="col-lg-9">
-            <!-- HEADER PUTUSAN -->
+            <!-- HEADER -->
             <div class="card mb-4">
                 <div class="card-header bg-primary text-white">
                     <h4 class="mb-0">
-                        <i class="fas fa-gavel"></i> 
+                        <i class="fas fa-file-alt"></i> 
                         <?= htmlspecialchars($data['judul']) ?>
                     </h4>
                 </div>
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-8">
-                            <h5 class="text-primary"><?= htmlspecialchars($data['nomor_putusan']) ?></h5>
-                            <p class="text-muted mb-0">
-                                <i class="fas fa-calendar"></i> 
-                                Tanggal Dibacakan: <?= tgl($data['tanggal_dibacakan']) ?>
-                            </p>
-                            <p class="text-muted mb-0">
-                                <i class="fas fa-balance-scale"></i> 
-                                Jenis Peradilan: <?= htmlspecialchars($data['jenis_peradilan']) ?>
-                            </p>
+                            <h5 class="text-primary mb-3">Informasi Putusan</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong><i class="fas fa-hashtag"></i> Nomor Putusan:</strong><br>
+                                    <?= htmlspecialchars($data['nomor_putusan'] ?? '-') ?></p>
+                                    
+                                    <p><strong><i class="fas fa-building"></i> Tempat Peradilan:</strong><br>
+                                    <?= htmlspecialchars($data['tempat_peradilan'] ?? '-') ?></p>
+                                    
+                                    <p><strong><i class="fas fa-calendar"></i> Tanggal Dibacakan:</strong><br>
+                                    <?= tgl($data['tanggal_dibacakan']) ?></p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong><i class="fas fa-scale-balanced"></i> Jenis Peradilan:</strong><br>
+                                    <?= htmlspecialchars($data['jenis_peradilan'] ?? '-') ?></p>
+                                    
+                                    <p><strong><i class="fas fa-tag"></i> Status Putusan:</strong><br>
+                                    <?= htmlspecialchars($data['status_putusan'] ?? '-') ?></p>
+                                    
+                                    <p><strong><i class="fas fa-gavel"></i> Bidang Hukum:</strong><br>
+                                    <?= htmlspecialchars($data['bidang_hukum_jenis_perkara'] ?? '-') ?></p>
+                                </div>
+                            </div>
+                            
+                            <?php if(!empty($data['kata_kunci'])): ?>
+                            <div class="mt-3">
+                                <strong><i class="fas fa-tags"></i> Kata Kunci:</strong><br>
+                                <?php 
+                                $keywords = explode(',', $data['kata_kunci']);
+                                foreach ($keywords as $keyword): ?>
+                                    <span class="keyword-badge"><?= htmlspecialchars(trim($keyword)) ?></span>
+                                <?php endforeach; ?>
+                            </div>
+                            <?php endif; ?>
                         </div>
                         <div class="col-md-4 text-end">
-                            <?php if($file_found): ?>
+                            <?php if($pdf_found): ?>
                             <span class="badge bg-success fs-6 p-2">
                                 <i class="fas fa-check-circle"></i> File Tersedia
                             </span>
@@ -495,153 +503,119 @@ include "header.php";
                 </div>
             </div>
 
-            <!-- ============================================
-                 METADATA PUTUSAN
-            ============================================ -->
-            <div class="card mb-4">
-                <div class="card-header fw-bold">METADATA PUTUSAN</div>
-                <div class="card-body p-0">
-                    <table class="table table-bordered table-detail mb-0">
-                        <tr>
-                            <td width="35%"><strong>Jenis Peradilan</strong></td>
-                            <td><?= htmlspecialchars($data['jenis_peradilan']) ?></td>
-                        </tr>
-                        <tr>
-                            <td><strong>Singkatan Jenis Peradilan</strong></td>
-                            <td><?= htmlspecialchars($data['singkatan_jenis_peradilan']) ?></td>
-                        </tr>
-                        <tr>
-                            <td><strong>Tempat Peradilan</strong></td>
-                            <td><?= htmlspecialchars($data['tempat_peradilan']) ?></td>
-                        </tr>
-                        <tr>
-                            <td><strong>Nomor Putusan</strong></td>
-                            <td><?= htmlspecialchars($data['nomor_putusan']) ?></td>
-                        </tr>
-                        <tr>
-                            <td><strong>Tanggal Dibacakan</strong></td>
-                            <td><?= tgl($data['tanggal_dibacakan']) ?></td>
-                        </tr>
-                        <tr>
-                            <td><strong>Tahun Putusan</strong></td>
-                            <td><?= htmlspecialchars($data['tahun_putusan']) ?></td>
-                        </tr>
-                        <tr>
-                            <td><strong>Bidang Hukum/Jenis Perkara</strong></td>
-                            <td><?= htmlspecialchars($data['bidang_hukum_jenis_perkara']) ?></td>
-                        </tr>
-                        <tr>
-                            <td><strong>Subjek</strong></td>
-                            <td><?= htmlspecialchars($data['subjek']) ?></td>
-                        </tr>
-                        <tr>
-                            <td><strong>Status Putusan</strong></td>
-                            <td>
-                                <?php 
-                                $status = $data['status_putusan'] ?? '-';
-                                $badge_class = 'bg-secondary';
-                                if (stripos($status, 'Tetap') !== false) $badge_class = 'bg-success';
-                                elseif (stripos($status, 'Kasasi') !== false) $badge_class = 'bg-warning';
-                                elseif (stripos($status, 'Peninjauan') !== false) $badge_class = 'bg-info';
-                                elseif (stripos($status, 'Provisionil') !== false || stripos($status, 'Sementara') !== false) $badge_class = 'bg-danger';
-                                ?>
-                                <span class="badge <?= $badge_class ?> badge-status"><?= $status ?></span>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td><strong>Bahasa</strong></td>
-                            <td><?= htmlspecialchars($data['bahasa']) ?></td>
-                        </tr>
-                        <tr>
-                            <td><strong>TEU Badan</strong></td>
-                            <td><?= htmlspecialchars($data['teu_badan']) ?></td>
-                        </tr>
-                        <tr>
-                            <td><strong>Lokasi</strong></td>
-                            <td><?= htmlspecialchars($data['lokasi']) ?></td>
-                        </tr>
-                        <tr>
-                            <td><strong>Sumber</strong></td>
-                            <td><?= htmlspecialchars($data['sumber']) ?: '-' ?></td>
-                        </tr>
-                        <tr>
-                            <td><strong>Tipe Dokumen</strong></td>
-                            <td><?= htmlspecialchars($data['tipe_dokumen']) ?></td>
-                        </tr>
-                        <?php if(!empty($data['kata_kunci'])): ?>
-                        <tr>
-                            <td><strong>Kata Kunci</strong></td>
-                            <td>
-                                <?php 
-                                $keywords = explode(',', $data['kata_kunci']);
-                                foreach($keywords as $keyword): 
-                                    $keyword = trim($keyword);
-                                    if(!empty($keyword)):
-                                ?>
-                                <span class="badge bg-light text-dark me-1 mb-1"><?= htmlspecialchars($keyword) ?></span>
-                                <?php endif; endforeach; ?>
-                            </td>
-                        </tr>
-                        <?php endif; ?>
-                    </table>
-                </div>
-            </div>
-
-            <!-- ============================================
-                 DESKRIPSI PUTUSAN
-            ============================================ -->
+            <!-- DESKRIPSI -->
             <?php if(!empty($data['deskripsi'])): ?>
             <div class="card mb-4">
-                <div class="card-header fw-bold">DESKRIPSI PUTUSAN</div>
+                <div class="card-header fw-bold">
+                    <i class="fas fa-file-text"></i> DESKRIPSI PUTUSAN
+                </div>
                 <div class="card-body">
-                    <?= nl2br(htmlspecialchars($data['deskripsi'])) ?>
+                    <div class="abstract-content">
+                        <?= nl2br(htmlspecialchars($data['deskripsi'])) ?>
+                    </div>
                 </div>
             </div>
             <?php endif; ?>
 
-            <!-- ============================================
+            <!-- ======================
+                 METADATA DETAIL
+            ====================== -->
+            <div class="card mb-4">
+                <div class="card-header fw-bold">METADATA DETAIL</div>
+                <div class="card-body p-0">
+                    <table class="table table-bordered mb-0">
+                        <tr>
+                            <td width="30%">ID Putusan</td>
+                            <td><?= htmlspecialchars($data['id_yurisprudensi']) ?></td>
+                        </tr>
+                        <tr>
+                            <td>Tipe Dokumen</td>
+                            <td><?= htmlspecialchars($data['tipe_dokumen'] ?? '-') ?></td>
+                        </tr>
+                        <tr>
+                            <td>Singkatan Jenis Peradilan</td>
+                            <td><?= htmlspecialchars($data['singkatan_jenis_peradilan'] ?? '-') ?></td>
+                        </tr>
+                        <tr>
+                            <td>Sumber</td>
+                            <td><?= htmlspecialchars($data['sumber'] ?? '-') ?></td>
+                        </tr>
+                        <tr>
+                            <td>Subjek</td>
+                            <td><?= htmlspecialchars($data['subjek'] ?? '-') ?></td>
+                        </tr>
+                        <tr>
+                            <td>Bahasa</td>
+                            <td><?= htmlspecialchars($data['bahasa'] ?? '-') ?></td>
+                        </tr>
+                        <tr>
+                            <td>Tahun Putusan</td>
+                            <td><?= htmlspecialchars($data['tahun_putusan'] ?? '-') ?></td>
+                        </tr>
+                        <tr>
+                            <td>TEU Badan</td>
+                            <td><?= htmlspecialchars($data['teu_badan'] ?? '-') ?></td>
+                        </tr>
+                        <tr>
+                            <td>Lokasi</td>
+                            <td><?= htmlspecialchars($data['lokasi'] ?? '-') ?></td>
+                        </tr>
+                        <tr>
+                            <td>Dibuat Pada</td>
+                            <td><?= safe_date_format($data['created_at']) ?></td>
+                        </tr>
+                        <tr>
+                            <td>Diupdate Pada</td>
+                            <td><?= safe_date_format($data['updated_at']) ?></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ======================
                  DOKUMEN DIGITAL
-            ============================================ -->
+            ====================== -->
             <div class="card mb-4">
                 <div class="card-header fw-bold">
                     <i class="fas fa-file-pdf"></i> DOKUMEN DIGITAL
                 </div>
                 <div class="card-body">
-                    <?php if($file_found): ?>
+                    <?php if($pdf_found): ?>
                     <div class="row align-items-center">
                         <div class="col-md-2 text-center">
                             <div class="file-icon-large">
-                                <i class="fas fa-file-pdf text-danger"></i>
+                                <i class="fas fa-file-pdf text-danger" style="font-size: 4rem;"></i>
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <h6><?= htmlspecialchars($file_name_display) ?></h6>
+                            <h6><?= htmlspecialchars(basename($actual_pdf_path)) ?></h6>
                             <p class="text-muted mb-1">
-                                <i class="fas fa-hdd"></i> Ukuran: <?= $file_size_formatted ?>
+                                <i class="fas fa-hdd"></i> Ukuran: <?= $file_size ?>
                             </p>
                             <p class="text-muted mb-0">
                                 <i class="fas fa-calendar"></i> 
-                                Diupdate: <?= date('d/m/Y H:i', $file_info['time']) ?>
+                                Diupdate: <?= date('d/m/Y H:i', filemtime($actual_pdf_path)) ?>
                             </p>
                         </div>
                         <div class="col-md-4">
                             <div class="d-grid gap-2">
-                                <!-- Tombol Download -->
-                                <a href="<?= htmlspecialchars($file_url) ?>" 
+                                <!-- Tombol Download dengan atribut download -->
+                                <a href="<?= htmlspecialchars($pdf_url) ?>" 
                                    target="_blank" 
-                                   download="<?= htmlspecialchars($file_name_display) ?>" 
-                                   class="btn btn-success btn-lg btn-download-custom">
+                                   download="<?= htmlspecialchars(basename($actual_pdf_path)) ?>" 
+                                   class="btn btn-success btn-lg">
                                     <i class="fas fa-download"></i> Download File
                                 </a>
                                 <div class="btn-group" role="group">
-                                    <a href="<?= htmlspecialchars($file_url) ?>" 
-                                       target="_blank" 
+                                    <a href="<?= htmlspecialchars($pdf_url) ?>" 
+                                       target="_blank"
                                        class="btn btn-outline-primary">
                                         <i class="fas fa-external-link-alt"></i> Buka
                                     </a>
                                     <button type="button" 
                                             class="btn btn-outline-info" 
-                                            onclick="showPreview()">
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#previewModal">
                                         <i class="fas fa-search"></i> Pratinjau
                                     </button>
                                 </div>
@@ -656,17 +630,17 @@ include "header.php";
                             </div>
                             <div class="flex-grow-1 ms-3">
                                 <h5 class="alert-heading">File Tidak Ditemukan!</h5>
-                                <p class="mb-2">Dokumen PDF tidak tersedia di server.</p>
+                                <p class="mb-2">Dokumen PDF tidak tersedia untuk putusan ini.</p>
                                 <hr>
                                 <div class="mb-3">
                                     <strong>Informasi Debug:</strong><br>
                                     <small class="text-muted">
-                                        Path database: <code><?= htmlspecialchars($file_path_db ?? 'NULL') ?></code><br>
-                                        Nama file: <code><?= htmlspecialchars($file_name_only ?? 'N/A') ?></code>
+                                        Nama file database: <code><?= htmlspecialchars($pdf_file) ?></code><br>
+                                        ID Putusan: <code><?= $data['id_yurisprudensi'] ?></code>
                                     </small>
                                 </div>
                                 <div class="d-flex gap-2">
-                                    <a href="?id=<?= $id ?>&debug=1" class="btn btn-warning btn-sm">
+                                    <a href="?token=<?= urlencode($_GET['token'] ?? '') ?>&debug=1" class="btn btn-warning btn-sm">
                                         <i class="fas fa-bug"></i> Debug Mode
                                     </a>
                                 </div>
@@ -676,33 +650,34 @@ include "header.php";
                     <?php endif; ?>
                 </div>
             </div>
-
         </div>
 
-        <!-- ============================================
-             SIDEBAR
-        ============================================ -->
+        <!-- SIDEBAR -->
         <div class="col-lg-3">
             <!-- QUICK ACTIONS -->
-            <div class="card sidebar-card mb-3 shadow-sm">
+            <div class="card mb-3 shadow-sm">
                 <div class="card-header bg-primary text-white">
                     <h6 class="mb-0"><i class="fas fa-bolt"></i> Quick Actions</h6>
                 </div>
                 <div class="card-body">
                     <div class="d-grid gap-2">
-                        <?php if($file_found): ?>
-                        <a href="<?= htmlspecialchars($file_url) ?>" 
+                        <?php if($pdf_found): ?>
+                        <!-- Tombol Download di sidebar -->
+                        <a href="<?= htmlspecialchars($pdf_url) ?>" 
                            target="_blank" 
-                           download="<?= htmlspecialchars($file_name_display) ?>" 
+                           download="<?= htmlspecialchars(basename($actual_pdf_path)) ?>" 
                            class="btn btn-success">
                             <i class="fas fa-download"></i> Download PDF
                         </a>
-                        <a href="<?= htmlspecialchars($file_url) ?>" 
-                           target="_blank" 
+                        <a href="<?= htmlspecialchars($pdf_url) ?>" 
+                           target="_blank"
                            class="btn btn-primary">
                             <i class="fas fa-external-link-alt"></i> Buka di Tab Baru
                         </a>
-                        <button onclick="showPreview()" class="btn btn-info">
+                        <button type="button" 
+                                class="btn btn-info" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#previewModal">
                             <i class="fas fa-search-plus"></i> Pratinjau
                         </button>
                         <?php else: ?>
@@ -713,18 +688,13 @@ include "header.php";
                         <a href="yurisprudensi.php" class="btn btn-outline-secondary">
                             <i class="fas fa-list"></i> Lihat Semua
                         </a>
-                        <?php if(isset($_SESSION['user_id'])): ?>
-                        <a href="admin/edit-yurisprudensi.php?id=<?= $id ?>" class="btn btn-outline-warning">
-                            <i class="fas fa-edit"></i> Edit Putusan
-                        </a>
-                        <?php endif; ?>
                     </div>
                 </div>
             </div>
 
             <!-- FILE INFO -->
-            <?php if($file_found): ?>
-            <div class="card sidebar-card mb-3 shadow-sm">
+            <?php if($pdf_found): ?>
+            <div class="card mb-3 shadow-sm">
                 <div class="card-header bg-info text-white">
                     <h6 class="mb-0"><i class="fas fa-file-alt"></i> Informasi File</h6>
                 </div>
@@ -732,15 +702,15 @@ include "header.php";
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <span><i class="fas fa-file"></i> Nama File</span>
-                            <span class="badge bg-light text-dark"><?= htmlspecialchars($file_name_display) ?></span>
+                            <span class="badge bg-light text-dark"><?= htmlspecialchars(basename($actual_pdf_path)) ?></span>
                         </li>
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <span><i class="fas fa-weight-hanging"></i> Ukuran</span>
-                            <span class="badge bg-primary"><?= $file_size_formatted ?></span>
+                            <span class="badge bg-primary"><?= $file_size ?></span>
                         </li>
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <span><i class="fas fa-calendar"></i> Diupdate</span>
-                            <span class="badge bg-light text-dark"><?= date('d/m/Y', $file_info['time']) ?></span>
+                            <span class="badge bg-light text-dark"><?= date('d/m/Y', filemtime($actual_pdf_path)) ?></span>
                         </li>
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <span><i class="fas fa-file-pdf"></i> Format</span>
@@ -751,72 +721,31 @@ include "header.php";
             </div>
             <?php endif; ?>
 
-            <!-- INFORMASI PERADILAN -->
-            <div class="card sidebar-card mb-3 shadow-sm">
-                <div class="card-header bg-secondary text-white">
-                    <h6 class="mb-0"><i class="fas fa-balance-scale"></i> Informasi Peradilan</h6>
+            <!-- INFO PERADILAN -->
+            <div class="card mb-3 shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0"><i class="fas fa-scale-balanced"></i> Info Peradilan</h6>
                 </div>
                 <div class="card-body">
-                    <div class="text-center mb-3">
-                        <div class="mb-2">
-                            <i class="fas fa-building fa-2x text-primary"></i>
-                        </div>
-                        <h5 class="mb-1"><?= htmlspecialchars($data['tempat_peradilan']) ?></h5>
-                        <p class="text-muted mb-2"><?= htmlspecialchars($data['jenis_peradilan']) ?></p>
-                    </div>
-                    <div class="small">
-                        <p class="mb-1">
-                            <i class="fas fa-hashtag me-2"></i>
-                            <strong>Singkatan:</strong> <?= htmlspecialchars($data['singkatan_jenis_peradilan']) ?>
-                        </p>
-                        <p class="mb-1">
-                            <i class="fas fa-book me-2"></i>
-                            <strong>Bidang:</strong> <?= htmlspecialchars($data['bidang_hukum_jenis_perkara']) ?>
-                        </p>
-                        <p class="mb-0">
-                            <i class="fas fa-calendar-alt me-2"></i>
-                            <strong>Tahun:</strong> <?= htmlspecialchars($data['tahun_putusan']) ?>
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- STATUS PUTUSAN -->
-            <div class="card sidebar-card mb-3 shadow-sm">
-                <div class="card-header bg-warning text-dark">
-                    <h6 class="mb-0"><i class="fas fa-info-circle"></i> Status Putusan</h6>
-                </div>
-                <div class="card-body">
-                    <div class="text-center">
-                        <?php
-                        $status_icon = 'check-circle';
-                        $status_color = 'success';
-                        $status_text = 'Tetap';
-                        if (stripos($data['status_putusan'], 'Kasasi') !== false) {
-                            $status_icon = 'arrow-repeat';
-                            $status_color = 'warning';
-                            $status_text = 'Kasasi';
-                        } elseif (stripos($data['status_putusan'], 'Peninjauan') !== false) {
-                            $status_icon = 'search';
-                            $status_color = 'info';
-                            $status_text = 'Peninjauan';
-                        } elseif (stripos($data['status_putusan'], 'Provisionil') !== false || stripos($data['status_putusan'], 'Sementara') !== false) {
-                            $status_icon = 'clock-history';
-                            $status_color = 'danger';
-                            $status_text = 'Sementara';
-                        }
-                        ?>
-                        <div class="mb-3">
-                            <i class="fas fa-<?= $status_icon ?> fa-3x text-<?= $status_color ?>"></i>
-                        </div>
-                        <h5 class="text-<?= $status_color ?>"><?= htmlspecialchars($data['status_putusan']) ?></h5>
-                        <p class="text-muted small mb-0">Status hukum putusan ini adalah <?= $status_text ?></p>
-                    </div>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>ID</span>
+                            <span class="badge bg-dark"><?= htmlspecialchars($data['id_yurisprudensi']) ?></span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>Tahun</span>
+                            <span class="badge bg-warning"><?= htmlspecialchars($data['tahun_putusan']) ?></span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>Status</span>
+                            <span class="badge bg-info"><?= htmlspecialchars($data['status_putusan'] ?? '-') ?></span>
+                        </li>
+                    </ul>
                 </div>
             </div>
 
             <!-- HELP CARD -->
-            <div class="card sidebar-card shadow-sm">
+            <div class="card shadow-sm">
                 <div class="card-header bg-light">
                     <h6 class="mb-0"><i class="fas fa-question-circle"></i> Bantuan</h6>
                 </div>
@@ -837,14 +766,11 @@ include "header.php";
                     </p>
                 </div>
             </div>
-
         </div>
     </div>
 
-    <!-- ============================================
-         PREVIEW MODAL
-    ============================================ -->
-    <?php if($file_found): ?>
+    <!-- PREVIEW MODAL -->
+    <?php if($pdf_found): ?>
     <div class="modal fade" id="previewModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content">
@@ -855,25 +781,27 @@ include "header.php";
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body p-0 preview-modal" style="background: #525659;">
+                <div class="modal-body p-0" style="background: #525659;">
                     <iframe 
                         id="pdfViewer"
-                        src="<?= htmlspecialchars($file_url) ?>#view=FitH&toolbar=1&navpanes=0" 
+                        src="<?= htmlspecialchars($pdf_url) ?>#view=FitH&toolbar=1&navpanes=0" 
                         width="100%" 
                         height="600"
-                        frameborder="0">
+                        frameborder="0"
+                        style="border: none;">
                     </iframe>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                         <i class="fas fa-times"></i> Tutup
                     </button>
-                    <a href="<?= htmlspecialchars($file_url) ?>" target="_blank" class="btn btn-primary">
+                    <a href="<?= htmlspecialchars($pdf_url) ?>" target="_blank" class="btn btn-primary">
                         <i class="fas fa-expand"></i> Buka Fullscreen
                     </a>
-                    <a href="<?= htmlspecialchars($file_url) ?>" 
+                    <!-- Tombol Download di modal -->
+                    <a href="<?= htmlspecialchars($pdf_url) ?>" 
                        target="_blank" 
-                       download="<?= htmlspecialchars($file_name_display) ?>" 
+                       download="<?= htmlspecialchars(basename($actual_pdf_path)) ?>" 
                        class="btn btn-success">
                         <i class="fas fa-download"></i> Download
                     </a>
@@ -882,51 +810,21 @@ include "header.php";
         </div>
     </div>
     <?php endif; ?>
-
 </div>
 
-<!-- ============================================
-     SCRIPTS
-============================================ -->
-<?php if($file_found): ?>
+<?php if($pdf_found): ?>
 <script>
-function showPreview() {
-    var modal = new bootstrap.Modal(document.getElementById('previewModal'));
-    modal.show();
-}
-
+// Refresh iframe saat modal dibuka
 document.getElementById('previewModal')?.addEventListener('shown.bs.modal', function () {
     var iframe = document.getElementById('pdfViewer');
     if (iframe) {
         iframe.src = iframe.src;
     }
 });
-
-// Keyboard shortcuts
-document.addEventListener('keydown', function(e) {
-    // Ctrl/Cmd + P untuk print
-    if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
-        e.preventDefault();
-        window.print();
-    }
-    // Ctrl/Cmd + D untuk download
-    if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
-        e.preventDefault();
-        const downloadBtn = document.querySelector('.btn-download-custom');
-        if(downloadBtn) downloadBtn.click();
-    }
-});
 </script>
 <?php endif; ?>
 
 <?php
-// ============================================
-// FOOTER
-// ============================================
 include "footer.php";
-
-// ============================================
-// CLOSE DATABASE CONNECTION
-// ============================================
 mysqli_close($koneksi);
 ?>

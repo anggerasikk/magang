@@ -1031,119 +1031,50 @@ include('header.php');
                 <div class="sidebar-menu">
                     <h4><i class="bi bi-link-45deg"></i> Menu Terkait</h4>
                     <ul>
-                        <li>
-                            <a href="struktur-organisasi.php">
+                        <li class="<?= (strpos($_SERVER['PHP_SELF'], 'Profil-JDIH') !== false) ? 'active' : '' ?>">
+                            <a href="?page=profil-jdih">
+                                <i class="bi bi-building"></i>
+                                Profil JDIH
+                            </a>
+                        </li>
+                        <li class="<?= (strpos($_SERVER['PHP_SELF'], 'struktur-organisasi') !== false) ? 'active' : '' ?>">
+                            <a href="?page=struktur-organisasi">
                                 <i class="bi bi-diagram-3"></i>
                                 Struktur Organisasi
                             </a>
                         </li>
-                        <li>
-                            <a href="alur-pengelolaan.php">
+                        <li class="<?= (strpos($_SERVER['PHP_SELF'], 'alur-pengelolaan') !== false) ? 'active' : '' ?>">
+                            <a href="?page=alur-pengelolaan">
                                 <i class="bi bi-diagram-2"></i>
                                 Alur Pengelolaan
                             </a>
                         </li>
-                        <li>
-                            <a href="sop-pengelola.php">
+                        <li class="<?= (strpos($_SERVER['PHP_SELF'], 'sop-pengelola') !== false) ? 'active' : '' ?>">
+                            <a href="?page=sop-pengelola">
                                 <i class="bi bi-clipboard-check"></i>
-                                SOP Pengelola JDIH
+                                SOP Pengelola
                             </a>
                         </li>
-                        <li>
-                            <a href="dasar-hukum.php">
+                        <li class="<?= (strpos($_SERVER['PHP_SELF'], 'dasar-hukum') !== false) ? 'active' : '' ?>">
+                            <a href="?page=dasar-hukum">
                                 <i class="bi bi-journal-text"></i>
-                                Dasar Hukum JDIH
+                                Dasar Hukum
                             </a>
                         </li>
-                        <li>
-                            <a href="visi-misi.php">
-                                <i class="bi bi-bullseye"></i>
-                                Visi & Misi
+                        <li class="<?= (strpos($_SERVER['PHP_SELF'], 'surat-keputusan') !== false) ? 'active' : '' ?>">
+                            <a href="?page=surat-keputusan">
+                                <i class="bi bi-file-earmark-pdf"></i>
+                                Surat Keputusan
+                            </a>
+                        </li>
+                        <li class="<?= (strpos($_SERVER['PHP_SELF'], 'video-profile') !== false) ? 'active' : '' ?>">
+                            <a href="?page=video-profile">
+                                <i class="bi bi-play-circle"></i>
+                                Video Profile
                             </a>
                         </li>
                     </ul>
                 </div>
-
-                <!-- CONTACT INFO -->
-                <div class="contact-info">
-                    <h4><i class="bi bi-telephone"></i> Kontak Informasi</h4>
-                    
-                    <div class="contact-detail">
-                        <h5><i class="bi bi-geo-alt"></i> Alamat</h5>
-                        <p>
-                            Sekretariat DPRD Kota Surakarta<br>
-                            Jl. Jenderal Sudirman No. 2<br>
-                            Kecamatan Pasar Kliwon<br>
-                            Kota Surakarta, Jawa Tengah 57111
-                        </p>
-                    </div>
-                    
-                    <div class="contact-detail">
-                        <h5><i class="bi bi-telephone"></i> Telepon</h5>
-                        <p>
-                            <a href="tel:+62271723456">(0271) 723456</a><br>
-                            Ext. 123 (JDIH)
-                        </p>
-                    </div>
-                    
-                    <div class="contact-detail">
-                        <h5><i class="bi bi-envelope"></i> Email</h5>
-                        <p>
-                            <a href="mailto:jdih@dprd-surakarta.go.id">jdih@dprd-surakarta.go.id</a>
-                        </p>
-                    </div>
-                    
-                    <div class="contact-detail">
-                        <h5><i class="bi bi-clock"></i> Jam Operasional</h5>
-                        <p>
-                            Senin - Jumat: 08:00 - 16:00 WIB<br>
-                            Sabtu - Minggu: Tutup
-                        </p>
-                    </div>
-                </div>
-
-                <!-- PORTAL LINKS -->
-                <div class="portal-links">
-                    <h4><i class="bi bi-link"></i> Link Portal</h4>
-                    
-                    <div class="portal-link-item">
-                        <i class="bi bi-globe"></i>
-                        <span>DPRD Kota Surakarta</span>
-                        <a href="https://dprd-surakarta.go.id" target="_blank"></a>
-                    </div>
-                    
-                    <div class="portal-link-item">
-                        <i class="bi bi-globe"></i>
-                        <span>Pemerintah Kota Surakarta</span>
-                        <a href="https://surakarta.go.id" target="_blank"></a>
-                    </div>
-                    
-                    <div class="portal-link-item">
-                        <i class="bi bi-globe"></i>
-                        <span>JDIH Nasional</span>
-                        <a href="https://jdih.kemenkumham.go.id" target="_blank"></a>
-                    </div>
-                    
-                    <div class="portal-link-item">
-                        <i class="bi bi-globe"></i>
-                        <span>JDIH Provinsi Jawa Tengah</span>
-                        <a href="https://jdih.jatengprov.go.id" target="_blank"></a>
-                    </div>
-                    
-                    <div class="portal-link-item">
-                        <i class="bi bi-globe"></i>
-                        <span>Sistem Informasi Hukum</span>
-                        <a href="https://peraturan.go.id" target="_blank"></a>
-                    </div>
-                    
-                    <div class="portal-link-item">
-                        <i class="bi bi-globe"></i>
-                        <span>Mahkamah Konstitusi</span>
-                        <a href="https://mkri.id" target="_blank"></a>
-                    </div>
-                </div>
-                
-                
 
             </div>
 

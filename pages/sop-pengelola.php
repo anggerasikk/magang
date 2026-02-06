@@ -429,95 +429,51 @@ include 'header.php';
             <!-- SIDEBAR -->
             <div class="col-lg-4">
                 
-                <!-- INFO BOX -->
-                <div class="sidebar-menu">
-                    <h4><i class="bi bi-info-circle"></i> Informasi Penting</h4>
-                    <p class="mb-0">
-                        SOP ini merupakan dokumen resmi yang harus diikuti oleh seluruh pengelola JDIH 
-                        dalam menjalankan tugas dan fungsi pengelolaan produk hukum di lingkungan 
-                        DPRD Kota Surakarta.
-                    </p>
-                </div>
-
                 <!-- MENU TERKAIT -->
                 <div class="sidebar-menu">
                     <h4><i class="bi bi-link-45deg"></i> Menu Terkait</h4>
                     <ul>
-                        <li>
-                            <a href="struktur-organisasi.php">
+                        <li class="<?= (strpos($_SERVER['PHP_SELF'], 'Profil-JDIH') !== false) ? 'active' : '' ?>">
+                            <a href="?page=profil-jdih">
+                                <i class="bi bi-building"></i>
+                                Profil JDIH
+                            </a>
+                        </li>
+                        <li class="<?= (strpos($_SERVER['PHP_SELF'], 'struktur-organisasi') !== false) ? 'active' : '' ?>">
+                            <a href="?page=struktur-organisasi">
                                 <i class="bi bi-diagram-3"></i>
                                 Struktur Organisasi
                             </a>
                         </li>
-                        <li>
-                            <a href="alur-pengelolaan.php">
-                                <i class="bi bi-diagram-3"></i>
-                                Alur Pengelolaan Produk Hukum
+                        <li class="<?= (strpos($_SERVER['PHP_SELF'], 'alur-pengelolaan') !== false) ? 'active' : '' ?>">
+                            <a href="?page=alur-pengelolaan">
+                                <i class="bi bi-diagram-2"></i>
+                                Alur Pengelolaan
                             </a>
                         </li>
-                        <li>
-                            <a href="dasar-hukum.php">
+                        <li class="<?= (strpos($_SERVER['PHP_SELF'], 'sop-pengelola') !== false) ? 'active' : '' ?>">
+                            <a href="?page=sop-pengelola">
+                                <i class="bi bi-clipboard-check"></i>
+                                SOP Pengelola
+                            </a>
+                        </li>
+                        <li class="<?= (strpos($_SERVER['PHP_SELF'], 'dasar-hukum') !== false) ? 'active' : '' ?>">
+                            <a href="?page=dasar-hukum">
                                 <i class="bi bi-journal-text"></i>
-                                Dasar Hukum JDIH
+                                Dasar Hukum
                             </a>
                         </li>
-                        <li>
-                            <a href="visi-misi.php">
-                                <i class="bi bi-bullseye"></i>
-                                Visi & Misi
+                        <li class="<?= (strpos($_SERVER['PHP_SELF'], 'surat-keputusan') !== false) ? 'active' : '' ?>">
+                            <a href="?page=surat-keputusan">
+                                <i class="bi bi-file-earmark-pdf"></i>
+                                Surat Keputusan
                             </a>
                         </li>
-                        <li>
-                            <a href="keputusan-dprd.php">
-                                <i class="bi bi-file-earmark-text"></i>
-                                Keputusan DPRD
+                        <li class="<?= (strpos($_SERVER['PHP_SELF'], 'video-profile') !== false) ? 'active' : '' ?>">
+                            <a href="?page=video-profile">
+                                <i class="bi bi-play-circle"></i>
+                                Video Profile
                             </a>
-                        </li>
-                    </ul>
-                </div>
-
-                <!-- DOWNLOAD BOX -->
-                <div class="sidebar-menu">
-                    <h4><i class="bi bi-download"></i> Download</h4>
-                    <p class="mb-3">Unduh dokumen SOP lengkap dalam format PDF:</p>
-                    <?php
-                    if (file_exists($pdfPath)) {
-                    ?>
-                        <a href="<?php echo $pdfPath; ?>" download class="download-btn">
-                            <i class="bi bi-download"></i>
-                            Download SOP Lengkap (PDF)
-                        </a>
-                    <?php
-                    } else {
-                    ?>
-                        <button class="download-btn" style="opacity: 0.6; cursor: not-allowed;">
-                            <i class="bi bi-exclamation-circle"></i>
-                            File Tidak Tersedia
-                        </button>
-                    <?php
-                    }
-                    ?>
-                </div>
-
-                <!-- INFORMASI DOKUMEN -->
-                <div class="sidebar-menu">
-                    <h4><i class="bi bi-file-earmark-text"></i> Informasi Dokumen</h4>
-                    <ul class="list-unstyled mb-0">
-                        <li class="mb-2">
-                            <small class="text-muted">Nama File:</small><br>
-                            <strong>SOP Pengelolaan Produk Hukum (JDIH).pdf</strong>
-                        </li>
-                        <li class="mb-2">
-                            <small class="text-muted">Ukuran:</small><br>
-                            <strong><?php echo file_exists($pdfPath) ? round(filesize($pdfPath) / 1024 / 1024, 2) . ' MB' : 'Tidak diketahui'; ?></strong>
-                        </li>
-                        <li class="mb-2">
-                            <small class="text-muted">Format:</small><br>
-                            <strong>PDF Document</strong>
-                        </li>
-                        <li>
-                            <small class="text-muted">Terakhir Diperbarui:</small><br>
-                            <strong><?php echo file_exists($pdfPath) ? date('d F Y', filemtime($pdfPath)) : 'Tidak diketahui'; ?></strong>
                         </li>
                     </ul>
                 </div>

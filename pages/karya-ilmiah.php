@@ -1,31 +1,232 @@
 <?php
-// karya-ilmiah.php
-session_start();
+// ============================================
+// KEAMANAN LEVEL 1: ERROR HANDLING
+// ============================================
+error_reporting(E_ALL);
+ini_set('display_errors', 1); // Aktifkan untuk debugging
+ini_set('log_errors', 1);
+ini_set('error_log', __DIR__ . '/logs/php_errors.log');
+
+// ============================================
+// KEAMANAN LEVEL 2: SESSION SECURITY
+// ============================================
+session_start([
+    'cookie_httponly' => true,
+    'cookie_secure' => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on',
+    'cookie_samesite' => 'Strict',
+    'use_only_cookies' => 1,
+    'cookie_lifetime' => 3600,
+    'gc_maxlifetime' => 3600
+]);
+
+// ============================================
+// KEAMANAN LEVEL 3: SESSION FIXATION PROTECTION
+// ============================================
+if (empty($_SESSION['initiated'])) {
+    session_regenerate_id(true);
+    $_SESSION['initiated'] = true;
+    $_SESSION['ip_address'] = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+    $_SESSION['user_agent'] = $_SERVER['HTTP_USER_AGENT'] ?? 'unknown';
+}
+
+function validate_session() {
+    if (!isset($_SESSION['ip_address']) || $_SESSION['ip_address'] !== ($_SERVER['REMOTE_ADDR'] ?? 'unknown')) {
+        session_destroy();
+        return false;
+    }
+    
+    if (!isset($_SESSION['user_agent']) || $_SESSION['user_agent'] !== ($_SERVER['HTTP_USER_AGENT'] ?? 'unknown')) {
+        session_destroy();
+        return false;
+    }
+    
+    return true;
+}
+
+if (!validate_session()) {
+    header('HTTP/1.1 403 Forbidden');
+    die('Invalid session detected');
+}
+
+// ============================================
+// KEAMANAN LEVEL 4: CSRF PROTECTION
+// ============================================
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
+// ============================================
+// KEAMANAN LEVEL 5: SECURITY HEADERS
+// ============================================
+header('X-Content-Type-Options: nosniff');
+header('X-Frame-Options: DENY');
+header('X-XSS-Protection: 1; mode=block');
+header('Referrer-Policy: strict-origin-when-cross-origin');
+
+// CSP Header
+$csp = "default-src 'self'; " .
+       "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; " .
+       "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; " .
+       "img-src 'self' data: https:; " .
+       "font-src 'self' https://cdn.jsdelivr.net; " .
+       "connect-src 'self';";
+header("Content-Security-Policy: " . $csp);
+
+// ============================================
+// KEAMANAN LEVEL 6: RATE LIMITING
+// ============================================
+function check_rate_limit($key, $limit = 10, $time_window = 60) {
+    if (!isset($_SESSION['rate_limit'])) {
+        $_SESSION['rate_limit'] = [];
+    }
+    
+    $now = time();
+    $window_start = $now - $time_window;
+    
+    // Hapus request lama
+    $_SESSION['rate_limit'][$key] = array_filter(
+        $_SESSION['rate_limit'][$key] ?? [],
+        function($time) use ($window_start) {
+            return $time > $window_start;
+        }
+    );
+    
+    // Cek limit
+    if (count($_SESSION['rate_limit'][$key]) >= $limit) {
+        error_log("Rate limit exceeded for $key from IP: " . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'));
+        return false;
+    }
+    
+    $_SESSION['rate_limit'][$key][] = $now;
+    return true;
+}
+
+// ============================================
+// KEAMANAN LEVEL 7: INPUT VALIDATION
+// ============================================
+function sanitize_input($input) {
+    if (is_array($input)) {
+        return array_map('sanitize_input', $input);
+    }
+    
+    $input = trim($input);
+    $input = stripslashes($input);
+    $input = htmlspecialchars($input, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    
+    return $input;
+}
+
+function safe_output($data) {
+    if (is_array($data)) {
+        return array_map('safe_output', $data);
+    }
+    
+    return htmlspecialchars($data, ENT_QUOTES | ENT_HTML5, 'UTF-8', true);
+}
+
+// ============================================
+// KEAMANAN LEVEL 8: SECURITY LOGGING
+// ============================================
+function security_log($message, $level = 'INFO') {
+    $log_file = __DIR__ . '/logs/security.log';
+    $timestamp = date('Y-m-d H:i:s');
+    $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+    $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? 'unknown';
+    $request_uri = $_SERVER['REQUEST_URI'] ?? 'unknown';
+    
+    $log_entry = sprintf(
+        "[%s] %s - IP: %s - UA: %s - URI: %s - %s\n",
+        $timestamp,
+        $level,
+        $ip,
+        substr($user_agent, 0, 100),
+        $request_uri,
+        $message
+    );
+    
+    error_log($log_entry, 3, $log_file);
+}
+
+// ============================================
+// KEAMANAN LEVEL 9: DATABASE CONNECTION
+// ============================================
 include_once "a_db.php";
 
 // ============================================
-// KONFIGURASI PATH YANG BENAR UNTUK MONOGRAFI
+// KONFIGURASI PATH UNTUK MONOGRAFI - DIPERBAIKI
 // ============================================
-$base_upload_path = "C:/xampp/htdocs/jdihcilacap_pasang/wb_admin/uploads/";
-$monografi_pdf_path = "C:/xampp/htdocs/jdihcilacap_pasang/wb_admin/uploads/monografi/pdf/";
-$monografi_images_path = "C:/xampp/htdocs/jdihcilacap_pasang/wb_admin/uploads/monografi/images/";
+// Path utama (sesuai dengan detail-monografi.php)
+$monografi_pdf_path = "C:/laragon/www/jdihcilacap_pasang_2026/panel_control/uploads/monografi/pdf/";
+$monografi_images_path = "C:/laragon/www/jdihcilacap_pasang_2026/panel_control/uploads/monografi/images/";
 
-$web_monografi_pdf_path = "/jdihcilacap_pasang/wb_admin/uploads/monografi/pdf/";
-$web_monografi_images_path = "/jdihcilacap_pasang/wb_admin/uploads/monografi/images/";
+// Fallback paths jika path utama tidak ada
+if (!is_dir($monografi_pdf_path)) {
+    $possible_paths = [
+        "C:/xampp/htdocs/jdihcilacap_pasang/uploads/monografi/pdf/",
+        "C:/xampp/htdocs/jdihcilacap_pasang_2026/uploads/monografi/pdf/",
+        $_SERVER['DOCUMENT_ROOT'] . "/uploads/monografi/pdf/",
+        $_SERVER['DOCUMENT_ROOT'] . "/panel_control/uploads/monografi/pdf/",
+    ];
+    
+    foreach ($possible_paths as $path) {
+        if (is_dir($path)) {
+            $monografi_pdf_path = $path;
+            break;
+        }
+    }
+}
+
+if (!is_dir($monografi_images_path)) {
+    $possible_paths = [
+        "C:/xampp/htdocs/jdihcilacap_pasang/uploads/monografi/images/",
+        "C:/xampp/htdocs/jdihcilacap_pasang_2026/uploads/monografi/images/",
+        $_SERVER['DOCUMENT_ROOT'] . "/uploads/monografi/images/",
+        $_SERVER['DOCUMENT_ROOT'] . "/panel_control/uploads/monografi/images/",
+    ];
+    
+    foreach ($possible_paths as $path) {
+        if (is_dir($path)) {
+            $monografi_images_path = $path;
+            break;
+        }
+    }
+}
+
+// Gambar default
+$default_image_url = "panel_control/assets/img/default-monografi.png";
+
+// Log paths untuk debugging
+error_log("PDF Path: " . $monografi_pdf_path);
+error_log("Images Path: " . $monografi_images_path);
+error_log("Default Image: " . $default_image_url);
 
 // ============================================
-// FUNGSI BANTU UNTUK FILE
+// FUNGSI BANTU SEDERHANA - DIPERBAIKI
 // ============================================
 
-// Fungsi untuk menemukan file PDF di server
+// Fungsi: Cek apakah ada file PDF di database - DIPERBAIKI
+function isPdfAvailableInDB($file_pdf_field) {
+    // Cek apakah ada file PDF di database
+    // Perbaikan: handle null value sebelum trim()
+    if ($file_pdf_field === null || $file_pdf_field === '') {
+        return false;
+    }
+    
+    // Sekarang bisa aman melakukan trim()
+    $trimmed_value = trim($file_pdf_field);
+    return !empty($trimmed_value);
+}
+
+// Fungsi: Cari file PDF di server (sama seperti di detail-monografi.php) - DIPERBAIKI
 function findPDFFile($filename, $id = null) {
     global $monografi_pdf_path;
     
-    if (empty($filename)) {
+    // Perbaikan: cek null terlebih dahulu
+    if ($filename === null || empty($filename)) {
         return null;
     }
     
-    // Bersihkan nama file
+    // Sanitize filename
     $filename = basename($filename);
     $clean_filename = preg_replace('/(\.pdf)+$/i', '.pdf', $filename);
     
@@ -38,7 +239,7 @@ function findPDFFile($filename, $id = null) {
         str_replace('/', '\\', $monografi_pdf_path) . $clean_filename,
         
         // Document root relatif
-        $_SERVER['DOCUMENT_ROOT'] . '/jdihcilacap_pasang/wb_admin/uploads/monografi/pdf/' . $clean_filename,
+        $_SERVER['DOCUMENT_ROOT'] . '/jdihcilacap_pasang_2026/panel_control/uploads/monografi/pdf/' . $clean_filename,
     ];
     
     // Jika ada ID, coba cari berdasarkan ID
@@ -57,7 +258,13 @@ function findPDFFile($filename, $id = null) {
             finfo_close($finfo);
             
             if (stripos($mime_type, 'pdf') !== false) {
-                return $location;
+                return [
+                    'path' => $location,
+                    'size' => filesize($location),
+                    'time' => filemtime($location),
+                    'mime' => $mime_type,
+                    'filename' => basename($location)
+                ];
             }
         }
     }
@@ -65,368 +272,306 @@ function findPDFFile($filename, $id = null) {
     return null;
 }
 
-// Fungsi untuk menemukan gambar
+// Fungsi: Cari file gambar - DIPERBAIKI
 function findImageFile($filename, $id = null) {
-    global $monografi_images_path;
+    global $monografi_images_path, $default_image_url;
     
-    if (empty($filename)) {
-        // Coba cari berdasarkan ID
-        if ($id) {
-            $image_extensions = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
-            foreach ($image_extensions as $ext) {
-                $test_filename = $id . '.' . $ext;
-                $test_path = $monografi_images_path . $test_filename;
-                
-                if (file_exists($test_path)) {
-                    return $test_path;
-                }
-                
-                // Coba dengan prefix
-                $test_filename2 = 'monografi_' . $id . '.' . $ext;
-                $test_path2 = $monografi_images_path . $test_filename2;
-                
-                if (file_exists($test_path2)) {
-                    return $test_path2;
-                }
-            }
-        }
-        return null;
+    // Perbaikan: cek null terlebih dahulu
+    if ($filename === null || empty($filename)) {
+        return [
+            'url' => $default_image_url,
+            'found' => false
+        ];
     }
     
-    // Bersihkan nama file
+    // Sanitize filename
     $filename = basename($filename);
+    $clean_filename = $filename;
     
-    // Lokasi yang mungkin - UTAMA untuk monografi
+    // Lokasi yang mungkin
     $possible_locations = [
-        // Lokasi utama monografi
-        $monografi_images_path . $filename,
-        
-        // Format Windows
-        str_replace('/', '\\', $monografi_images_path) . $filename,
-        
-        // Document root relatif
-        $_SERVER['DOCUMENT_ROOT'] . '/jdihcilacap_pasang/wb_admin/uploads/monografi/images/' . $filename,
+        $monografi_images_path . $clean_filename,
+        str_replace('/', '\\', $monografi_images_path) . $clean_filename,
     ];
+    
+    // Jika ada ID, coba cari berdasarkan ID
+    if ($id) {
+        $extensions = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+        foreach ($extensions as $ext) {
+            $possible_locations[] = $monografi_images_path . $id . '.' . $ext;
+            $possible_locations[] = $monografi_images_path . 'thumbnail_' . $id . '.' . $ext;
+        }
+    }
     
     // Cek semua lokasi
     foreach ($possible_locations as $location) {
         if (file_exists($location) && is_file($location) && is_readable($location)) {
-            return $location;
+            $web_url = str_replace(
+                $_SERVER['DOCUMENT_ROOT'], 
+                '', 
+                str_replace('\\', '/', $location)
+            );
+            
+            if (strpos($web_url, '/') !== 0) {
+                $web_url = '/' . $web_url;
+            }
+            
+            return [
+                'url' => $web_url . '?t=' . time(),
+                'found' => true,
+                'path' => $location
+            ];
         }
     }
     
-    return null;
+    return [
+        'url' => $default_image_url,
+        'found' => false
+    ];
+}
+
+// Fungsi: Generate URL untuk file PDF
+function generatePdfUrl($file_path) {
+    $root = $_SERVER['DOCUMENT_ROOT'];
+    $root = str_replace('\\', '/', $root);
+    $file_path = str_replace('\\', '/', $file_path);
+    
+    // Jika file ada dalam DOCUMENT_ROOT
+    if (strpos($file_path, $root) === 0) {
+        $url_path = substr($file_path, strlen($root));
+        if (strpos($url_path, '/') !== 0) {
+            $url_path = '/' . $url_path;
+        }
+        return $url_path . '?t=' . time();
+    }
+    
+    // Untuk Laragon
+    if (strpos($file_path, 'C:/laragon/www') === 0) {
+        $url_path = substr($file_path, strlen('C:/laragon/www'));
+        if (strpos($url_path, '/') !== 0) {
+            $url_path = '/' . $url_path;
+        }
+        return $url_path . '?t=' . time();
+    }
+    
+    // Fallback: return path as is
+    return $file_path . '?t=' . time();
 }
 
 // ============================================
-// QUERY DATA UTAMA - DARI TABEL MONOGRAFI
-// Untuk Karya Ilmiah
+// PAGINATION SETTINGS
 // ============================================
-$query = "SELECT 
-            id_monografi,
-            judul,
-            jenis_monografi,
-            tanggal_pembuatan,
-            tahun_terbit,
-            penulis,
-            penerbit,
-            isbn,
-            bidang_hukum,
-            jumlah_halaman,
-            deskripsi,
-            status,
-            bahasa,
-            file_pdf,
-            thumbnail,
-            created_at,
-            updated_at,
-            id_user
-          FROM monografi 
-          WHERE jenis_monografi LIKE '%Karya_Ilmiah%' OR 
-                jenis_monografi LIKE '%karya_ilmiah%' OR
-                jenis_monografi LIKE '%Jurnal%' OR
-                jenis_monografi LIKE '%jurnal%' OR
-                jenis_monografi LIKE '%Skripsi%' OR
-                jenis_monografi LIKE '%skripsi%' OR
-                jenis_monografi LIKE '%Tesis%' OR
-                jenis_monografi LIKE '%tesis%' OR
-                jenis_monografi LIKE '%Artikel%' OR
-                jenis_monografi LIKE '%artikel%' OR
-                judul LIKE '%Karya Ilmiah%' OR
-                judul LIKE '%Jurnal%' OR
-                judul LIKE '%Skripsi%' OR
-                judul LIKE '%Tesis%' OR
-                judul LIKE '%Artikel%'
-          ORDER BY tahun_terbit DESC, created_at DESC";
-$result = mysqli_query($koneksi, $query);
+$items_per_page = 6; // Tampil 6 card per halaman
+$current_page = isset($_GET['page_num']) && is_numeric($_GET['page_num']) ? (int)$_GET['page_num'] : 1;
+if ($current_page < 1) $current_page = 1;
 
-if (!$result) {
-    die("Query error: " . mysqli_error($koneksi));
+$offset = ($current_page - 1) * $items_per_page;
+
+// ============================================
+// KEAMANAN LEVEL 12: ID ENCRYPTION
+// ============================================
+function encode_id($id) {
+    if (!is_numeric($id) || $id <= 0) {
+        return null;
+    }
+    
+    $timestamp = time();
+    $random = bin2hex(random_bytes(8));
+    $token = base64_encode("mono_{$id}_{$timestamp}_{$random}");
+    
+    // URL safe encoding
+    $token = str_replace(['+', '/', '='], ['-', '_', ''], $token);
+    
+    return $token;
 }
 
 // ============================================
-// TOTAL DOKUMEN
+// KEAMANAN LEVEL 13: INPUT PROCESSING
 // ============================================
-$total_query = "SELECT COUNT(*) as total 
-                FROM monografi 
-                WHERE jenis_monografi LIKE '%Karya_Ilmiah%' OR 
-                      jenis_monografi LIKE '%karya_ilmiah%' OR
-                      jenis_monografi LIKE '%Jurnal%' OR
-                      jenis_monografi LIKE '%jurnal%' OR
-                      jenis_monografi LIKE '%Skripsi%' OR
-                      jenis_monografi LIKE '%skripsi%' OR
-                      jenis_monografi LIKE '%Tesis%' OR
-                      jenis_monografi LIKE '%tesis%' OR
-                      jenis_monografi LIKE '%Artikel%' OR
-                      jenis_monografi LIKE '%artikel%' OR
-                      judul LIKE '%Karya Ilmiah%' OR
-                      judul LIKE '%Jurnal%' OR
-                      judul LIKE '%Skripsi%' OR
-                      judul LIKE '%Tesis%' OR
-                      judul LIKE '%Artikel%'";
-$total_result = mysqli_query($koneksi, $total_query);
-$total_dokumen = mysqli_fetch_assoc($total_result)['total'];
+$clean_get = [];
+foreach ($_GET as $key => $value) {
+    $clean_get[$key] = sanitize_input($value);
+}
+
+$debug_mode = isset($clean_get['debug']) ? (int)$clean_get['debug'] : 0;
+$search_query = isset($clean_get['search']) ? $clean_get['search'] : '';
+
+// Apply rate limiting untuk search
+if (!empty($search_query)) {
+    $rate_limit_key = 'search_' . ($_SERVER['REMOTE_ADDR'] ?? 'unknown');
+    if (!check_rate_limit($rate_limit_key, 15, 60)) {
+        header('HTTP/1.1 429 Too Many Requests');
+        die('Too many search requests. Please try again later.');
+    }
+}
+
+// Log akses halaman
+security_log("Page accessed: karya-ilmiah.php | Search: " . substr($search_query, 0, 100) . " | Page: $current_page", "INFO");
 
 // ============================================
-// STATISTIK PER TAHUN
+// KEAMANAN LEVEL 14: DATABASE QUERY WITH PREPARED STATEMENTS & PAGINATION
 // ============================================
-$year_stats_query = "
-    SELECT tahun_terbit, COUNT(*) as jumlah
-    FROM monografi
-    WHERE jenis_monografi LIKE '%Karya_Ilmiah%' OR 
-          jenis_monografi LIKE '%karya_ilmiah%' OR
-          jenis_monografi LIKE '%Jurnal%' OR
-          jenis_monografi LIKE '%jurnal%' OR
-          jenis_monografi LIKE '%Skripsi%' OR
-          jenis_monografi LIKE '%skripsi%' OR
-          jenis_monografi LIKE '%Tesis%' OR
-          jenis_monografi LIKE '%tesis%' OR
-          jenis_monografi LIKE '%Artikel%' OR
-          jenis_monografi LIKE '%artikel%' OR
-          judul LIKE '%Karya Ilmiah%' OR
-          judul LIKE '%Jurnal%' OR
-          judul LIKE '%Skripsi%' OR
-          judul LIKE '%Tesis%' OR
-          judul LIKE '%Artikel%'
-    GROUP BY tahun_terbit
-    ORDER BY tahun_terbit DESC
-    LIMIT 5";
-$year_stats_result = mysqli_query($koneksi, $year_stats_query);
-
-// ============================================
-// DOKUMEN TERBARU
-// ============================================
-$recent_query = "
-    SELECT id_monografi, judul, tanggal_pembuatan, tahun_terbit, penulis
-    FROM monografi
-    WHERE jenis_monografi LIKE '%Karya_Ilmiah%' OR 
-          jenis_monografi LIKE '%karya_ilmiah%' OR
-          jenis_monografi LIKE '%Jurnal%' OR
-          jenis_monografi LIKE '%jurnal%' OR
-          jenis_monografi LIKE '%Skripsi%' OR
-          jenis_monografi LIKE '%skripsi%' OR
-          jenis_monografi LIKE '%Tesis%' OR
-          jenis_monografi LIKE '%tesis%' OR
-          jenis_monografi LIKE '%Artikel%' OR
-          jenis_monografi LIKE '%artikel%' OR
-          judul LIKE '%Karya Ilmiah%' OR
-          judul LIKE '%Jurnal%' OR
-          judul LIKE '%Skripsi%' OR
-          judul LIKE '%Tesis%' OR
-          judul LIKE '%Artikel%'
-    ORDER BY created_at DESC
-    LIMIT 5";
-$recent_result = mysqli_query($koneksi, $recent_query);
-
-// ============================================
-// JENIS KARYA STATS
-// ============================================
-$jenis_stats_query = "
-    SELECT 
-        CASE 
-            WHEN jenis_monografi LIKE '%Jurnal%' OR jenis_monografi LIKE '%jurnal%' OR judul LIKE '%Jurnal%' THEN 'Jurnal'
-            WHEN jenis_monografi LIKE '%Skripsi%' OR jenis_monografi LIKE '%skripsi%' OR judul LIKE '%Skripsi%' THEN 'Skripsi'
-            WHEN jenis_monografi LIKE '%Tesis%' OR jenis_monografi LIKE '%tesis%' OR judul LIKE '%Tesis%' THEN 'Tesis'
-            WHEN jenis_monografi LIKE '%Artikel%' OR jenis_monografi LIKE '%artikel%' OR judul LIKE '%Artikel%' THEN 'Artikel Ilmiah'
-            ELSE 'Karya Ilmiah Lainnya'
-        END as jenis_karya,
-        COUNT(*) as jumlah
-    FROM monografi
-    WHERE jenis_monografi LIKE '%Karya_Ilmiah%' OR 
-          jenis_monografi LIKE '%karya_ilmiah%' OR
-          jenis_monografi LIKE '%Jurnal%' OR
-          jenis_monografi LIKE '%jurnal%' OR
-          jenis_monografi LIKE '%Skripsi%' OR
-          jenis_monografi LIKE '%skripsi%' OR
-          jenis_monografi LIKE '%Tesis%' OR
-          jenis_monografi LIKE '%tesis%' OR
-          jenis_monografi LIKE '%Artikel%' OR
-          jenis_monografi LIKE '%artikel%' OR
-          judul LIKE '%Karya Ilmiah%' OR
-          judul LIKE '%Jurnal%' OR
-          judul LIKE '%Skripsi%' OR
-          judul LIKE '%Tesis%' OR
-          judul LIKE '%Artikel%'
-    GROUP BY 
-        CASE 
-            WHEN jenis_monografi LIKE '%Jurnal%' OR jenis_monografi LIKE '%jurnal%' OR judul LIKE '%Jurnal%' THEN 'Jurnal'
-            WHEN jenis_monografi LIKE '%Skripsi%' OR jenis_monografi LIKE '%skripsi%' OR judul LIKE '%Skripsi%' THEN 'Skripsi'
-            WHEN jenis_monografi LIKE '%Tesis%' OR jenis_monografi LIKE '%tesis%' OR judul LIKE '%Tesis%' THEN 'Tesis'
-            WHEN jenis_monografi LIKE '%Artikel%' OR jenis_monografi LIKE '%artikel%' OR judul LIKE '%Artikel%' THEN 'Artikel Ilmiah'
-            ELSE 'Karya Ilmiah Lainnya'
-        END
-    ORDER BY jumlah DESC";
-$jenis_stats_result = mysqli_query($koneksi, $jenis_stats_query);
-
-// ============================================
-// TAHUN FILTER
-// ============================================
-$years_query = "
-    SELECT DISTINCT tahun_terbit
-    FROM monografi
-    WHERE (jenis_monografi LIKE '%Karya_Ilmiah%' OR 
-           jenis_monografi LIKE '%karya_ilmiah%' OR
-           jenis_monografi LIKE '%Jurnal%' OR
-           jenis_monografi LIKE '%jurnal%' OR
-           jenis_monografi LIKE '%Skripsi%' OR
-           jenis_monografi LIKE '%skripsi%' OR
-           jenis_monografi LIKE '%Tesis%' OR
-           jenis_monografi LIKE '%tesis%' OR
-           jenis_monografi LIKE '%Artikel%' OR
-           jenis_monografi LIKE '%artikel%' OR
-           judul LIKE '%Karya Ilmiah%' OR
-           judul LIKE '%Jurnal%' OR
-           judul LIKE '%Skripsi%' OR
-           judul LIKE '%Tesis%' OR
-           judul LIKE '%Artikel%')
-    ORDER BY tahun_terbit DESC";
-$years_result = mysqli_query($koneksi, $years_query);
-
-$years = [];
-while ($row = mysqli_fetch_assoc($years_result)) {
-    $years[] = $row['tahun_terbit'];
+try {
+    // Hitung total data untuk pagination
+    if (!empty($search_query)) {
+        $search_param = "%" . $search_query . "%";
+        $count_query = "SELECT COUNT(*) as total 
+                       FROM monografi 
+                       WHERE jenis_monografi LIKE '%Penulisan%Karya%Ilmiah%' 
+                       AND (
+                         judul LIKE ? 
+                         OR penulis LIKE ?
+                         OR bidang_hukum LIKE ?
+                         OR deskripsi LIKE ?
+                       )";
+        
+        $count_stmt = mysqli_prepare($koneksi, $count_query);
+        mysqli_stmt_bind_param($count_stmt, "ssss", $search_param, $search_param, $search_param, $search_param);
+        mysqli_stmt_execute($count_stmt);
+        $count_result = mysqli_stmt_get_result($count_stmt);
+        $count_row = mysqli_fetch_assoc($count_result);
+        $total_dokumen = $count_row['total'];
+        
+        // Query dengan pagination
+        $query = "SELECT 
+                    id_monografi,
+                    judul,
+                    jenis_monografi,
+                    tanggal_pembuatan,
+                    tahun_terbit,
+                    penulis,
+                    penerbit,
+                    isbn,
+                    bidang_hukum,
+                    jumlah_halaman,
+                    deskripsi,
+                    status,
+                    bahasa,
+                    file_pdf,
+                    thumbnail,
+                    created_at
+                  FROM monografi 
+                  WHERE jenis_monografi LIKE '%Penulisan%Karya%Ilmiah%' 
+                  AND (
+                    judul LIKE ? 
+                    OR penulis LIKE ?
+                    OR bidang_hukum LIKE ?
+                    OR deskripsi LIKE ?
+                  )
+                  ORDER BY tahun_terbit DESC, id_monografi DESC
+                  LIMIT ? OFFSET ?";
+        
+        $stmt = mysqli_prepare($koneksi, $query);
+        mysqli_stmt_bind_param($stmt, "ssssii", $search_param, $search_param, $search_param, $search_param, $items_per_page, $offset);
+        
+    } else {
+        // Hitung total data tanpa search
+        $count_query = "SELECT COUNT(*) as total 
+                       FROM monografi 
+                       WHERE jenis_monografi LIKE '%Penulisan%Karya%Ilmiah%'";
+        $count_result = mysqli_query($koneksi, query: $count_query);
+        $count_row = mysqli_fetch_assoc($count_result);
+        $total_dokumen = $count_row['total'];
+        
+        // Query dengan pagination tanpa search
+        $query = "SELECT 
+                    id_monografi,
+                    judul,
+                    jenis_monografi,
+                    tanggal_pembuatan,
+                    tahun_terbit,
+                    penulis,
+                    penerbit,
+                    isbn,
+                    bidang_hukum,
+                    jumlah_halaman,
+                    deskripsi,
+                    status,
+                    bahasa,
+                    file_pdf,
+                    thumbnail,
+                    created_at
+                  FROM monografi 
+                  WHERE jenis_monografi LIKE '%Penulisan%Karya%Ilmiah%' 
+                  ORDER BY tahun_terbit DESC, id_monografi DESC
+                  LIMIT ? OFFSET ?";
+        
+        $stmt = mysqli_prepare($koneksi, $query);
+        mysqli_stmt_bind_param($stmt, "ii", $items_per_page, $offset);
+    }
+    
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    
+    if (!$result) {
+        throw new Exception("Database query failed: " . mysqli_error($koneksi));
+    }
+    
+    // Hitung total halaman
+    $total_pages = ceil($total_dokumen / $items_per_page);
+    if ($current_page > $total_pages && $total_pages > 0) {
+        $current_page = $total_pages;
+        // Redirect ke halaman terakhir jika page number melebihi total
+        header("Location: ?page=karya-ilmiah&page_num=$current_page" . ($search_query ? "&search=" . urlencode($search_query) : ""));
+        exit;
+    }
+    
+} catch (Exception $e) {
+    security_log("Database error: " . $e->getMessage(), "ERROR");
+    
+    if ($debug_mode) {
+        die("Database error: " . safe_output($e->getMessage()));
+    } else {
+        die("System temporarily unavailable. Please try again later.");
+    }
 }
 
 // ============================================
-// PENULIS STATS
+// KEAMANAN LEVEL 15: GET ADDITIONAL DATA
 // ============================================
-$penulis_stats_query = "
-    SELECT penulis, COUNT(*) as jumlah
-    FROM monografi
-    WHERE (jenis_monografi LIKE '%Karya_Ilmiah%' OR 
-           jenis_monografi LIKE '%karya_ilmiah%' OR
-           jenis_monografi LIKE '%Jurnal%' OR
-           jenis_monografi LIKE '%jurnal%' OR
-           jenis_monografi LIKE '%Skripsi%' OR
-           jenis_monografi LIKE '%skripsi%' OR
-           jenis_monografi LIKE '%Tesis%' OR
-           jenis_monografi LIKE '%tesis%' OR
-           jenis_monografi LIKE '%Artikel%' OR
-           jenis_monografi LIKE '%artikel%' OR
-           judul LIKE '%Karya Ilmiah%' OR
-           judul LIKE '%Jurnal%' OR
-           judul LIKE '%Skripsi%' OR
-           judul LIKE '%Tesis%' OR
-           judul LIKE '%Artikel%')
-    AND penulis IS NOT NULL AND penulis != ''
-    GROUP BY penulis
-    ORDER BY jumlah DESC
-    LIMIT 10";
-$penulis_stats_result = mysqli_query($koneksi, $penulis_stats_query);
+try {
+    // Tahun untuk filter
+    $years_query = "SELECT DISTINCT tahun_terbit 
+                    FROM monografi 
+                    WHERE jenis_monografi LIKE '%Penulisan%Karya%Ilmiah%'
+                    ORDER BY tahun_terbit DESC";
+    $years_result = mysqli_query($koneksi, $years_query);
+    $years = [];
+    while ($row = mysqli_fetch_assoc($years_result)) {
+        $year = (int)$row['tahun_terbit'];
+        // Validate year range
+        if ($year >= 1900 && $year <= 2100) {
+            $years[] = $year;
+        }
+    }
+    
+} catch (Exception $e) {
+    security_log("Additional data query error: " . $e->getMessage(), "ERROR");
+}
+
+// Latest documents
+$latest_query = "SELECT id_monografi, judul, tahun_terbit, created_at 
+                 FROM monografi 
+                 WHERE jenis_monografi LIKE '%Karya%Ilmiah%'
+                 ORDER BY created_at DESC 
+                 LIMIT 5";
+$latest_result = mysqli_query($koneksi, $latest_query);
 
 // ============================================
-// HEADER
+// HEADER TEMPLATE
 // ============================================
-$page_title = "Penulisan Karya Ilmiah - JDIH DPRD Kota Surakarta";
-$page_description = "Kumpulan karya ilmiah terkait hukum dan legislasi";
-
+$page_title = safe_output("Karya Ilmiah DPRD - JDIH DPRD Kota Surakarta");
 include "header.php";
 ?>
 
 <!-- ===============================
-     STYLE
+     STYLE - DIPERBAIKI UNTUK GAMBAR DAN PAGINATION
 ================================ -->
 <style>
-<?php 
-// Include CSS dasar
-include "style-keputusan-dprd.css"; 
-?>
+<?php include "style-keputusan-dprd.css"; ?>
 
-/* STYLE KHUSUS UNTUK KARYA ILMIAH */
-.karya-ilmiah-card {
-    border-left: 5px solid #007bff;
-    transition: all 0.3s ease;
-}
+/* STYLE KHUSUS UNTUK KAJIAN RAPERDA */
 
-.karya-ilmiah-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 30px rgba(0, 123, 255, 0.2);
-}
-
-.karya-badge {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    background: linear-gradient(135deg, #007bff, #6610f2);
-    color: white;
-    padding: 5px 15px;
-    border-radius: 20px;
-    font-weight: 700;
-    font-size: 0.8rem;
-    z-index: 2;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.2);
-}
-
-.karya-type {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 4px 12px;
-    border-radius: 12px;
-    font-size: 0.8rem;
-    font-weight: 500;
-}
-
-.type-jurnal {
-    background: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
-}
-
-.type-skripsi {
-    background: #d1ecf1;
-    color: #0c5460;
-    border: 1px solid #bee5eb;
-}
-
-.type-tesis {
-    background: #fff3cd;
-    color: #856404;
-    border: 1px solid #ffeaa7;
-}
-
-.type-artikel {
-    background: #e2e3e5;
-    color: #383d41;
-    border: 1px solid #d6d8db;
-}
-
-.abstrak-info {
-    background: #f8f9fa;
-    border-left: 4px solid #007bff;
-    padding: 15px;
-    border-radius: 0 8px 8px 0;
-    margin-top: 15px;
-    font-size: 0.9rem;
-}
-
-.abstrak-title {
-    font-weight: 600;
-    color: #007bff;
-    margin-bottom: 5px;
-}
-
-/* STYLE KHUSUS UNTUK GAMBAR */
 .card-image {
     position: relative;
     width: 100%;
@@ -454,7 +599,7 @@ include "style-keputusan-dprd.css";
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #007bff 0%, #6610f2 100%);
+    background: linear-gradient(135deg, #36d1dc 0%, #5b86e5 100%);
     color: white;
     padding: 20px;
     text-align: center;
@@ -490,31 +635,84 @@ include "style-keputusan-dprd.css";
     letter-spacing: 0.5px;
 }
 
-/* TOMBOL DOWNLOAD */
+/* TOMBOL DOWNLOAD - DIPERBAIKI */
 .download-btn {
     position: relative;
     overflow: hidden;
     transition: all 0.3s ease;
+    background: linear-gradient(135deg, #4db8ab 0%, #5eb3a8 100%);
+    color: white !important;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    font-weight: 500;
+    text-decoration: none !important;
+    display: inline-block;
+    text-align: center;
 }
 
 .download-btn:hover {
+    background: linear-gradient(135deg, #5eb3a8 0%, #5eb3a8 100%);
+    color: white !important;
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    text-decoration: none !important;
 }
 
 .download-btn.disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    pointer-events: none;
+    background: linear-gradient(135deg, #6c757d 0%, #495057 100%) !important;
+    color: #e0e0e0 !important;
+    cursor: not-allowed !important;
+    pointer-events: auto !important;
+    opacity: 0.7 !important;
+    border: none !important;
 }
 
-/* Download Status */
-.download-status {
+.download-btn.disabled:hover {
+    transform: none !important;
+    box-shadow: none !important;
+    background: linear-gradient(135deg, #6c757d 0%, #495057 100%) !important;
+}
+
+
+/* Responsive */
+@media (max-width: 768px) {
+    .card-image {
+        height: 180px;
+    }
+    
+    .document-card {
+        flex-direction: column;
+    }
+    
+    .card-actions {
+        flex-direction: column;
+    }
+    
+    .card-btn {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+}
+
+/* Debug info */
+.debug-info {
     font-size: 11px;
-    margin-top: 5px;
-    padding: 3px 8px;
+    border-left: 3px solid #dc3545;
+    background: #f8f9fa;
+    margin-top: 10px;
+    padding: 10px;
+    border-radius: 4px;
+}
+
+/* Download Status - DIPERBAIKI */
+.download-status {
+    font-size: 12px;
+    margin: 10px 0;
+    padding: 8px 12px;
     border-radius: 4px;
     display: inline-block;
+    font-weight: 500;
 }
 .download-status.available {
     background-color: #d4edda;
@@ -525,6 +723,15 @@ include "style-keputusan-dprd.css";
     background-color: #f8d7da;
     color: #721c24;
     border: 1px solid #f5c6cb;
+}
+
+.download-status i {
+    margin-right: 5px;
+}
+
+/* Custom untuk Kajian Raperda */
+.naskah-akademik-badge {
+    background: linear-gradient(135deg, #36d1dc 0%, #5b86e5 100%);
 }
 
 /* Styling untuk info tambahan */
@@ -551,6 +758,7 @@ include "style-keputusan-dprd.css";
     display: flex;
     gap: 10px;
     flex-wrap: wrap;
+    margin-top: 15px;
 }
 
 .card-btn {
@@ -559,95 +767,146 @@ include "style-keputusan-dprd.css";
     text-align: center;
 }
 
-/* Stats boxes */
-.stats-box {
-    background: white;
-    border-radius: 8px;
-    padding: 15px;
-    text-align: center;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+/* Styling khusus untuk monografi */
+.monografi-title {
+    font-size: 1.1rem;
+    line-height: 1.4;
 }
 
-.stats-number {
-    font-size: 2rem;
-    font-weight: bold;
-    color: #007bff;
+/* Search Box */
+.search-box {
+    margin-bottom: 20px;
 }
 
-.stats-label {
-    font-size: 0.9rem;
-    color: #666;
-    margin-top: 5px;
+/* Year Filter */
+.year-filter {
+    margin-bottom: 20px;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-    .card-image {
-        height: 180px;
-    }
-    
-    .document-card {
-        flex-direction: column;
-    }
-    
-    .stats-box {
-        margin-bottom: 15px;
-    }
+.year-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
 }
 
-/* Filter khusus */
-.karya-filter-btn {
-    background: white;
-    border: 2px solid #dee2e6;
-    color: #495057;
-    padding: 8px 20px;
-    border-radius: 25px;
-    font-weight: 500;
+.year-btn {
+    padding: 8px 15px;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    cursor: pointer;
     transition: all 0.3s ease;
 }
 
-.karya-filter-btn:hover {
-    border-color: #007bff;
-    color: #007bff;
+.year-btn:hover {
+    background: #e9ecef;
 }
 
-.karya-filter-btn.active {
+.year-btn.active {
     background: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+/* ========== PAGINATION STYLES ========== */
+.pagination-container {
+    margin-top: 30px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
+}
+
+.pagination {
+    display: flex;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 5px;
+}
+
+.page-item {
+    margin: 0 2px;
+}
+
+.page-link {
+    display: block;
+    padding: 8px 15px;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    color: #007bff;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    min-width: 40px;
+    text-align: center;
+}
+
+.page-link:hover {
+    background-color: #e9ecef;
+    border-color: #dee2e6;
+    color: #0056b3;
+    text-decoration: none;
+}
+
+.page-item.active .page-link {
+    background-color: #007bff;
     border-color: #007bff;
     color: white;
+    font-weight: 600;
 }
 
-/* Kategori karya */
-.kategori-box {
+.page-item.disabled .page-link {
+    color: #6c757d;
+    background-color: #f8f9fa;
+    border-color: #dee2e6;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.page-item:not(.disabled):not(.active) .page-link:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* Page Info */
+.page-info {
     text-align: center;
-    padding: 15px;
-    border-radius: 8px;
-    background: white;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    transition: all 0.3s ease;
-    height: 100%;
+    margin-top: 10px;
+    color: #6c757d;
+    font-size: 14px;
 }
 
-.kategori-box:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+/* Responsive Pagination */
+@media (max-width: 576px) {
+    .page-link {
+        padding: 6px 10px;
+        min-width: 35px;
+        font-size: 14px;
+    }
+    
+    .pagination {
+        gap: 3px;
+    }
 }
 
-.kategori-box i {
-    font-size: 2.5rem;
-    margin-bottom: 15px;
-    color: #007bff;
+/* Document Counter */
+.document-counter {
+    text-align: center;
+    margin-top: 10px;
+    font-size: 14px;
+    color: #6c757d;
+    padding: 8px 15px;
+    background: #f8f9fa;
+    border-radius: 5px;
+    border: 1px solid #dee2e6;
 }
 
-.kategori-box h5 {
-    margin-bottom: 10px;
-    color: #333;
-}
-
-.kategori-box p {
-    font-size: 0.9rem;
-    color: #666;
-    margin-bottom: 0;
+.document-counter strong {
+    color: #495057;
 }
 </style>
 
@@ -656,20 +915,20 @@ include "style-keputusan-dprd.css";
 ================================ -->
 <section class="page-header">
     <div class="container">
-        <h1 class="text-white">PENULISAN KARYA ILMIAH</h1>
-        <p class="subtitle">Karya Ilmiah Hukum dan Legislasi Kota Surakarta</p>
+        <h1 class="text-white">KARYA ILMIAH DPRD</h1>
+        <p class="subtitle">Karya Ilmiah Dewan Perwakilan Rakyat Daerah Kota Surakarta</p>
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="index.php">Beranda</a></li>
-                <li class="breadcrumb-item"><a href="?page=perundangan">Perundang-Undangan</a></li>
-                <li class="breadcrumb-item active">Penulisan Karya Ilmiah</li>
+                <li class="breadcrumb-item">Monografi Hukum</li>
+                <li class="breadcrumb-item active">Karya Ilmiah DPRD</li>
             </ol>
         </nav>
     </div>
 </section>
 
 <!-- ===============================
-     MAIN CONTENT
+     MAIN CONTENT - DIPERBAIKI UNTUK TAMPIL GAMBAR & DOWNLOAD
 ================================ -->
 <section class="main-content">
 <div class="container">
@@ -678,945 +937,658 @@ include "style-keputusan-dprd.css";
 <!-- ===== KONTEN UTAMA ===== -->
 <div class="col-lg-8">
 
-<!-- HEADER KARYA ILMIAH -->
-<div class="monografi-container">
-    <div class="monografi-header">
-        <div class="monografi-icon">
-            <i class="bi bi-pencil"></i>
+<?php if (isset($_SESSION['security_message'])): ?>
+<div class="security-warning">
+    <i class="bi bi-shield-check"></i> <?= safe_output($_SESSION['security_message']) ?>
+</div>
+<?php unset($_SESSION['security_message']); ?>
+<?php endif; ?>
+
+<!-- SEARCH BAR DENGAN CSRF TOKEN -->
+<div class="search-box">
+    <form method="GET" action="" class="d-flex gap-2" id="searchForm">
+        <input type="hidden" name="csrf_token" value="<?= safe_output($_SESSION['csrf_token']) ?>">
+        <input type="hidden" name="page" value="karya-ilmiah">
+        <input type="hidden" name="page_num" value="1">
+        <div class="flex-grow-1">
+            <input type="text" 
+                   name="search" 
+                   class="form-control form-control-lg" 
+                   placeholder="Cari berdasarkan judul, penulis, atau bidang hukum..." 
+                   value="<?= safe_output($search_query) ?>"
+                   aria-label="Search documents"
+                   minlength="2"
+                   maxlength="100">
         </div>
-        <h2 class="section-title">Penulisan Karya Ilmiah</h2>
-        <p class="monografi-description">
-            Kumpulan karya ilmiah yang dihasilkan oleh anggota DPRD, staf ahli, akademisi, 
-            dan peneliti terkait dengan aspek hukum, legislasi, dan pemerintahan daerah 
-            Kota Surakarta.
-        </p>
+        <button type="submit" class="btn btn-primary btn-lg" id="searchButton">
+            <i class="bi bi-search"></i> Cari
+        </button>
+        <?php if (!empty($search_query) || $current_page > 1): ?>
+            <a href="?page=karya-ilmiah" class="btn btn-secondary btn-lg">
+                <i class="bi bi-x"></i> Reset
+            </a>
+        <?php endif; ?>
+    </form>
+</div>
+
+<!-- FILTER TAHUN -->
+<div class="year-filter">
+    <h5><i class="bi bi-calendar"></i> Filter Berdasarkan Tahun</h5>
+    <div class="year-buttons">
+        <button class="year-btn active" data-year="semua">Semua</button>
+        <?php foreach ($years as $year): ?>
+            <button class="year-btn" data-year="<?= safe_output($year) ?>"><?= safe_output($year) ?></button>
+        <?php endforeach; ?>
     </div>
+</div>
+
+<?php if (!empty($search_query)): ?>
+    <h3 class="section-title">Hasil Pencarian: "<?= safe_output($search_query) ?>"</h3>
+<?php else: ?>
+    <h3 class="section-title">Daftar Karya Ilmiah DPRD</h3>
+<?php endif; ?>
+
+<?php if (mysqli_num_rows($result) > 0): ?>
+<div class="card-container">
+<?php 
+$counter = 0;
+while ($row = mysqli_fetch_assoc($result)):
+    $counter++;
+    $tanggal = date('d F Y', strtotime($row['tanggal_pembuatan']));
+    $tahun_terbit = $row['tahun_terbit'];
+    $id = $row['id_monografi'];
     
-    <!-- PENCARIAN -->
-    <div class="year-filter">
-        <h5>Cari Karya Ilmiah</h5>
-        <form class="search-form" id="searchForm">
-            <div class="input-group">
-                <input type="text" class="form-control" placeholder="Masukkan kata kunci karya ilmiah..." 
-                       aria-label="Search" id="searchKeyword">
-                <button class="btn btn-search" type="submit" id="button-search">
-                    <i class="bi bi-search"></i> CARI
-                </button>
-            </div>
-        </form>
-    </div>
+    // ============================================
+    // CARI GAMBAR - MENGGUNAKAN FUNGSI BARU
+    // ============================================
+    $image_info = findImageFile($row['thumbnail'], $id);
+    $image_url = $image_info['url'];
+    $image_found = $image_info['found'];
     
-    <!-- STATISTIK -->
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="stats-box">
-                <div class="stats-number"><?= $total_dokumen ?></div>
-                <div class="stats-label">Total Karya</div>
-            </div>
-        </div>
-        <?php
-        mysqli_data_seek($jenis_stats_result, 0);
-        $jenis_counts = [];
-        $counter = 0;
-        while ($jenis = mysqli_fetch_assoc($jenis_stats_result)) {
-            if ($counter < 3) { // Ambil 3 jenis pertama
-                $jenis_counts[$jenis['jenis_karya']] = $jenis['jumlah'];
-                $counter++;
-            }
-        }
+    // ============================================
+    // CEK FILE PDF - SISTEM BARU SEDERHANA
+    // ============================================
+    // 1. Cek apakah ada di database (KOLOM file_pdf)
+    $pdf_exists_in_db = isPdfAvailableInDB($row['file_pdf']);
+    
+    // 2. Jika ada di database, cari file fisik
+    $pdf_info = null;
+    $pdf_found = false;
+    $pdf_url = '#';
+    $pdf_filename = '';
+    
+    if ($pdf_exists_in_db) {
+        $pdf_info = findPDFFile($row['file_pdf'], $id);
         
-        // Hitung dokumen tahun ini
-        $current_year = date('Y');
-        $tahun_ini_query = "SELECT COUNT(*) as total FROM monografi 
-                          WHERE (jenis_monografi LIKE '%Karya_Ilmiah%' OR 
-                                 jenis_monografi LIKE '%karya_ilmiah%' OR
-                                 jenis_monografi LIKE '%Jurnal%' OR
-                                 jenis_monografi LIKE '%jurnal%' OR
-                                 jenis_monografi LIKE '%Skripsi%' OR
-                                 jenis_monografi LIKE '%skripsi%' OR
-                                 jenis_monografi LIKE '%Tesis%' OR
-                                 jenis_monografi LIKE '%tesis%' OR
-                                 jenis_monografi LIKE '%Artikel%' OR
-                                 jenis_monografi LIKE '%artikel%' OR
-                                 judul LIKE '%Karya Ilmiah%' OR
-                                 judul LIKE '%Jurnal%' OR
-                                 judul LIKE '%Skripsi%' OR
-                                 judul LIKE '%Tesis%' OR
-                                 judul LIKE '%Artikel%')
-                          AND tahun_terbit = '$current_year'";
-        $tahun_ini_result = mysqli_query($koneksi, $tahun_ini_query);
-        $tahun_ini_count = mysqli_fetch_assoc($tahun_ini_result)['total'];
-        ?>
-        <div class="col-md-3">
-            <div class="stats-box">
-                <div class="stats-number"><?= $tahun_ini_count ?></div>
-                <div class="stats-label">Tahun <?= $current_year ?></div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="stats-box">
-                <div class="stats-number"><?= isset($jenis_counts['Jurnal']) ? $jenis_counts['Jurnal'] : 0 ?></div>
-                <div class="stats-label">Jurnal Nasional</div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="stats-box">
-                <div class="stats-number">
-                    <?php 
-                    $skripsi_tesis = (isset($jenis_counts['Skripsi']) ? $jenis_counts['Skripsi'] : 0) + 
-                                    (isset($jenis_counts['Tesis']) ? $jenis_counts['Tesis'] : 0);
-                    echo $skripsi_tesis;
-                    ?>
-                </div>
-                <div class="stats-label">Skripsi & Tesis</div>
-            </div>
-        </div>
-    </div>
+        if ($pdf_info) {
+            $pdf_found = true;
+            $pdf_url = generatePdfUrl($pdf_info['path']);
+            $pdf_filename = $pdf_info['filename'] ?? basename($row['file_pdf']);
+        }
+    }
     
-    <!-- FILTER JENIS KARYA -->
-    <div class="year-filter">
-        <h5>Filter Berdasarkan Jenis Karya</h5>
-        <div class="year-buttons">
-            <button class="karya-filter-btn active" data-jenis="semua">Semua</button>
-            <button class="karya-filter-btn" data-jenis="jurnal">Jurnal</button>
-            <button class="karya-filter-btn" data-jenis="skripsi">Skripsi</button>
-            <button class="karya-filter-btn" data-jenis="tesis">Tesis</button>
-            <button class="karya-filter-btn" data-jenis="artikel">Artikel</button>
-        </div>
+    // Enkripsi ID untuk detail
+    $encrypted_id = encode_id($id);
+    $detail_url = "index.php?page=detail-monografi&token=" . urlencode($encrypted_id);
+    
+    // Judul untuk download filename
+    $safe_title = preg_replace('/[^a-zA-Z0-9]/', '_', substr($row['judul'], 0, 50));
+    $download_filename = $pdf_found ? $pdf_filename : ($safe_title . '.pdf');
+?>
+<div class="document-card" data-tahun="<?= safe_output($tahun_terbit); ?>" data-id="<?= safe_output($id); ?>">
+    <!-- CARD IMAGE - DIPERBAIKI -->
+    <div class="card-image" id="card-image-<?= $id ?>">
+        <img src="<?= safe_output($image_url) ?>" 
+             alt="<?= safe_output($row['judul']) ?>"
+             loading="lazy"
+             onerror="this.src='<?= safe_output($default_image_url) ?>'">
     </div>
 
-    <h3 class="section-title mt-4">Daftar Karya Ilmiah Terbaru</h3>
+    <!-- CARD CONTENT -->
+    <div class="card-content">
+        <div class="card-number">Tahun <?= safe_output($tahun_terbit) ?></div>
+        <h3 class="card-title"><?= safe_output($row['judul']) ?></h3>
 
-    <?php if (mysqli_num_rows($result) > 0): ?>
-    <div class="card-container" id="documentsContainer">
-    <?php 
-    $counter = 0;
-    mysqli_data_seek($result, 0); // Reset pointer
-    
-    while ($row = mysqli_fetch_assoc($result)):
-        $counter++;
-        $tanggal = date('d F Y', strtotime($row['tanggal_pembuatan']));
-        
-        // ============================================
-        // CARI FILE PDF
-        // ============================================
-        $file_from_db = $row['file_pdf'];
-        $file_found = false;
-        $actual_file_path = null;
-        $download_url = '#';
-        
-        if (!empty($file_from_db)) {
-            $actual_file_path = findPDFFile($file_from_db, $row['id_monografi']);
-            if ($actual_file_path) {
-                $file_found = true;
-                // URL untuk download langsung
-                $relative_path = str_replace($_SERVER['DOCUMENT_ROOT'], '', $actual_file_path);
-                $download_url = $relative_path . '?t=' . time();
-            }
-        }
-        
-        // ============================================
-        // CARI GAMBAR/THUMBNAIL
-        // ============================================
-        $image_url = '';
-        $image_found = false;
-        $actual_image_path = null;
-        
-        if (!empty($row['thumbnail'])) {
-            $actual_image_path = findImageFile($row['thumbnail'], $row['id_monografi']);
-            if ($actual_image_path) {
-                $image_found = true;
-                $relative_image_path = str_replace($_SERVER['DOCUMENT_ROOT'], '', $actual_image_path);
-                $image_url = $relative_image_path;
-            }
-        } else {
-            $actual_image_path = findImageFile(null, $row['id_monografi']);
-            if ($actual_image_path) {
-                $image_found = true;
-                $relative_image_path = str_replace($_SERVER['DOCUMENT_ROOT'], '', $actual_image_path);
-                $image_url = $relative_image_path;
-            }
-        }
-        
-        // Pastikan URL gambar dimulai dengan /
-        if (!empty($image_url) && !preg_match('/^https?:\/\//', $image_url) && $image_url[0] !== '/') {
-            $image_url = '/' . $image_url;
-        }
-        
-        // Tentukan jenis karya
-        $judul = strtolower($row['judul']);
-        $jenis = strtolower($row['jenis_monografi']);
-        $karya_jenis = '';
-        $karya_class = '';
-        $karya_text = '';
-        
-        if (strpos($jenis, 'jurnal') !== false || strpos($judul, 'jurnal') !== false) {
-            $karya_jenis = 'jurnal';
-            $karya_class = 'type-jurnal';
-            $karya_text = 'Jurnal Nasional';
-        } elseif (strpos($jenis, 'skripsi') !== false || strpos($judul, 'skripsi') !== false) {
-            $karya_jenis = 'skripsi';
-            $karya_class = 'type-skripsi';
-            $karya_text = 'Skripsi';
-        } elseif (strpos($jenis, 'tesis') !== false || strpos($judul, 'tesis') !== false) {
-            $karya_jenis = 'tesis';
-            $karya_class = 'type-tesis';
-            $karya_text = 'Tesis';
-        } elseif (strpos($jenis, 'artikel') !== false || strpos($judul, 'artikel') !== false) {
-            $karya_jenis = 'artikel';
-            $karya_class = 'type-artikel';
-            $karya_text = 'Artikel Ilmiah';
-        } else {
-            $karya_jenis = 'lainnya';
-            $karya_class = 'type-artikel';
-            $karya_text = 'Karya Ilmiah';
-        }
-        
-        // Tentukan icon berdasarkan jenis
-        $icon_class = "bi bi-file-earmark-text";
-        if ($karya_jenis == 'jurnal') {
-            $icon_class = "bi bi-journal";
-        } elseif ($karya_jenis == 'skripsi') {
-            $icon_class = "bi bi-book";
-        } elseif ($karya_jenis == 'tesis') {
-            $icon_class = "bi bi-journals";
-        }
-        
-        // URL untuk detail
-        $detail = "index.php?page=detail-monografi&id=" . $row['id_monografi'];
-        
-        // Buat singkatan
-        $singkatan = "KRY";
-        if ($karya_jenis == 'jurnal') {
-            $singkatan = "JRN";
-        } elseif ($karya_jenis == 'skripsi') {
-            $singkatan = "SKR";
-        } elseif ($karya_jenis == 'tesis') {
-            $singkatan = "TES";
-        } elseif ($karya_jenis == 'artikel') {
-            $singkatan = "ART";
-        }
-    ?>
+        <div class="card-meta">
+            <div class="card-date">
+                <i class="bi bi-calendar"></i> <?= safe_output($tanggal) ?>
+            </div>
+            <?php if (!empty($row['status'])): ?>
+                <div class="card-status"><?= safe_output($row['status']) ?></div>
+            <?php endif; ?>
+        </div>
 
-    <div class="document-card karya-ilmiah-card" data-jenis="<?= $karya_jenis ?>" data-tahun="<?= $row['tahun_terbit'] ?>" data-id="<?= $row['id_monografi']; ?>">
-        <div class="karya-badge">KARYA ILMIAH</div>
-        <div class="card-image">
-            <?php if ($image_found && !empty($image_url)): ?>
-                <img src="<?= htmlspecialchars($image_url) ?>" 
-                     alt="<?= htmlspecialchars($row['judul']) ?>"
-                     loading="lazy"
-                     onerror="this.onerror=null; this.style.display='none'; this.parentElement.querySelector('.placeholder').style.display='flex';">
-                <div class="placeholder" style="display: none;">
-                    <i class="<?= $icon_class ?>"></i>
-                    <p><?= htmlspecialchars($singkatan) ?><br>
-                    <small>Tahun <?= htmlspecialchars($row['tahun_terbit']) ?></small></p>
-                </div>
+        <?php if (!empty($row['penulis']) || !empty($row['bidang_hukum'])): ?>
+        <div class="card-extra-info">
+            <?php if (!empty($row['penulis'])): ?>
+                <span><i class="bi bi-person"></i> <?= safe_output($row['penulis']) ?></span>
+            <?php endif; ?>
+            <?php if (!empty($row['bidang_hukum'])): ?>
+                <span><i class="bi bi-journal"></i> <?= safe_output($row['bidang_hukum']) ?></span>
+            <?php endif; ?>
+        </div>
+        <?php endif; ?>
+
+        <!-- STATUS FILE - BERDASARKAN DATABASE -->
+        <div class="download-status <?= $pdf_exists_in_db ? 'available' : 'unavailable' ?>">
+            <i class="bi bi-<?= $pdf_exists_in_db ? 'check-circle' : 'x-circle' ?>"></i>
+            <?php if ($pdf_exists_in_db): ?>
+                File PDF tersedia
+                <?php if (!$pdf_found): ?>
+                    <br><small style="font-size: 9px; color: #dc3545;">(File fisik tidak ditemukan)</small>
+                <?php endif; ?>
             <?php else: ?>
-                <div class="placeholder">
-                    <i class="<?= $icon_class ?>"></i>
-                    <p><?= htmlspecialchars($singkatan) ?><br>
-                    <small>Tahun <?= htmlspecialchars($row['tahun_terbit']) ?></small></p>
-                </div>
+                File PDF tidak tersedia
             <?php endif; ?>
-            <div class="image-overlay">
-                <span class="image-badge"><?= htmlspecialchars($row['tahun_terbit']) ?></span>
-            </div>
         </div>
 
-        <div class="card-content">
-            <div class="card-number"><?= htmlspecialchars($row['jenis_monografi']) ?></div>
-            <h4 class="card-title">
-                <a href="<?= $detail ?>" class="text-decoration-none text-dark"><?= htmlspecialchars($row['judul']) ?></a>
-            </h4>
-
-            <div class="d-flex flex-wrap gap-2 mb-3">
-                <span class="karya-type <?= $karya_class ?>">
-                    <i class="<?= $icon_class ?>"></i> <?= $karya_text ?>
-                </span>
-                <span class="harmonisasi-type">
-                    <i class="bi bi-person"></i> <?= htmlspecialchars($row['penulis']) ?>
-                </span>
-            </div>
-
-            <div class="card-meta">
-                <div class="card-date">
-                    <i class="bi bi-calendar"></i> <?= $tanggal ?>
-                </div>
-                <div class="card-status"><?= htmlspecialchars($row['tahun_terbit']) ?></div>
-            </div>
-
-            <?php if (!empty($row['penulis']) || !empty($row['bidang_hukum']) || !empty($row['jumlah_halaman'])): ?>
-            <div class="card-extra-info">
-                <?php if (!empty($row['penulis'])): ?>
-                <span><i class="bi bi-person"></i> <?= htmlspecialchars($row['penulis']) ?></span>
-                <?php endif; ?>
-                <?php if (!empty($row['bidang_hukum'])): ?>
-                <span><i class="bi bi-journal"></i> <?= htmlspecialchars($row['bidang_hukum']) ?></span>
-                <?php endif; ?>
-                <?php if (!empty($row['jumlah_halaman'])): ?>
-                <span><i class="bi bi-file-text"></i> <?= htmlspecialchars($row['jumlah_halaman']) ?> halaman</span>
-                <?php endif; ?>
-                <?php if (!empty($row['penerbit'])): ?>
-                <span><i class="bi bi-building"></i> <?= htmlspecialchars($row['penerbit']) ?></span>
-                <?php endif; ?>
-            </div>
-            <?php endif; ?>
-
-            <?php if (!empty($row['deskripsi'])): ?>
-            <div class="abstrak-info">
-                <div class="abstrak-title">Abstrak:</div>
-                <p><?= nl2br(htmlspecialchars(substr($row['deskripsi'], 0, 250))) ?><?= strlen($row['deskripsi']) > 250 ? '...' : '' ?></p>
-            </div>
-            <?php endif; ?>
-
-            <div class="download-status <?= $file_found ? 'available' : 'unavailable' ?>">
-                <i class="bi bi-<?= $file_found ? 'check-circle' : 'x-circle' ?>"></i>
-                <?= $file_found ? 'File PDF tersedia' : 'File PDF tidak tersedia' ?>
-            </div>
-
-            <div class="card-actions">
-                <!-- TOMBOL LIHAT DETAIL -->
-                <a href="<?= $detail ?>" class="card-btn btn-view">
-                    <i class="bi bi-eye"></i> Lihat Detail
+        <!-- CARD ACTIONS - BUTTON DOWNLOAD YANG JELAS -->
+        <div class="card-actions">
+            <a href="<?= safe_output($detail_url) ?>" class="card-btn btn-view">
+                <i class="bi bi-eye"></i> Lihat Detail
+            </a>
+            
+            <?php if ($pdf_exists_in_db && $pdf_found): ?>
+                <!-- Button aktif - file ada di DB dan ditemukan fisiknya -->
+                <a href="<?= safe_output($pdf_url) ?>" 
+                   class="card-btn download-btn"
+                   download="<?= safe_output($download_filename) ?>"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   data-id="<?= $id ?>"
+                   data-title="<?= safe_output(addslashes($row['judul'])) ?>"
+                   onclick="return confirmDownload(this)">
+                    <i class="bi bi-download"></i> Download PDF
                 </a>
-                
-                <!-- TOMBOL DOWNLOAD -->
-                <?php if ($file_found): ?>
-                    <!-- Tombol Download Langsung -->
-                    <a href="<?= htmlspecialchars($download_url) ?>" 
-                       class="card-btn btn-download download-btn" 
-                       data-id="<?= $row['id_monografi']; ?>"
-                       data-filename="<?= htmlspecialchars(basename($actual_file_path)) ?>"
-                       download>
-                        <i class="bi bi-download"></i> Download PDF
-                    </a>
-                <?php else: ?>
-                    <a href="#" 
-                       class="card-btn btn-download disabled" 
-                       onclick="event.preventDefault(); showFileNotFoundAlert('<?= htmlspecialchars($row['judul']) ?>');"
-                       title="File PDF tidak tersedia">
-                        <i class="bi bi-download"></i> Download PDF
-                    </a>
-                <?php endif; ?>
-            </div>
+            <?php elseif ($pdf_exists_in_db && !$pdf_found): ?>
+                <!-- Button disabled - file ada di DB tapi tidak ditemukan fisiknya -->
+                <a href="#" 
+                   class="card-btn download-btn disabled"
+                   onclick="event.preventDefault(); showFileNotAccessibleAlert('<?= safe_output(addslashes($row['judul'])) ?>');"
+                   title="File terdaftar tetapi tidak dapat diakses">
+                    <i class="bi bi-exclamation-triangle"></i> Tidak Dapat Diakses
+                </a>
+            <?php else: ?>
+                <!-- Button disabled - tidak ada file di database -->
+                <a href="#" 
+                   class="card-btn download-btn disabled"
+                   onclick="event.preventDefault(); showNoFileAlert('<?= safe_output(addslashes($row['judul'])) ?>');"
+                   title="Tidak ada file PDF yang terdaftar">
+                    <i class="bi bi-x-circle"></i> Tidak Tersedia
+                </a>
+            <?php endif; ?>
         </div>
-    </div>
-
-    <?php endwhile; ?>
-    </div>
-    <?php else: ?>
-    <div class="no-data">
-        <i class="bi bi-pencil"></i>
-        <h4>Tidak Ada Data</h4>
-        <p class="text-muted mb-0">
-            Tidak ada karya ilmiah yang tersedia di database.
-        </p>
-        <?php 
-        // Debug: Tampilkan jenis monografi yang ada
-        $debug_query = "SELECT DISTINCT jenis_monografi FROM monografi WHERE jenis_monografi LIKE '%Karya%' OR jenis_monografi LIKE '%Jurnal%' OR jenis_monografi LIKE '%Skripsi%' OR jenis_monografi LIKE '%Tesis%' OR jenis_monografi LIKE '%Artikel%' LIMIT 10";
-        $debug_result = mysqli_query($koneksi, $debug_query);
-        if (mysqli_num_rows($debug_result) > 0): ?>
-        <div class="alert alert-info mt-3">
-            <small>Contoh jenis monografi karya ilmiah yang tersedia:<br>
-            <?php while ($debug_row = mysqli_fetch_assoc($debug_result)): ?>
-                <?= htmlspecialchars($debug_row['jenis_monografi']) ?><br>
-            <?php endwhile; ?>
+        
+        <?php if ($debug_mode): ?>
+        <div class="debug-info">
+            <small>
+                <strong>Debug Info (ID: <?= $id ?>):</strong><br>
+                Database PDF: "<?= safe_output($row['file_pdf']) ?>"<br>
+                Ada di Database: <?= $pdf_exists_in_db ? 'YA' : 'TIDAK' ?><br>
+                Ditemukan Secara Fisik: <?= $pdf_found ? 'YA' : 'TIDAK' ?><br>
+                PDF URL: <?= safe_output($pdf_url) ?><br>
+                Download Filename: <?= safe_output($download_filename) ?>
             </small>
         </div>
         <?php endif; ?>
     </div>
-    <?php endif; ?>
-
-    <!-- KATEGORI KARYA ILMIAH -->
-    <div class="year-filter mt-5">
-        <h4 class="section-title mb-4"><i class="bi bi-diagram-3 text-primary me-2"></i>Kategori Karya Ilmiah</h4>
-        <div class="row">
-            <div class="col-md-3 mb-3">
-                <div class="kategori-box">
-                    <div class="mb-3">
-                        <i class="bi bi-journal fs-1 text-primary"></i>
-                    </div>
-                    <h5>Jurnal</h5>
-                    <p class="small">Artikel jurnal nasional & internasional</p>
-                    <div class="mt-2">
-                        <span class="badge bg-primary"><?= isset($jenis_counts['Jurnal']) ? $jenis_counts['Jurnal'] : 0 ?> karya</span>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3 mb-3">
-                <div class="kategori-box">
-                    <div class="mb-3">
-                        <i class="bi bi-book fs-1 text-primary"></i>
-                    </div>
-                    <h5>Skripsi</h5>
-                    <p class="small">Karya ilmiah strata 1 (S1)</p>
-                    <div class="mt-2">
-                        <span class="badge bg-primary"><?= isset($jenis_counts['Skripsi']) ? $jenis_counts['Skripsi'] : 0 ?> karya</span>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3 mb-3">
-                <div class="kategori-box">
-                    <div class="mb-3">
-                        <i class="bi bi-journals fs-1 text-primary"></i>
-                    </div>
-                    <h5>Tesis</h5>
-                    <p class="small">Karya ilmiah strata 2 (S2)</p>
-                    <div class="mt-2">
-                        <span class="badge bg-primary"><?= isset($jenis_counts['Tesis']) ? $jenis_counts['Tesis'] : 0 ?> karya</span>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3 mb-3">
-                <div class="kategori-box">
-                    <div class="mb-3">
-                        <i class="bi bi-file-earmark-text fs-1 text-primary"></i>
-                    </div>
-                    <h5>Artikel</h5>
-                    <p class="small">Makalah konferensi & prosiding</p>
-                    <div class="mt-2">
-                        <span class="badge bg-primary"><?= isset($jenis_counts['Artikel Ilmiah']) ? $jenis_counts['Artikel Ilmiah'] : 0 ?> karya</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
+<?php endwhile; ?>
+</div>
+
+<!-- ============================================
+     PAGINATION SECTION
+================================ -->
+<?php if ($total_pages > 1): ?>
+<div class="pagination-container">
+    <nav aria-label="Page navigation">
+        <ul class="pagination">
+            <!-- Previous Page Link -->
+            <li class="page-item <?= $current_page == 1 ? 'disabled' : '' ?>">
+                <a class="page-link" 
+                   href="?page=karya-ilmiah<?= !empty($search_query) ? '&search=' . urlencode($search_query) : '' ?>&page_num=<?= $current_page - 1 ?>"
+                   aria-label="Previous">
+                    <i class="bi bi-chevron-left"></i> Prev
+                </a>
+            </li>
+            
+            <!-- First Page -->
+            <?php if ($current_page > 3): ?>
+                <li class="page-item">
+                    <a class="page-link" 
+                       href="?page=karya-ilmiah<?= !empty($search_query) ? '&search=' . urlencode($search_query) : '' ?>&page_num=1">
+                        1
+                    </a>
+                </li>
+                <?php if ($current_page > 4): ?>
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                <?php endif; ?>
+            <?php endif; ?>
+            
+            <!-- Page Numbers -->
+            <?php 
+            $start_page = max(1, $current_page - 2);
+            $end_page = min($total_pages, $current_page + 2);
+            
+            for ($i = $start_page; $i <= $end_page; $i++): 
+            ?>
+                <li class="page-item <?= $i == $current_page ? 'active' : '' ?>">
+                    <a class="page-link" 
+                       href="?page=karya-ilmiah<?= !empty($search_query) ? '&search=' . urlencode($search_query) : '' ?>&page_num=<?= $i ?>">
+                        <?= $i ?>
+                    </a>
+                </li>
+            <?php endfor; ?>
+            
+            <!-- Last Page -->
+            <?php if ($current_page < $total_pages - 2): ?>
+                <?php if ($current_page < $total_pages - 3): ?>
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                <?php endif; ?>
+                <li class="page-item">
+                    <a class="page-link" 
+                       href="?page=karya-ilmiah<?= !empty($search_query) ? '&search=' . urlencode($search_query) : '' ?>&page_num=<?= $total_pages ?>">
+                        <?= $total_pages ?>
+                    </a>
+                </li>
+            <?php endif; ?>
+            
+            <!-- Next Page Link -->
+            <li class="page-item <?= $current_page == $total_pages ? 'disabled' : '' ?>">
+                <a class="page-link" 
+                   href="?page=karya-ilmiah<?= !empty($search_query) ? '&search=' . urlencode($search_query) : '' ?>&page_num=<?= $current_page + 1 ?>"
+                   aria-label="Next">
+                    Next <i class="bi bi-chevron-right"></i>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</div>
+
+<!-- Page Info -->
+<div class="page-info">
+    Menampilkan <?= ($offset + 1) ?> - <?= min($offset + $items_per_page, $total_dokumen) ?> dari <?= $total_dokumen ?> dokumen
+</div>
+<?php endif; ?>
+
+<?php else: ?>
+<div class="alert alert-info mt-4">
+    <i class="bi bi-info-circle"></i> Tidak ada data Karya Ilmiah yang ditemukan.
+</div>
+<?php endif; ?>
 
 </div>
 
 <!-- ===== SIDEBAR ===== -->
 <div class="col-lg-4">
-
-<!-- Reset result pointer untuk sidebar -->
-<?php
-mysqli_data_seek($year_stats_result, 0);
-mysqli_data_seek($recent_result, 0);
-mysqli_data_seek($jenis_stats_result, 0);
-mysqli_data_seek($penulis_stats_result, 0);
-?>
-
-<div class="sidebar-menu">
-<h4><i class="bi bi-pencil"></i> Menu Monografi Hukum</h4>
-<ul>
-<li><a href="pokok-pikiran-dprd.php"><i class="bi bi-lightbulb"></i> Pokok Pikiran DPRD</a></li>
-<li><a href="kajian-raperda.php"><i class="bi bi-search"></i> Kajian Raperda</a></li>
-<li><a href="naskah-akademik.php"><i class="bi bi-journal-text"></i> Naskah Akademik</a></li>
-<li><a href="hasil-fasilitasi.php"><i class="bi bi-gear"></i> Hasil Fasilitasi Raperda</a></li>
-<li><a href="risalah.php"><i class="bi bi-chat-text"></i> Risalah</a></li>
-<li><a href="hasil-harmonisasi.php"><i class="bi bi-shuffle"></i> Hasil Harmonisasi Raperda</a></li>
-<li class="active"><a href="#"><i class="bi bi-pencil"></i> Penulisan Karya Ilmiah</a></li>
-<li><a href="himpunan-peraturan.php"><i class="bi bi-folder"></i> Himpunan Peraturan</a></li>
-</ul>
-</div>
-
-<!-- STATISTIK KARYA -->
-<div class="sidebar-menu">
-    <h4><i class="bi bi-bar-chart"></i> Statistik Karya Ilmiah</h4>
-    <ul>
-        <li class="d-flex justify-content-between">
-            <span>Total Karya Ilmiah</span>
-            <span class="badge bg-primary rounded-pill"><?= $total_dokumen ?></span>
-        </li>
-        <?php while ($jenis = mysqli_fetch_assoc($jenis_stats_result)): 
-            $badge_class = 'bg-primary';
-            if ($jenis['jenis_karya'] == 'Jurnal') $badge_class = 'bg-success';
-            elseif ($jenis['jenis_karya'] == 'Skripsi') $badge_class = 'bg-info';
-            elseif ($jenis['jenis_karya'] == 'Tesis') $badge_class = 'bg-warning';
-            elseif ($jenis['jenis_karya'] == 'Artikel Ilmiah') $badge_class = 'bg-secondary';
-        ?>
-        <li class="d-flex justify-content-between">
-            <span><?= htmlspecialchars($jenis['jenis_karya']) ?></span>
-            <span class="badge <?= $badge_class ?> rounded-pill"><?= $jenis['jumlah'] ?></span>
-        </li>
-        <?php endwhile; ?>
-    </ul>
-</div>
-
-<!-- FILTER TAHUN -->
-<div class="sidebar-menu">
-    <h4><i class="bi bi-calendar"></i> Filter Berdasarkan Tahun</h4>
-    <div class="year-buttons-sidebar">
-        <button class="year-btn year-filter-sidebar active" data-year="semua">Semua</button>
-        <?php foreach ($years as $year): ?>
-            <button class="year-btn year-filter-sidebar" data-year="<?= $year ?>"><?= $year ?></button>
-        <?php endforeach; ?>
+    <!-- Menu Monografi Statistik -->
+    <div class="sidebar-menu">
+        <h4><i class="bi bi-collection"></i> Menu Monografi Hukum</h4>
+        <ul>
+            <li>
+                <a href="?page=pokok-pikiran"><i class="bi bi-lightbulb"></i> Pokok Pikiran DPRD</a>
+            </li>
+            <li>
+                <a href="?page=kajian-raperda">
+                    <i class="bi bi-search"></i> Kajian Raperda
+                </a>
+            </li>
+            <li>
+                <a href="?page=naskah-akademik">
+                    <i class="bi bi-journal-text"></i> Naskah Akademik
+                </a>
+            </li>
+            <li>
+                <a href="?page=dokumen-langka">
+                    <i class="bi bi-file-earmark-pdf"></i> Dokumen Langka
+                </a>
+            </li>
+            <li>
+                <a href="?page=risalah">
+                    <i class="bi bi-file-text"></i> Risalah
+                </a>
+            </li>
+            <li>
+                <a href="?page=hasil-fasilitasi">
+                    <i class="bi bi-gear"></i> Hasil Fasilitasi
+                </a>
+            </li>
+            <li>
+                <a href="?page=hasil-harmonisasi">
+                    <i class="bi bi-shuffle"></i> Hasil Harmonisasi
+                </a>
+            </li>
+            <li class="<?= (basename($_SERVER['PHP_SELF']) == 'karya-ilmiah.php' || $_GET['page'] == 'karya-ilmiah') ? 'active' : '' ?>">
+                <a href="?page=karya-ilmiah">
+                    <i class="bi bi-pencil"></i> Penulisan Karya Ilmiah
+                </a>
+            </li>
+            <li>
+                <a href="?page=himpunan">
+                    <i class="bi bi-folder"></i> Himpunan Peraturan
+                </a>
+            </li>
+        </ul>
     </div>
-</div>
 
-<!-- PENULIS TERBANYAK -->
-<div class="sidebar-menu">
-    <h4><i class="bi bi-person"></i> Penulis Terbanyak</h4>
-    <div class="list-group">
-        <?php while ($penulis = mysqli_fetch_assoc($penulis_stats_result)): ?>
-        <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-            <span class="text-truncate" style="max-width: 150px;"><?= htmlspecialchars($penulis['penulis']) ?></span>
-            <span class="badge bg-primary rounded-pill"><?= $penulis['jumlah'] ?></span>
-        </a>
-        <?php endwhile; ?>
+    <!-- Statistik -->
+    <div class="sidebar-menu">
+        <h4><i class="bi bi-bar-chart"></i> Statistik Karya Ilmiah</h4>
+        <ul>
+            <li class="stat-item-main">
+                <span class="stat-label">Total Dokumen</span>
+                <span class="stat-value"><?= $total_dokumen ?></span>
+            </li>
+            <?php if (!empty($years)): ?>
+                <?php 
+                // Ambil 5 tahun terakhir untuk statistik
+                $recent_years = array_slice($years, 0, 5);
+                foreach ($recent_years as $year): 
+                ?>
+                <li class="stat-item">
+                    <span class="stat-year"><?= $year ?></span>
+                    <span class="stat-count"><?= count(array_filter($years, function($y) use ($year) { return $y == $year; })) ?> dokumen</span>
+                </li>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </ul>
     </div>
-</div>
 
-<!-- KARYA TERBARU -->
-<div class="sidebar-menu">
-    <h4><i class="bi bi-clock-history"></i> Karya Terbaru</h4>
-    <ul>
-    <?php while ($recent = mysqli_fetch_assoc($recent_result)): 
-        // Tentukan icon berdasarkan jenis
-        $judul_lower = strtolower($recent['judul']);
-        $recent_icon = "bi bi-file-earmark-text";
-        if (strpos($judul_lower, 'jurnal') !== false) $recent_icon = "bi bi-journal";
-        elseif (strpos($judul_lower, 'skripsi') !== false) $recent_icon = "bi bi-book";
-        elseif (strpos($judul_lower, 'tesis') !== false) $recent_icon = "bi bi-journals";
-    ?>
-    <li>
-        <a href="index.php?page=detail-monografi&id=<?= $recent['id_monografi'] ?>">
-            <i class="<?= $recent_icon ?>"></i> <?= htmlspecialchars(substr($recent['judul'], 0, 40)) ?>...
-        </a>
-        <small class="text-muted d-block">Oleh: <?= htmlspecialchars($recent['penulis']) ?></small>
-        <small class="text-muted">Tahun: <?= htmlspecialchars($recent['tahun_terbit']) ?></small>
-    </li>
-    <?php endwhile; ?>
-    </ul>
-</div>
-
-<!-- PANDUAN PENULISAN -->
-<div class="sidebar-menu">
-    <h4><i class="bi bi-book"></i> Panduan & Template</h4>
-    <ul>
-        <li><a href="#" onclick="showTemplate()"><i class="bi bi-file-earmark-word"></i> Template Penulisan (DOC)</a></li>
-        <li><a href="#" onclick="showPedoman()"><i class="bi bi-file-earmark-pdf"></i> Pedoman Sitasi (PDF)</a></li>
-        <li><a href="#" onclick="showMetodologi()"><i class="bi bi-file-earmark-ppt"></i> Presentasi Metodologi (PPT)</a></li>
-        <li><a href="#" onclick="showContoh()"><i class="bi bi-file-earmark-zip"></i> Contoh Karya Lengkap (ZIP)</a></li>
-    </ul>
-</div>
+    <!-- Dokumen Terbaru -->
+    <div class="sidebar-menu">
+        <h4><i class="bi bi-fire"></i> Dokumen Terbaru</h4>
+        <ul>
+        <?php if ($latest_result): while ($doc = mysqli_fetch_assoc($latest_result)): ?>
+        <li>
+            <a href="?page=karya-ilmiah&id=<?= urlencode(encode_id($doc['id_monografi'])) ?>">
+                <i class="bi bi-file-text"></i> <?= safe_output(substr($doc['judul'], 0, 50)) ?>
+            </a>
+            <small class="text-muted d-block"><?= safe_output($doc['tahun_terbit']) ?></small>
+            <small class="text-muted"><?= date('d M Y', strtotime($doc['created_at'])) ?></small>
+        </li>
+        <?php endwhile; endif; ?>
+        </ul>
+    </div>
 
 </div>
+
+    <?php if ($debug_mode): ?>
+    <div class="sidebar-menu">
+        <h4><i class="bi bi-bug"></i> Debug Paths</h4>
+        <div class="debug-info">
+            <small>
+                <strong>File Paths:</strong><br>
+                PDF Path: <?= $monografi_pdf_path ?><br>
+                Images Path: <?= $monografi_images_path ?><br>
+                Default Image: <?= $default_image_url ?>
+            </small>
+        </div>
+    </div>
+    <?php endif; ?>
+</div>
+
 </div>
 </div>
 </section>
 
 <?php include "footer.php"; ?>
 
+<!-- ===============================
+     JAVASCRIPT - DIPERBAIKI DENGAN PAGINATION
+================================ -->
 <script>
 // ============================================
-// FILTER BERDASARKAN JENIS KARYA
+// FUNGSI KONFIRMASI DOWNLOAD
 // ============================================
-document.querySelectorAll(".karya-filter-btn").forEach(btn => {
-    btn.addEventListener('click', () => {
-        document.querySelectorAll(".karya-filter-btn").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        const selectedJenis = btn.dataset.jenis;
-        
-        filterDocuments(selectedJenis, currentYear);
-    });
-});
-
-// ============================================
-// FILTER BERDASARKAN TAHUN (SIDEBAR)
-// ============================================
-let currentYear = "semua";
-let currentJenis = "semua";
-
-document.querySelectorAll(".year-filter-sidebar").forEach(btn => {
-    btn.addEventListener('click', () => {
-        document.querySelectorAll(".year-filter-sidebar").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        currentYear = btn.dataset.year;
-        
-        filterDocuments(currentJenis, currentYear);
-    });
-});
-
-// ============================================
-// FUNGSI FILTER DOKUMEN
-// ============================================
-function filterDocuments(jenis, year) {
-    const cards = document.querySelectorAll('.karya-ilmiah-card');
-    let visibleCount = 0;
+function confirmDownload(linkElement) {
+    const title = linkElement.getAttribute('data-title');
+    const id = linkElement.getAttribute('data-id');
     
-    cards.forEach(card => {
-        const cardJenis = card.dataset.jenis;
-        const cardYear = card.dataset.tahun;
+    // Tampilkan konfirmasi sederhana
+    if (confirm(`Anda akan mendownload file:\n\n"${title}"\n\nKlik OK untuk melanjutkan download.`)) {
+        console.log('Download confirmed for ID:', id, 'Title:', title);
         
-        const jenisMatch = jenis === "semua" || cardJenis === jenis;
-        const yearMatch = year === "semua" || cardYear === year;
+        // Track download (opsional)
+        trackDownload(id, title);
         
-        if (jenisMatch && yearMatch) {
-            card.style.display = "flex";
-            visibleCount++;
-        } else {
-            card.style.display = "none";
+        // Tambahkan timestamp untuk menghindari cache
+        const currentHref = linkElement.getAttribute('href');
+        if (currentHref && !currentHref.includes('?t=')) {
+            const newHref = currentHref + (currentHref.includes('?') ? '&' : '?') + 't=' + Date.now();
+            linkElement.setAttribute('href', newHref);
         }
-    });
-    
-    // Update counter
-    if (visibleCount === 0) {
-        document.getElementById('documentsContainer').innerHTML = `
-            <div class="no-data">
-                <i class="bi bi-search"></i>
-                <h4>Tidak Ditemukan</h4>
-                <p class="text-muted mb-0">
-                    Tidak ada karya ilmiah yang sesuai dengan filter yang dipilih.
-                </p>
-                <button class="btn btn-primary mt-3" onclick="resetFilters()">
-                    <i class="bi bi-arrow-clockwise"></i> Reset Filter
-                </button>
-            </div>
-        `;
-    }
-}
-
-// ============================================
-// RESET FILTER
-// ============================================
-function resetFilters() {
-    currentJenis = "semua";
-    currentYear = "semua";
-    
-    document.querySelectorAll(".karya-filter-btn").forEach(b => b.classList.remove("active"));
-    document.querySelector(".karya-filter-btn[data-jenis='semua']").classList.add("active");
-    
-    document.querySelectorAll(".year-filter-sidebar").forEach(b => b.classList.remove("active"));
-    document.querySelector(".year-filter-sidebar[data-year='semua']").classList.add("active");
-    
-    const cards = document.querySelectorAll('.karya-ilmiah-card');
-    cards.forEach(card => {
-        card.style.display = "flex";
-    });
-}
-
-// ============================================
-// FUNGSI PENCARIAN
-// ============================================
-document.getElementById('searchForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const keyword = document.getElementById('searchKeyword').value.toLowerCase().trim();
-    
-    if (!keyword) {
-        alert('Masukkan kata kunci pencarian!');
-        return;
-    }
-    
-    const cards = document.querySelectorAll('.karya-ilmiah-card');
-    let foundCount = 0;
-    
-    cards.forEach(card => {
-        const title = card.querySelector('.card-title a').textContent.toLowerCase();
-        const desc = card.querySelector('.abstrak-info p')?.textContent.toLowerCase() || '';
-        const penulis = card.querySelector('.harmonisasi-type')?.textContent.toLowerCase() || '';
         
-        if (title.includes(keyword) || desc.includes(keyword) || penulis.includes(keyword)) {
-            card.style.display = "flex";
-            foundCount++;
-            
-            // Highlight the keyword
-            highlightText(card, keyword);
-        } else {
-            card.style.display = "none";
-        }
-    });
-    
-    if (foundCount === 0) {
-        document.getElementById('documentsContainer').innerHTML = `
-            <div class="no-data">
-                <i class="bi bi-search"></i>
-                <h4>Tidak Ditemukan</h4>
-                <p class="text-muted mb-0">
-                    Tidak ada karya ilmiah yang sesuai dengan kata kunci "${keyword}".
-                </p>
-                <button class="btn btn-primary mt-3" onclick="resetSearch()">
-                    <i class="bi bi-arrow-clockwise"></i> Tampilkan Semua
-                </button>
-            </div>
-        `;
+        // Biarkan browser melanjutkan download
+        return true;
     }
     
-    // Show search results info
-    if (foundCount > 0) {
-        showSearchResultsInfo(keyword, foundCount);
-    }
-});
+    // Batal download
+    return false;
+}
 
-function highlightText(card, keyword) {
-    const elements = card.querySelectorAll('.card-title a, .abstrak-info p');
+// ============================================
+// FUNGSI ALERT UNTUK FILE TIDAK TERSEDIA
+// ============================================
+function showNoFileAlert(title) {
+    alert(`File PDF untuk "${title}" tidak tersedia di database.`);
+}
+
+function showFileNotAccessibleAlert(title) {
+    alert(`File PDF untuk "${title}" terdaftar di database tetapi tidak dapat diakses.\n\nSilakan hubungi administrator.`);
+}
+
+// ============================================
+// FUNGSI UNTUK TRACKING DOWNLOAD (OPTIONAL)
+// ============================================
+function trackDownload(id, title) {
+    // Kirim data ke server untuk tracking jika diperlukan
+    const data = {
+        action: 'download',
+        document_id: id,
+        document_title: title,
+        timestamp: new Date().toISOString(),
+        user_agent: navigator.userAgent,
+        url: window.location.href
+    };
     
-    elements.forEach(element => {
-        const originalText = element.textContent;
-        const regex = new RegExp(`(${keyword})`, 'gi');
-        const highlightedText = originalText.replace(regex, '<mark>$1</mark>');
-        
-        if (originalText !== highlightedText) {
-            element.innerHTML = highlightedText;
-        }
-    });
-}
-
-function resetSearch() {
-    document.getElementById('searchKeyword').value = '';
-    resetFilters();
-}
-
-function showSearchResultsInfo(keyword, count) {
-    if (typeof Swal !== 'undefined') {
-        Swal.fire({
-            icon: 'info',
-            title: 'Hasil Pencarian',
-            html: `Ditemukan <strong>${count}</strong> karya ilmiah dengan kata kunci "<strong>${keyword}</strong>"`,
-            timer: 3000,
-            showConfirmButton: false
-        });
+    // Menggunakan Beacon API jika tersedia
+    if (navigator.sendBeacon) {
+        navigator.sendBeacon('/api/track-download.php', JSON.stringify(data));
     } else {
-        console.log(`Found ${count} academic works for "${keyword}"`);
+        // Fallback menggunakan fetch
+        fetch('/api/track-download.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+            keepalive: true
+        }).catch(err => {
+            console.log('Download tracking failed:', err);
+        });
     }
+    
+    console.log('Download tracked:', data);
 }
 
 // ============================================
-// FUNGSI UNTUK NOTIFIKASI
-// ============================================
-function showFileNotFoundAlert(judul) {
-    if (typeof Swal !== 'undefined') {
-        Swal.fire({
-            icon: 'warning',
-            title: 'File Tidak Tersedia',
-            html: `File PDF untuk karya ilmiah <strong>${judul}</strong> tidak ditemukan di server.<br><br>
-                  <small>Silakan hubungi administrator untuk melaporkan masalah ini.</small>`,
-            confirmButtonText: 'Mengerti'
-        });
-    } else {
-        alert(`File PDF untuk karya ilmiah "${judul}" tidak ditemukan di server.\n\nSilakan hubungi administrator untuk melaporkan masalah ini.`);
-    }
-}
-
-function showDownloadStarted(filename) {
-    if (typeof Swal !== 'undefined') {
-        Swal.fire({
-            icon: 'success',
-            title: 'Download Dimulai',
-            html: `File <strong>${filename}</strong> sedang didownload...<br><br>
-                  <small>Jika download tidak dimulai, coba klik kanan dan "Save link as..."</small>`,
-            timer: 3000,
-            showConfirmButton: false
-        });
-    } else {
-        console.log(`Download started: ${filename}`);
-        alert(`Download file "${filename}" sedang dimulai.`);
-    }
-}
-
-// ============================================
-// PANDUAN PENULISAN FUNCTIONS
-// ============================================
-function showTemplate() {
-    if (typeof Swal !== 'undefined') {
-        Swal.fire({
-            title: 'Template Penulisan',
-            html: `
-                <div class="text-start">
-                    <h6>Template yang tersedia:</h6>
-                    <ul>
-                        <li><strong>Template Jurnal:</strong> Format IMRaD dengan style APA 7th</li>
-                        <li><strong>Template Skripsi:</strong> Format standar perguruan tinggi</li>
-                        <li><strong>Template Tesis:</strong> Format penelitian kualitatif/kuantitatif</li>
-                        <li><strong>Template Artikel:</strong> Format konferensi nasional/internasional</li>
-                    </ul>
-                    <hr>
-                    <p class="mb-2">Silakan download template yang sesuai:</p>
-                    <div class="text-center">
-                        <button class="btn btn-primary" onclick="window.open('templates/jurnal_template.docx', '_blank')">
-                            <i class="bi bi-download"></i> Download Template
-                        </button>
-                    </div>
-                </div>
-            `,
-            confirmButtonText: 'Tutup',
-            width: 600
-        });
-    }
-}
-
-function showPedoman() {
-    if (typeof Swal !== 'undefined') {
-        Swal.fire({
-            title: 'Pedoman Sitasi dan Referensi',
-            html: `
-                <div class="text-start">
-                    <h6>Pedoman yang tersedia:</h6>
-                    <ol>
-                        <li>Pedoman Sitasi APA Style 7th Edition</li>
-                        <li>Pedoman Sitasi Chicago Style 17th Edition</li>
-                        <li>Pedoman Sitasi Harvard Style</li>
-                        <li>Pedoman Manajemen Referensi dengan Mendeley</li>
-                        <li>Pedoman Manajemen Referensi dengan Zotero</li>
-                    </ol>
-                    <hr>
-                    <p class="mb-2">Download pedoman sitasi:</p>
-                    <div class="text-center">
-                        <button class="btn btn-primary" onclick="window.open('pedoman/sitasi_apa7.pdf', '_blank')">
-                            <i class="bi bi-download"></i> Download Pedoman
-                        </button>
-                    </div>
-                </div>
-            `,
-            confirmButtonText: 'Tutup',
-            width: 600
-        });
-    }
-}
-
-function showMetodologi() {
-    if (typeof Swal !== 'undefined') {
-        Swal.fire({
-            title: 'Presentasi Metodologi Penelitian',
-            html: `
-                <div class="text-start">
-                    <h6>Materi metodologi penelitian:</h6>
-                    <ul>
-                        <li>Metodologi Penelitian Hukum Normatif</li>
-                        <li>Metodologi Penelitian Hukum Empiris</li>
-                        <li>Teknik Pengumpulan Data dan Analisis</li>
-                        <li>Etika Penelitian dan Plagiarisme</li>
-                        <li>Teknik Penulisan dan Penyuntingan</li>
-                    </ul>
-                    <hr>
-                    <p class="mb-2">Download materi presentasi:</p>
-                    <div class="text-center">
-                        <button class="btn btn-primary" onclick="window.open('materi/metodologi_penelitian.ppt', '_blank')">
-                            <i class="bi bi-download"></i> Download Materi
-                        </button>
-                    </div>
-                </div>
-            `,
-            confirmButtonText: 'Tutup',
-            width: 600
-        });
-    }
-}
-
-function showContoh() {
-    if (typeof Swal !== 'undefined') {
-        Swal.fire({
-            title: 'Contoh Karya Ilmiah Lengkap',
-            html: `
-                <div class="text-start">
-                    <h6>Contoh karya ilmiah lengkap:</h6>
-                    <ul>
-                        <li>Contoh Jurnal Hukum Terpublikasi (PDF)</li>
-                        <li>Contoh Skripsi Hukum Berpredikat Cumlaude</li>
-                        <li>Contoh Tesis Hukum dengan Metode Campuran</li>
-                        <li>Contoh Artikel Konferensi Internasional</li>
-                        <li>Contoh Proposal Penelitian yang Didanai</li>
-                    </ul>
-                    <hr>
-                    <p class="mb-2">Download contoh karya ilmiah:</p>
-                    <div class="text-center">
-                        <button class="btn btn-primary" onclick="window.open('contoh/contoh_karya_ilmiah.zip', '_blank')">
-                            <i class="bi bi-download"></i> Download Contoh
-                        </button>
-                    </div>
-                </div>
-            `,
-            confirmButtonText: 'Tutup',
-            width: 600
-        });
-    }
-}
-
-// ============================================
-// HANDLING DOWNLOAD BUTTON
+// FILTER BERDASARKAN TAHUN
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
-    // Untuk tombol download yang aktif
-    const downloadButtons = document.querySelectorAll('.download-btn:not(.disabled)');
+    // Year filter
+    const yearButtons = document.querySelectorAll('.year-btn');
+    const documentCards = document.querySelectorAll('.document-card');
     
-    downloadButtons.forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            const id = this.getAttribute('data-id');
-            const filename = this.getAttribute('data-filename');
-            
-            // Tampilkan notifikasi
-            showDownloadStarted(filename);
-            
-            console.log('Download clicked:', {
-                id: id,
-                filename: filename,
-                href: this.href
+    if (yearButtons.length > 0 && documentCards.length > 0) {
+        yearButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Update active state
+                yearButtons.forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                
+                const selectedYear = this.getAttribute('data-year');
+                
+                // Filter cards
+                documentCards.forEach(card => {
+                    const cardYear = card.getAttribute('data-tahun');
+                    
+                    if (selectedYear === 'semua' || cardYear === selectedYear) {
+                        card.style.display = 'flex';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
             });
         });
-    });
-    
-    // Untuk tombol download yang disabled
-    const disabledButtons = document.querySelectorAll('.btn-download.disabled');
-    disabledButtons.forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            const card = this.closest('.karya-ilmiah-card');
-            const judul = card.querySelector('.card-title a').textContent;
-            showFileNotFoundAlert(judul);
-        });
-    });
+    }
     
     // ============================================
-    // ERROR HANDLING UNTUK GAMBAR
+    // VALIDASI FORM PENCARIAN
     // ============================================
-    const images = document.querySelectorAll('.card-image img');
-    
-    images.forEach(img => {
-        // Cek jika gambar sudah error
-        if (img.complete && img.naturalHeight === 0) {
-            const placeholder = img.parentElement.querySelector('.placeholder');
-            if (placeholder) {
-                img.style.display = 'none';
-                placeholder.style.display = 'flex';
+    const searchForm = document.getElementById('searchForm');
+    if (searchForm) {
+        searchForm.addEventListener('submit', function(e) {
+            const searchInput = this.querySelector('input[name="search"]');
+            const searchButton = document.getElementById('searchButton');
+            
+            if (searchInput && searchInput.value.trim().length < 2) {
+                e.preventDefault();
+                alert('Masukkan minimal 2 karakter untuk pencarian.');
+                searchInput.focus();
+                return false;
             }
-        }
-        
-        // Event listener untuk error gambar
+            
+            // Reset ke halaman 1 saat search
+            const pageNumInput = this.querySelector('input[name="page_num"]');
+            if (pageNumInput) {
+                pageNumInput.value = '1';
+            }
+            
+            // Disable button untuk prevent double submit
+            if (searchButton) {
+                searchButton.disabled = true;
+                searchButton.innerHTML = '<i class="bi bi-hourglass"></i> Searching...';
+                
+                // Re-enable setelah 3 detik (fallback)
+                setTimeout(() => {
+                    searchButton.disabled = false;
+                    searchButton.innerHTML = '<i class="bi bi-search"></i> Cari';
+                }, 3000);
+            }
+        });
+    }
+    
+    // ============================================
+    // AUTO-HIDE ALERTS SETELAH 5 DETIK
+    // ============================================
+    setTimeout(() => {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => {
+            alert.style.transition = 'opacity 0.5s';
+            alert.style.opacity = '0';
+            setTimeout(() => {
+                if (alert.parentNode) {
+                    alert.parentNode.removeChild(alert);
+                }
+            }, 500);
+        });
+    }, 5000);
+    
+    // ============================================
+    // HANDLE IMAGE ERRORS
+    // ============================================
+    document.querySelectorAll('.card-image img').forEach(img => {
         img.addEventListener('error', function() {
-            this.style.display = 'none';
-            const placeholder = this.parentElement.querySelector('.placeholder');
-            if (placeholder) {
-                placeholder.style.display = 'flex';
+            // Ganti dengan gambar default jika gagal load
+            const defaultImage = '<?= safe_output($default_image_url) ?>';
+            if (this.src !== defaultImage) {
+                this.src = defaultImage;
             }
         });
     });
 });
 
 // ============================================
-// KARYA ILMIAH BADGE CLICK
+// MONITOR DOWNLOAD SUCCESS (OPTIONAL)
 // ============================================
-document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.karya-badge').forEach(badge => {
-        badge.addEventListener('click', function(e) {
-            e.stopPropagation();
-            
-            if (typeof Swal !== 'undefined') {
-                Swal.fire({
-                    title: 'Karya Ilmiah',
-                    html: `
-                        <div class="text-start">
-                            <p>Karya ilmiah hasil penelitian tentang hukum dan legislasi di Kota Surakarta.</p>
-                            <p><strong>Tujuan Publikasi:</strong></p>
-                            <ul>
-                                <li>Mengembangkan ilmu pengetahuan hukum</li>
-                                <li>Memberikan kontribusi pada pembuatan kebijakan</li>
-                                <li>Mendorong penelitian ilmiah di bidang hukum</li>
-                                <li>Meningkatkan kualitas produk legislasi</li>
-                                <li>Sebagai referensi akademik dan praktisi</li>
-                            </ul>
-                        </div>
-                    `,
-                    icon: 'info',
-                    confirmButtonText: 'Mengerti'
-                });
-            } else {
-                alert('Karya Ilmiah: Hasil penelitian tentang hukum dan legislasi yang berkontribusi pada pengembangan ilmu pengetahuan dan kebijakan publik.');
-            }
-        });
-    });
+let downloadStartTime = null;
+
+window.addEventListener('blur', function() {
+    // Jika window kehilangan fokus setelah klik download, anggap download dimulai
+    if (document.activeElement && document.activeElement.classList.contains('download-btn') && 
+        !document.activeElement.classList.contains('disabled')) {
+        downloadStartTime = Date.now();
+        console.log('Download window opened');
+    }
+});
+
+window.addEventListener('focus', function() {
+    // Jika window kembali fokus setelah beberapa detik, anggap download selesai
+    if (downloadStartTime && (Date.now() - downloadStartTime > 2000)) {
+        console.log('Download likely completed');
+        downloadStartTime = null;
+    }
 });
 </script>
 
 <?php 
-mysqli_close($koneksi); 
+// ============================================
+// KEAMANAN LEVEL 16: CLEANUP & FINAL SECURITY
+// ============================================
+
+// Log successful page access
+security_log("Page loaded successfully | Total documents: $total_dokumen | Current page: $current_page | Search: " . ($search_query ?: 'none'), "INFO");
+
+// Cleanup sensitive data
+if (isset($result)) {
+    if (isset($stmt)) {
+        mysqli_stmt_close($stmt);
+    }
+    mysqli_free_result($result);
+}
+
+if (isset($count_stmt)) {
+    mysqli_stmt_close($count_stmt);
+}
+
+if (isset($count_result)) {
+    mysqli_free_result($count_result);
+}
+
+if (isset($years_result)) mysqli_free_result($years_result);
+
+// Clear sensitive variables
+unset(
+    $query, $result, $stmt, $row, 
+    $encrypted_id, $image_info, $pdf_info,
+    $search_query, $clean_get, $search_param,
+    $count_query, $count_result, $count_row,
+    $count_stmt
+);
+
+// Close database connection dengan error handling
+if (isset($koneksi)) {
+    try {
+        mysqli_close($koneksi);
+    } catch (Exception $e) {
+        security_log("Database close error: " . $e->getMessage(), "ERROR");
+    }
+}
+
+// Clear session data jika tidak diperlukan
+if (!isset($_SESSION['user_id'])) {
+    unset($_SESSION['rate_limit']);
+}
+
+// Add security footer
+echo "<!-- Security System: Active -->\n";
+echo "<!-- PDF Path: " . htmlspecialchars($monografi_pdf_path) . " -->\n";
+echo "<!-- Images Path: " . htmlspecialchars($monografi_images_path) . " -->\n";
+echo "<!-- Default Image: " . htmlspecialchars($default_image_url) . " -->\n";
+echo "<!-- Pagination: Page $current_page of $total_pages ($items_per_page per page) -->\n";
+echo "<!-- Generated: " . date('Y-m-d H:i:s') . " -->\n";
 ?>

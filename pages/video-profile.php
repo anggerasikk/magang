@@ -21,13 +21,14 @@ include 'header.php';
     }
 
     /* ===== HEADER SECTION ENHANCED ===== */
-    .page-header {
-        background: linear-gradient(135deg, var(--primary-color) 0%, var(--dark-color) 100%);
-        padding: 80px 0 50px;
-        position: relative;
-        overflow: hidden;
-        margin-bottom: 30px;
-    }
+        .page-header {
+            background: linear-gradient(15deg, #13547a 0%, #80d0c7 100%);
+            padding: 40px 0 30px 0;
+            margin-top: 0;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
 
     .page-header::before {
         content: '';
@@ -63,30 +64,18 @@ include 'header.php';
         line-height: 1.6;
     }
 
-    .breadcrumb {
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(10px);
-        border-radius: 50px;
-        padding: 12px 25px !important;
-        display: inline-block;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-
-    .breadcrumb-item a {
-        color: rgba(255, 255, 255, 0.9) !important;
-        text-decoration: none;
-        transition: var(--transition);
-    }
-
-    .breadcrumb-item a:hover {
-        color: white !important;
-        transform: translateX(3px);
-    }
-
-    .breadcrumb-item.active {
-        color: white !important;
-        font-weight: 600;
-    }
+        .page-header .breadcrumb-item a {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+        }
+        
+        .page-header .breadcrumb-item.active {
+            color: white;
+        }
+        
+        .page-header .breadcrumb-item+.breadcrumb-item::before {
+            color: rgba(255, 255, 255, 0.8);
+        }
 
     /* ===== MAIN CONTENT ===== */
     .main-content {
@@ -973,6 +962,13 @@ include 'header.php';
                 <div class="col-12">
                     <h1 class="text-white">VIDEO PROFIL JDIH</h1>
                     <p class="subtitle">Sekretariat Dewan Perwakilan Rakyat Daerah Kota Surakarta</p>
+                                        <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="index.php">Beranda</a></li>
+                            <li class="breadcrumb-item"><a href="#">Tentang Kami</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">Video Profil</li>
+                        </ol>
+                    </nav>
                 </div>
             </div>
         </div>
@@ -1071,9 +1067,9 @@ include 'header.php';
                         
                         <div class="video-list">
                             <!-- Video 2 - Tutorial -->
-                            <div class="video-card" data-video-id="-aAbLqOKyd8" data-video-title="Tutorial Penggunaan Website JDIH">
+                            <div class="video-card" data-video-id="-aAbLqOKyd8" data-video-title="Bincang-Bincang Informasi Hukum JDIH Kota Surakarta (BIJAKS)">
                                 <div class="video-thumbnail">
-                                    <img src="https://img.youtube.com/vi/-aAbLqOKyd8/maxresdefault.jpg" alt="Tutorial Penggunaan Website JDIH" onerror="this.src='https://images.unsplash.com/photo-1589829545856-d10d557cf95f?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80'">
+                                    <img src="https://img.youtube.com/vi/-aAbLqOKyd8/maxresdefault.jpg" alt="Bincang-Bincang Informasi Hukum JDIH Kota Surakarta (BIJAKS" onerror="this.src='https://images.unsplash.com/photo-1589829545856-d10d557cf95f?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80'">
                                     <div class="play-overlay">
                                         <div class="play-icon">
                                             <i class="bi bi-play-fill"></i>
@@ -1081,7 +1077,7 @@ include 'header.php';
                                     </div>
                                 </div>
                                 <div class="video-card-content">
-                                    <h4 class="video-card-title">Tutorial Penggunaan Website JDIH</h4>
+                                    <h4 class="video-card-title">Bincang-Bincang Informasi Hukum JDIH Kota Surakarta (BIJAKS)</h4>
                                     <p class="video-card-desc">Panduan lengkap cara menggunakan website JDIH DPRD Kota Surakarta untuk mencari dan mengakses produk hukum.</p>
                                     <div class="video-card-meta">
                                         <span><i class="bi bi-clock"></i> 7:30</span>
@@ -1091,9 +1087,9 @@ include 'header.php';
                             </div>
                             
                             <!-- Video 3 - Proses Legislasi -->
-                            <div class="video-card" data-video-id="B5XrqNA9FJ8" data-video-title="Proses Legislasi di DPRD Surakarta">
+                            <div class="video-card" data-video-id="B5XrqNA9FJ8" data-video-title="JDIH Surakarta mempersembahkan film dengan judul "Rebyek"">
                                 <div class="video-thumbnail">
-                                    <img src="https://img.youtube.com/vi/B5XrqNA9FJ8/maxresdefault.jpg" alt="Proses Legislasi di DPRD Surakarta" onerror="this.src='https://images.unsplash.com/photo-1589391886085-8b6b0ac72a1a?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80'">
+                                    <img src="https://img.youtube.com/vi/B5XrqNA9FJ8/maxresdefault.jpg" alt="JDIH Surakarta mempersembahkan film dengan judul "Rebyek"" onerror="this.src='https://images.unsplash.com/photo-1589391886085-8b6b0ac72a1a?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80'">
                                     <div class="play-overlay">
                                         <div class="play-icon">
                                             <i class="bi bi-play-fill"></i>
@@ -1101,7 +1097,7 @@ include 'header.php';
                                     </div>
                                 </div>
                                 <div class="video-card-content">
-                                    <h4 class="video-card-title">Proses Legislasi di DPRD Surakarta</h4>
+                                    <h4 class="video-card-title">JDIH Surakarta mempersembahkan film dengan judul "Rebyek"</h4>
                                     <p class="video-card-desc">Proses pembentukan peraturan daerah mulai dari pengajuan hingga pengesahan. Pelajari tahapan-tahapannya.</p>
                                     <div class="video-card-meta">
                                         <span><i class="bi bi-clock"></i> 9:15</span>
@@ -1111,7 +1107,7 @@ include 'header.php';
                             </div>
                             
                             <!-- Video 4 - Wawancara -->
-                            <div class="video-card" data-video-id="IQ9IijAz8Ow" data-video-title="Wawancara dengan Kepala JDIH">
+                            <div class="video-card" data-video-id="IQ9IijAz8Ow" data-video-title="Website JDIH Surakarta">
                                 <div class="video-thumbnail">
                                     <img src="https://img.youtube.com/vi/IQ9IijAz8Ow/maxresdefault.jpg" alt="Wawancara dengan Kepala JDIH" onerror="this.src='https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80'">
                                     <div class="play-overlay">
@@ -1121,7 +1117,7 @@ include 'header.php';
                                     </div>
                                 </div>
                                 <div class="video-card-content">
-                                    <h4 class="video-card-title">Wawancara dengan Kepala JDIH</h4>
+                                    <h4 class="video-card-title">Website JDIH</h4>
                                     <p class="video-card-desc">Wawancara eksklusif dengan Kepala JDIH DPRD Kota Surakarta tentang tantangan dan prestasi.</p>
                                     <div class="video-card-meta">
                                         <span><i class="bi bi-clock"></i> 12:45</span>
@@ -1141,131 +1137,49 @@ include 'header.php';
                     <div class="sidebar-menu">
                         <h4><i class="bi bi-link-45deg"></i> Menu Terkait</h4>
                         <ul>
-                            <li>
+                            <li class="<?= (strpos($_SERVER['PHP_SELF'], 'Profil-JDIH') !== false) ? 'active' : '' ?>">
                                 <a href="?page=profil-jdih">
-                                    <i class="bi bi-person-badge"></i>
+                                    <i class="bi bi-building"></i>
                                     Profil JDIH
                                 </a>
                             </li>
-                            <li>
+                            <li class="<?= (strpos($_SERVER['PHP_SELF'], 'struktur-organisasi') !== false) ? 'active' : '' ?>">
                                 <a href="?page=struktur-organisasi">
                                     <i class="bi bi-diagram-3"></i>
                                     Struktur Organisasi
                                 </a>
                             </li>
-                            <li>
+                            <li class="<?= (strpos($_SERVER['PHP_SELF'], 'alur-pengelolaan') !== false) ? 'active' : '' ?>">
                                 <a href="?page=alur-pengelolaan">
                                     <i class="bi bi-diagram-2"></i>
                                     Alur Pengelolaan
                                 </a>
                             </li>
-                            <li>
-                                <a href="?page=visi-misi">
-                                    <i class="bi bi-bullseye"></i>
-                                    Visi & Misi
+                            <li class="<?= (strpos($_SERVER['PHP_SELF'], 'sop-pengelola') !== false) ? 'active' : '' ?>">
+                                <a href="?page=sop-pengelola">
+                                    <i class="bi bi-clipboard-check"></i>
+                                    SOP Pengelola
                                 </a>
                             </li>
-                            <li>
-                                <a href="?page=galeri">
-                                    <i class="bi bi-images"></i>
-                                    Galeri Foto
+                            <li class="<?= (strpos($_SERVER['PHP_SELF'], 'dasar-hukum') !== false) ? 'active' : '' ?>">
+                                <a href="?page=dasar-hukum">
+                                    <i class="bi bi-journal-text"></i>
+                                    Dasar Hukum
+                                </a>
+                            </li>
+                            <li class="<?= (strpos($_SERVER['PHP_SELF'], 'surat-keputusan') !== false) ? 'active' : '' ?>">
+                                <a href="?page=surat-keputusan">
+                                    <i class="bi bi-file-earmark-pdf"></i>
+                                    Surat Keputusan
+                                </a>
+                            </li>
+                            <li class="<?= (strpos($_SERVER['PHP_SELF'], 'video-profile') !== false) ? 'active' : '' ?>">
+                                <a href="?page=video-profile">
+                                    <i class="bi bi-play-circle"></i>
+                                    Video Profile
                                 </a>
                             </li>
                         </ul>
-                    </div>
-
-                    <!-- CONTACT INFO -->
-                    <div class="contact-info">
-                        <h4><i class="bi bi-telephone"></i> Kontak Informasi</h4>
-                        
-                        <div class="contact-detail">
-                            <h5>Alamat</h5>
-                            <p>
-                                Sekretariat DPRD Kota Surakarta<br>
-                                Jl. Jenderal Sudirman No. 2<br>
-                                Kecamatan Pasar Kliwon<br>
-                                Kota Surakarta, Jawa Tengah 57111
-                            </p>
-                        </div>
-                        
-                        <div class="contact-detail">
-                            <h5>Telepon</h5>
-                            <p>
-                                <a href="tel:+62271723456">(0271) 723456</a><br>
-                                Ext. 123 (JDIH)
-                            </p>
-                        </div>
-                        
-                        <div class="contact-detail">
-                            <h5>Email</h5>
-                            <p>
-                                <a href="mailto:jdih@dprd-surakarta.go.id">jdih@dprd-surakarta.go.id</a>
-                            </p>
-                        </div>
-                        
-                        <div class="contact-detail">
-                            <h5>YouTube Channel</h5>
-                            <p>
-                                <a href="https://youtube.com/@jdihdprdsurakarta" target="_blank">
-                                    JDIH DPRD Surakarta
-                                </a>
-                            </p>
-                        </div>
-                    </div>
-
-                    <!-- PORTAL LINKS -->
-                    <div class="portal-links">
-                        <h4><i class="bi bi-link"></i> Link Portal</h4>
-                        
-                        <div class="portal-link-item">
-                            <i class="bi bi-youtube"></i>
-                            <span>YouTube JDIH</span>
-                            <a href="https://youtube.com/@jdihdprdsurakarta" target="_blank"></a>
-                        </div>
-                        
-                        <div class="portal-link-item">
-                            <i class="bi bi-globe"></i>
-                            <span>Website DPRD</span>
-                            <a href="https://dprd-surakarta.go.id" target="_blank"></a>
-                        </div>
-                        
-                        <div class="portal-link-item">
-                            <i class="bi bi-globe"></i>
-                            <span>Pemkot Surakarta</span>
-                            <a href="https://surakarta.go.id" target="_blank"></a>
-                        </div>
-                        
-                        <div class="portal-link-item">
-                            <i class="bi bi-globe"></i>
-                            <span>JDIH Nasional</span>
-                            <a href="https://jdih.kemenkumham.go.id" target="_blank"></a>
-                        </div>
-                        
-                        <div class="portal-link-item">
-                            <i class="bi bi-instagram"></i>
-                            <span>Instagram JDIH</span>
-                            <a href="https://instagram.com/jdih_surakarta" target="_blank"></a>
-                        </div>
-                        
-                        <div class="portal-link-item">
-                            <i class="bi bi-facebook"></i>
-                            <span>Facebook JDIH</span>
-                            <a href="https://facebook.com/jdihsurakarta" target="_blank"></a>
-                        </div>
-                    </div>
-                    
-                    <!-- DOWNLOAD VIDEO -->
-                    <div class="sidebar-menu">
-                        <h4><i class="bi bi-download"></i> Download Video</h4>
-                        <p class="mb-3">Unduh video profil untuk presentasi atau arsip:</p>
-                        <a href="downloads/video-profil-jdih.mp4" download class="btn custom-btn w-100 mb-2">
-                            <i class="bi bi-file-earmark-play"></i>
-                            Download MP4 (1080p)
-                        </a>
-                        <a href="downloads/transkrip-video.pdf" download class="btn custom-border-btn w-100">
-                            <i class="bi bi-file-earmark-text"></i>
-                            Download Transkrip
-                        </a>
                     </div>
 
                 </div>
