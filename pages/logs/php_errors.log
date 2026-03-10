@@ -8551,3 +8551,6 @@ Stack trace:
 [05-Feb-2026 08:28:43 UTC] PDF Path: C:/laragon/www/jdihcilacap_pasang_2026/panel_control/uploads/monografi/pdf/
 [05-Feb-2026 08:28:43 UTC] Images Path: C:/laragon/www/jdihcilacap_pasang_2026/panel_control/uploads/monografi/images/
 [05-Feb-2026 08:28:43 UTC] Default Image: panel_control/assets/img/default-monografi.png
+[10-Mar-2026 07:02:04 UTC] CRITICAL: a_functions.php not found in C:\laragon\www\jdihcilacap_pasang_2026\pages
+[10-Mar-2026 07:02:04 UTC] [2026-03-10 07:02:04] IP: ::1 | Page: keputusan-sekretariat.php | Search:  | Results: 4
+

@@ -45,7 +45,7 @@ if ($aksi == ''){
                 <div class="panel-heading clearfix">
                     <?php if ($_SESSION['level'] == 'user_admin' || $_SESSION['level'] == 'user_input'): ?>
                         <!-- LINK KE HALAMAN TAMBAH MONOGRAFI YANG SUDAH ADA -->
-                        <a href='http://localhost/jdihcilacap_pasang/panel_control/index.php?page=monografi&aksi=tambah' class='btn btn-primary'>
+                        <a href='http://localhost/jdihcilacap_pasang_2026/panel_control/index.php?page=monografi&aksi=tambah' class='btn btn-primary'>
                             <i class='fa fa-plus'></i> Tambah Risalah
                         </a>
                     <?php endif; ?>
@@ -118,7 +118,7 @@ if ($aksi == ''){
                                     
                                     // Tombol Edit - LINK KE HALAMAN EDIT YANG SUDAH ADA
                                     if ($_SESSION['level'] == 'user_admin' || $_SESSION['level'] == 'user_input'){ 
-                                        echo "<a class='btn btn-warning btn-xs' href='http://localhost/jdihcilacap_pasang/panel_control/index.php?page=monografi&aksi=edit&id={$data['id_monografi']}' title='Edit'>
+                                        echo "<a class='btn btn-warning btn-xs' href='http://localhost/jdihcilacap_pasang_2026/panel_control/index.php?page=monografi&aksi=edit&id={$data['id_monografi']}' title='Edit'>
                                                 <i class='fa fa-edit'></i>
                                               </a>";
                                     }
@@ -208,7 +208,7 @@ if ($aksi == ''){
 } elseif ($aksi == 'edit' && isset($_GET['id'])) { 
     // REDIRECT KE HALAMAN EDIT YANG SUDAH ADA DI MONOGRAFI.PHP
     $id = $_GET['id'];
-    header("Location: http://localhost/jdihcilacap_pasang/panel_control/index.php?page=monografi&aksi=edit&id=$id");
+    header("Location: http://localhost/jdihcilacap_pasang_2026/panel_control/index.php?page=monografi&aksi=edit&id=$id");
     exit();
 
 // ================================================
@@ -306,7 +306,7 @@ if ($aksi == ''){
                                 <h4>Aksi</h4>
                                 <?php if ($_SESSION['level'] == 'user_admin' || $_SESSION['level'] == 'user_input'): ?>
                                     <!-- LINK KE HALAMAN EDIT YANG SUDAH ADA -->
-                                    <a href="http://localhost/jdihcilacap_pasang/panel_control/index.php?page=monografi&aksi=edit&id=<?php echo $data['id_monografi']; ?>" 
+                                    <a href="http://localhost/jdihcilacap_pasang_2026/panel_control/index.php?page=monografi&aksi=edit&id=<?php echo $data['id_monografi']; ?>" 
                                        class="btn btn-warning btn-block">
                                         <i class="fa fa-edit"></i> Edit Data
                                     </a>
@@ -333,7 +333,7 @@ if ($aksi == ''){
 // ================================================
 } elseif ($aksi == 'tambah') {
     // REDIRECT KE HALAMAN TAMBAH YANG SUDAH ADA DI MONOGRAFI.PHP
-    header("Location: http://localhost/jdihcilacap_pasang/panel_control/index.php?page=monografi&aksi=tambah");
+    header("Location: http://localhost/jdihcilacap_pasang_2026/panel_control/index.php?page=monografi&aksi=tambah");
     exit();
 }
 ?>

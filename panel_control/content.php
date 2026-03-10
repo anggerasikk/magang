@@ -227,7 +227,7 @@ if(!isset($_SESSION['login']) || !isset($_SESSION['level'])) {
                 'user' => 'Manajemen User',
                 'account' => 'Pengaturan Akun',
                 'ruang' => 'Manajemen Ruangan',
-                'notulen' => 'Notulen Rapat',
+                'notulen' => 'Produk Hukum',
                 'monografi' => 'Monografi',
                 'kajian-raperda' => 'Kajian Raperda',
                 'naskah-akademik' => 'Naskah Akademik',

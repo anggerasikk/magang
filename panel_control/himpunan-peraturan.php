@@ -333,7 +333,7 @@ if ($aksi == ''){
 // ================================================
 } elseif ($aksi == 'tambah') {
     // REDIRECT KE HALAMAN TAMBAH YANG SUDAH ADA DI MONOGRAFI.PHP
-    header("Location: http://localhost/jdihcilacap_pasang/panel_control/index.php?page=monografi&aksi=tambah");
+    header("Location: http://localhost/jdihcilacap_pasang_2026/panel_control/index.php?page=monografi&aksi=tambah");
     exit();
 }
 ?>

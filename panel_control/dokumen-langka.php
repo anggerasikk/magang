@@ -118,7 +118,7 @@ if ($aksi == ''){
                                     
                                     // Tombol Edit - LINK KE HALAMAN EDIT YANG SUDAH ADA
                                     if ($_SESSION['level'] == 'user_admin' || $_SESSION['level'] == 'user_input'){ 
-                                        echo "<a class='btn btn-warning btn-xs' href='http://localhost/jdihcilacap_pasang_2026_2026/panel_control/index.php?page=monografi&aksi=edit&id={$data['id_monografi']}' title='Edit'>
+                                        echo "<a class='btn btn-warning btn-xs' href='http://localhost/jdihcilacap_pasang_2026/panel_control/index.php?page=monografi&aksi=edit&id={$data['id_monografi']}' title='Edit'>
                                                 <i class='fa fa-edit'></i>
                                               </a>";
                                     }
@@ -208,7 +208,7 @@ if ($aksi == ''){
 } elseif ($aksi == 'edit' && isset($_GET['id'])) { 
     // REDIRECT KE HALAMAN EDIT YANG SUDAH ADA DI MONOGRAFI.PHP
     $id = $_GET['id'];
-    header("Location: http://localhost/jdihcilacap_pasang_2026_2026/panel_control/index.php?page=monografi&aksi=edit&id=$id");
+    header("Location: http://localhost/jdihcilacap_pasang_2026/panel_control/index.php?page=monografi&aksi=edit&id=$id");
     exit();
 
 // ================================================
@@ -306,7 +306,7 @@ if ($aksi == ''){
                                 <h4>Aksi</h4>
                                 <?php if ($_SESSION['level'] == 'user_admin' || $_SESSION['level'] == 'user_input'): ?>
                                     <!-- LINK KE HALAMAN EDIT YANG SUDAH ADA -->
-                                    <a href="http://localhost/jdihcilacap_pasang_2026_2026/panel_control/index.php?page=monografi&aksi=edit&id=<?php echo $data['id_monografi']; ?>" 
+                                    <a href="http://localhost/jdihcilacap_pasang_2026/panel_control/index.php?page=monografi&aksi=edit&id=<?php echo $data['id_monografi']; ?>" 
                                        class="btn btn-warning btn-block">
                                         <i class="fa fa-edit"></i> Edit Data
                                     </a>
