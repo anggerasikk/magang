@@ -19,6 +19,14 @@ if ($aksi == ''){
 <html>
 <head>
     <title>Data Peraturan Daerah - Admin JDIH</title>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
     <link rel="stylesheet" href="style-admin.css">
 </head>
 <body>
@@ -107,15 +115,14 @@ if ($aksi == ''){
                             }
                             
                             echo "<tr>
-                                    <td>$no</td>
-                                    <td>{$i['tahun_pengundangan']}</td>
-                                    <td>{$i['noPeraturan']}</td>                            
-                                    <td>{$i['judul']}</td>
-                                    <td>$status_badge</td>
-                                    <td class='text-center'>$gambar</td>
-                                    <td class='text-center'>$pdf_file</td>
-                                    <td class='text-center'>";
-                            
+                                <td>$no</td>
+                                <td>" . ($i['tahun_pengundangan'] ?? '-') . "</td>
+                                <td>" . ($i['noPeraturan'] ?? '-') . "</td>
+                                <td>" . ($i['judul'] ?? '-') . "</td>
+                                <td>$status_badge</td>
+                                <td class='text-center'>$gambar</td>
+                                <td class='text-center'>$pdf_file</td>
+                                <td class='text-center'>";
                             // Tombol Lihat Detail
                             echo "<a class='btn btn-info btn-xs btn-action' href='index.php?page=perda&aksi=detail&id={$i['idData']}' title='Lihat Detail'>
                                     <i class='fa fa-folder-open'></i>

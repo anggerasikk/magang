@@ -324,40 +324,6 @@ $read_messages = $koneksi->query("SELECT COUNT(*) FROM pesan_kontak WHERE status
     </div>
 </div>
 
-<!-- Filter dan Search -->
-<div class="filter-box">
-    <form method="GET" action="" class="row g-3 align-items-center">
-        <input type="hidden" name="page" value="kontak-admin">
-        
-        <div class="col-md-6">
-            <div class="input-group">
-                <input type="text" class="form-control" name="search" 
-                       placeholder="Cari berdasarkan nama, email, telepon, atau pesan..."
-                       value="<?php echo htmlspecialchars($search); ?>">
-                <div class="input-group-append">
-                    <button class="btn btn-primary" type="submit">
-                        <i class="fa fa-search"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-md-4">
-            <select class="form-control" name="status" onchange="this.form.submit()">
-                <option value="all" <?php echo $status_filter == 'all' ? 'selected' : ''; ?>>Semua Status</option>
-                <option value="unread" <?php echo $status_filter == 'unread' ? 'selected' : ''; ?>>Belum Dibaca</option>
-                <option value="read" <?php echo $status_filter == 'read' ? 'selected' : ''; ?>>Sudah Dibaca</option>
-            </select>
-        </div>
-        
-        <div class="col-md-2">
-            <a href="?page=kontak-admin" class="btn btn-secondary btn-block">
-                <i class="fa fa-refresh"></i> Reset
-            </a>
-        </div>
-    </form>
-</div>
-
 <!-- Tabel Pesan -->
 <div class="row">
     <div class="col-md-12">

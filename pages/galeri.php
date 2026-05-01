@@ -870,33 +870,15 @@ body {
                 <?php endif; ?>
             </div>
         </div>
-
-        <!-- NAVIGATION BREADCRUMB -->
-        <div class="galeri-nav">
-            <div class="nav-breadcrumb">
-                <a href="?page=galeri" class="nav-link">
-                    <i class="bi bi-images"></i> Semua Album
-                </a>
-                
-                <?php if ($album_id > 0 && isset($album_info)): ?>
-                    <span class="nav-separator">/</span>
-                    <span class="nav-current">
-                        <i class="bi bi-folder"></i> <?php echo htmlspecialchars($album_info['judul'] ?? '', ENT_QUOTES | ENT_HTML5, 'UTF-8'); ?>
-                    </span>
-                <?php endif; ?>
-            </div>
-            
-            <?php if ($album_id > 0): ?>
+         <!-- ALBUM HEADER (jika sedang melihat album) -->
+        <?php if ($album_id > 0 && isset($album_info)): ?>
+             <?php if ($album_id > 0): ?>
                 <div class="mt-3">
                     <a href="?page=galeri" class="back-button">
                         <i class="bi bi-arrow-left"></i> Kembali ke Semua Album
                     </a>
                 </div>
             <?php endif; ?>
-        </div>
-
-        <!-- ALBUM HEADER (jika sedang melihat album) -->
-        <?php if ($album_id > 0 && isset($album_info)): ?>
             <div class="album-header">
                 <h2><?php echo htmlspecialchars($album_info['judul'] ?? '', ENT_QUOTES | ENT_HTML5, 'UTF-8'); ?></h2>
                 <?php if (!empty($album_info['deskripsi'])): ?>
@@ -932,14 +914,7 @@ body {
                         $foto_count = isset($item['foto_count']) ? $item['foto_count'] : 0;
                 ?>
                 
-                <?php
-                $albumToken = bin2hex(random_bytes(8));
-                $_SESSION['album_tokens'][$albumToken] = $item['id'];
-                ?>
-
-                <div class="galeri-card"
-                    onclick="window.location.href='?page=galeri&album=<?php echo htmlspecialchars($albumToken, ENT_QUOTES | ENT_HTML5, 'UTF-8'); ?>'">
-
+                <div class="galeri-card" onclick="window.location.href='?page=galeri&album=<?php echo htmlspecialchars($item['id'] ?? '', ENT_QUOTES | ENT_HTML5, 'UTF-8'); ?>'">
                     <div class="galeri-image">
                         <?php if (!empty($url_gambar)): ?>
                             <img src="<?php echo $url_gambar; ?>" 

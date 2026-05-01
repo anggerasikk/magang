@@ -351,25 +351,6 @@ $filter_tipe = isset($_GET['tipe']) ? $_GET['tipe'] : 'semua';
 <html lang="id">
 <head>
     <title>Videografis & Infografis - JDIH DPRD Surakarta</title>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <!-- Bootstrap CSS -->
-    <link href="css/bootstrap.css" rel="stylesheet" />
-    <link href="css/bootstrap-overrides.css" type="text/css" rel="stylesheet" />
-    
-    <!-- Theme -->
-    <link rel="stylesheet" type="text/css" href="css/theme/default.css" />
-    
-    <!-- Libraries -->
-    <link rel="stylesheet" type="text/css" href="css/font-awesome.css" />
-    <link rel="stylesheet" type="text/css" href="css/elements/dataTables.bootstrap.css" />
-    <link rel="stylesheet" type="text/css" href="css/elements/tables.css" />
-    <link rel="stylesheet" type="text/css" href="css/elements/form.css" />
-    
-    <!-- Google Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
     <style>
     :root{
         --c:#0ea5a4;
@@ -725,9 +706,8 @@ $filter_tipe = isset($_GET['tipe']) ? $_GET['tipe'] : 'semua';
                     
                     <div class="grafis-actions">
                         <a href="?page=grafis&edit_id=<?php echo $data['id']; ?>" 
-                           class="btn btn-sm btn-warning"
-                           data-toggle="modal" 
-                           data-target="#modalEditData"
+                           class="btn btn-sm btn-warning btn-edit"
+                    
                            data-info='<?php echo htmlspecialchars(json_encode($data_array), ENT_QUOTES); ?>'>
                             <i class="fa fa-edit"></i> Edit
                         </a>
@@ -943,7 +923,6 @@ $filter_tipe = isset($_GET['tipe']) ? $_GET['tipe'] : 'semua';
 
 <!-- JavaScript Libraries -->
 <script src="js/jquery.min.js"></script>
-<script src="js/bootstrap.js"></script>
 
 <script>
 // Fungsi untuk menampilkan video
@@ -1000,7 +979,7 @@ $(document).on('click', '.grafis-thumbnail:not(.video-thumbnail)', function() {
 });
 
 // Fungsi untuk mengisi modal edit dengan data
-$(document).on('click', 'a[data-target="#modalEditData"]', function(e) {
+$(document).on('click', '.btn-edit', function(e) {
     e.preventDefault();
     
     var info = $(this).data('info');

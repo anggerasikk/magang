@@ -7,6 +7,22 @@ require_once 'a_db.php';
 $message = '';
 $message_type = '';
 
+// Handle AJAX request untuk mendapatkan data album (DIPINDAHKAN KE PALING ATAS)
+if (isset($_GET['ajax']) && $_GET['ajax'] == 'get_album') {
+    header('Content-Type: application/json');
+    $album_id_ajax = intval($_GET['id']);
+    $sql = "SELECT id, judul, deskripsi, url_gambar, is_cover FROM galeri_foto WHERE id = $album_id_ajax AND tipe = 'album'";
+    $result = $koneksi->query($sql);
+    if ($result && $result->num_rows > 0) {
+        $album = $result->fetch_assoc();
+        echo json_encode(['success' => true, 'album' => $album]);
+    } else {
+        echo json_encode(['success' => false, 'message' => 'Album tidak ditemukan']);
+    }
+    $koneksi->close();
+    exit();
+}
+
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // TAMBAH ALBUM BARU DENGAN FOTO
@@ -38,14 +54,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if ($koneksi->query($sql_album)) {
             $album_id = $koneksi->insert_id;
             $message = "Album berhasil ditambahkan!";
-            $message_type = "success";
+            header("Location: ?page=galeri&msg=" . urlencode($message) . "&type=success");
+            exit();
             
             // Handle upload foto-foto tambahan (jika ada)
             if (isset($_FILES['foto_tambahan']) && count($_FILES['foto_tambahan']['name']) > 0) {
                 $upload_count = 0;
                 
                 for ($i = 0; $i < count($_FILES['foto_tambahan']['name']); $i++) {
-                    if ($_FILES['foto_tambahan']['error'][$i] == 0) {
+                    if ($_FILES['foto_tambahan']['error'][$i] == 0 && !empty($_FILES['foto_tambahan']['name'][$i])) {
                         $file_name = time() . '_' . $i . '_' . basename($_FILES['foto_tambahan']['name'][$i]);
                         $target_file = $upload_dir . $file_name;
                         
@@ -73,13 +90,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     
     // EDIT ALBUM DENGAN FOTO TAMBAHAN
     elseif (isset($_POST['edit_album'])) {
-        $id = intval($_POST['id']);
+        $id = isset($_POST['id']) ? intval($_POST['id']) : 0;
         $judul = $koneksi->real_escape_string($_POST['judul']);
         $deskripsi = $koneksi->real_escape_string($_POST['deskripsi']);
         $is_cover = isset($_POST['is_cover']) ? 1 : 0;
         
         // Handle update cover (jika ada file baru)
-        if (isset($_FILES['cover_url']) && $_FILES['cover_url']['error'] == 0) {
+        if (isset($_FILES['cover_url']) && $_FILES['cover_url']['error'] == 0 && !empty($_FILES['cover_url']['name'])) {
             $upload_dir = 'uploads/galeri/';
             if (!file_exists($upload_dir)) {
                 mkdir($upload_dir, 0777, true);
@@ -88,8 +105,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             // Hapus cover lama jika ada
             $sql_old = "SELECT url_gambar FROM galeri_foto WHERE id = $id";
             $result_old = $koneksi->query($sql_old);
-            if ($row = $result_old->fetch_assoc() && $row['url_gambar'] && file_exists($row['url_gambar'])) {
-                unlink($row['url_gambar']);
+            if ($row = $result_old->fetch_assoc()) {
+                if ($row['url_gambar'] && file_exists($row['url_gambar'])) {
+                    unlink($row['url_gambar']);
+                }
             }
             
             $file_name = time() . '_cover_' . basename($_FILES['cover_url']['name']);
@@ -120,7 +139,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         
         if ($koneksi->query($sql)) {
             $message = "Album berhasil diupdate!";
-            $message_type = "success";
+            header("Location: ?page=galeri&msg=" . urlencode($message) . "&type=success");
+            exit();
             
             // Handle upload foto-foto tambahan (jika ada)
             if (isset($_FILES['foto_tambahan']) && count($_FILES['foto_tambahan']['name']) > 0) {
@@ -134,7 +154,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $urutan = $last['last_urutan'] ? $last['last_urutan'] + 1 : 1;
                 
                 for ($i = 0; $i < count($_FILES['foto_tambahan']['name']); $i++) {
-                    if ($_FILES['foto_tambahan']['error'][$i] == 0) {
+                    if ($_FILES['foto_tambahan']['error'][$i] == 0 && !empty($_FILES['foto_tambahan']['name'][$i])) {
                         $file_name = time() . '_' . $i . '_' . basename($_FILES['foto_tambahan']['name'][$i]);
                         $target_file = $upload_dir . $file_name;
                         
@@ -194,7 +214,31 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         
         if ($koneksi->query($sql)) {
             $message = "Foto berhasil ditambahkan!";
-            $message_type = "success";
+            header("Location: ?page=galeri&msg=" . urlencode($message) . "&type=success");
+            exit();
+        } else {
+            $message = "Error: " . $koneksi->error;
+            $message_type = "danger";
+        }
+    }
+    
+    // EDIT FOTO INDIVIDUAL
+    elseif (isset($_POST['edit_foto'])) {
+        $id = isset($_POST['id']) ? intval($_POST['id']) : 0;
+        $judul = $koneksi->real_escape_string($_POST['judul_foto']);
+        $deskripsi = $koneksi->real_escape_string($_POST['deskripsi_foto']);
+        $urutan = intval($_POST['urutan_foto']);
+        
+        $sql = "UPDATE galeri_foto SET 
+                judul = '$judul', 
+                deskripsi = '$deskripsi',
+                urutan = $urutan
+                WHERE id = $id";
+        
+        if ($koneksi->query($sql)) {
+            $message = "Foto berhasil diupdate!";
+            header("Location: ?page=galeri&msg=" . urlencode($message) . "&type=success");
+            exit();
         } else {
             $message = "Error: " . $koneksi->error;
             $message_type = "danger";
@@ -202,9 +246,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
     
     // HAPUS DATA
-    elseif (isset($_GET['hapus'])) {
-        $id = intval($_GET['hapus']);
-        $album_id_param = isset($_GET['album']) ? intval($_GET['album']) : 0;
+    elseif (isset($_POST['hapus'])) {
+        $id = isset($_POST['id']) ? intval($_POST['id']) : 0;
+        $album_id_param = isset($_POST['album_id']) ? intval($_POST['album_id']) : 0;
         
         // Hapus file gambar dari server
         $sql_select = "SELECT url_gambar, tipe, parent_id FROM galeri_foto WHERE id = $id";
@@ -234,35 +278,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $sql = "DELETE FROM galeri_foto WHERE id = $id";
         if ($koneksi->query($sql)) {
             $message = "Data berhasil dihapus!";
-            $message_type = "success";
+            header("Location: ?page=galeri&msg=" . urlencode($message) . "&type=success");
+            exit();
             
-            // Redirect ke halaman yang sesuai
-            if ($album_id_param > 0 && $row['tipe'] == 'foto') {
-                header("Location: ?page=galeri&album=$album_id_param&msg=" . urlencode($message) . "&type=$message_type");
-                exit();
-            }
-        } else {
-            $message = "Error: " . $koneksi->error;
-            $message_type = "danger";
-        }
-    }
-    
-    // EDIT FOTO INDIVIDUAL
-    elseif (isset($_POST['edit_foto'])) {
-        $id = intval($_POST['id']);
-        $judul = $koneksi->real_escape_string($_POST['judul_foto']);
-        $deskripsi = $koneksi->real_escape_string($_POST['deskripsi_foto']);
-        $urutan = intval($_POST['urutan_foto']);
-        
-        $sql = "UPDATE galeri_foto SET 
-                judul = '$judul', 
-                deskripsi = '$deskripsi',
-                urutan = $urutan
-                WHERE id = $id";
-        
-        if ($koneksi->query($sql)) {
-            $message = "Foto berhasil diupdate!";
-            $message_type = "success";
         } else {
             $message = "Error: " . $koneksi->error;
             $message_type = "danger";
@@ -283,24 +301,6 @@ if (isset($_GET['msg'])) {
 <html lang="id">
 <head>
     <title>Galeri Foto - JDIH DPRD Surakarta</title>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <!-- Bootstrap CSS -->
-    <link href="css/bootstrap.css" rel="stylesheet" />
-    <link href="css/bootstrap-overrides.css" type="text/css" rel="stylesheet" />
-    
-    <!-- Theme -->
-    <link rel="stylesheet" type="text/css" href="css/theme/default.css" />
-    
-    <!-- Libraries -->
-    <link rel="stylesheet" type="text/css" href="css/font-awesome.css" />
-    <link rel="stylesheet" type="text/css" href="css/elements/dataTables.bootstrap.css" />
-    <link rel="stylesheet" type="text/css" href="css/elements/tables.css" />
-    <link rel="stylesheet" type="text/css" href="css/elements/form.css" />
-    
-    <!-- Google Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
     :root{
@@ -318,6 +318,7 @@ if (isset($_GET['msg'])) {
     
     .galeri-container {
         margin-top: 20px;
+        padding: 0 20px;
     }
     
     .album-card {
@@ -367,22 +368,33 @@ if (isset($_GET['msg'])) {
         margin-bottom: 20px;
     }
     
+    .foto-card {
+        background: var(--w);
+        border-radius: var(--r);
+        box-shadow: var(--s);
+        overflow: hidden;
+    }
+    
     .foto-img {
         width: 100%;
         height: 200px;
         object-fit: cover;
-        border-radius: var(--r);
+        cursor: pointer;
     }
     
     .foto-info {
         padding: 10px;
         background: var(--w);
-        border-radius: 0 0 var(--r) var(--r);
     }
     
     .modal-header {
         background: var(--c);
         color: var(--w);
+    }
+    
+    .modal-header .close {
+        color: var(--w);
+        opacity: 0.8;
     }
     
     .btn-custom {
@@ -399,6 +411,10 @@ if (isset($_GET['msg'])) {
     }
     
     .btn-danger {
+        border-radius: 20px;
+    }
+    
+    .btn-warning {
         border-radius: 20px;
     }
     
@@ -454,6 +470,19 @@ if (isset($_GET['msg'])) {
         align-items: center;
         justify-content: center;
         margin-right: 10px;
+        font-size: 12px;
+    }
+    
+    .current-cover {
+        margin-top: 10px;
+    }
+    
+    .current-cover img {
+        max-width: 100px;
+        max-height: 100px;
+        border-radius: 5px;
+        border: 1px solid #ddd;
+        padding: 5px;
     }
     </style>
 </head>
@@ -462,9 +491,9 @@ if (isset($_GET['msg'])) {
 <div class="galeri-container">
     <!-- Pesan Notifikasi -->
     <?php if ($message): ?>
-    <div class="alert alert-<?php echo $message_type; ?> alert-dismissible">
+    <div class="alert alert-<?php echo $message_type; ?> alert-dismissible fade show">
         <button type="button" class="close" data-dismiss="alert">&times;</button>
-        <?php echo $message; ?>
+        <?php echo htmlspecialchars($message); ?>
     </div>
     <?php endif; ?>
     
@@ -487,7 +516,7 @@ if (isset($_GET['msg'])) {
                     <i class="fa fa-edit"></i> Edit Album
                 </button>
                 <h3 style="display: inline-block; margin-left: 20px; color: var(--d);">
-                    <?php echo $album['judul']; ?>
+                    <?php echo htmlspecialchars($album['judul']); ?>
                 </h3>
             <?php else: ?>
                 <button class="btn btn-custom" data-toggle="modal" data-target="#modalTambahAlbum">
@@ -505,7 +534,7 @@ if (isset($_GET['msg'])) {
         <?php if ($album_id == 0): ?>
             <!-- TAMPILAN ALBUM -->
             <?php
-            $sql_albums = "SELECT * FROM galeri_foto WHERE tipe = 'album' ORDER BY tanggal_dibuat DESC";
+            $sql_albums = "SELECT * FROM galeri_foto WHERE tipe = 'album' ORDER BY is_cover DESC, tanggal_dibuat DESC";
             $result_albums = $koneksi->query($sql_albums);
             
             if ($result_albums->num_rows > 0):
@@ -526,8 +555,8 @@ if (isset($_GET['msg'])) {
                         <?php endif; ?>
                     </div>
                     <div class="album-info">
-                        <h3 class="album-title"><?php echo $album['judul']; ?></h3>
-                        <p class="album-desc"><?php echo substr($album['deskripsi'], 0, 100) . '...'; ?></p>
+                        <h3 class="album-title"><?php echo htmlspecialchars($album['judul']); ?></h3>
+                        <p class="album-desc"><?php echo htmlspecialchars(substr($album['deskripsi'], 0, 100) . (strlen($album['deskripsi']) > 100 ? '...' : '')); ?></p>
                         <p><small class="text-muted">
                             <i class="fa fa-images"></i> <?php echo $count['total']; ?> foto
                         </small></p>
@@ -538,11 +567,14 @@ if (isset($_GET['msg'])) {
                             <button class="btn btn-sm btn-warning" onclick="editAlbum(<?php echo $album['id']; ?>)">
                                 <i class="fa fa-edit"></i> Edit
                             </button>
-                            <a href="?page=galeri&hapus=<?php echo $album['id']; ?>" 
-                               class="btn btn-sm btn-danger" 
-                               onclick="return confirm('Hapus album ini beserta semua fotonya?')">
-                                <i class="fa fa-trash"></i> Hapus
-                            </a>
+                            <form method="POST" style="display: inline;" onsubmit="return confirm('Hapus album ini beserta semua fotonya?')">
+                                <input type="hidden" name="hapus" value="1">
+                                <input type="hidden" name="id" value="<?php echo $album['id']; ?>">
+                                <input type="hidden" name="album_id" value="0">
+                                <button type="submit" class="btn btn-sm btn-danger">
+                                    <i class="fa fa-trash"></i> Hapus
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -571,18 +603,21 @@ if (isset($_GET['msg'])) {
                          onclick="openLightbox('<?php echo $foto['url_gambar']; ?>')"
                          style="cursor: pointer;">
                     <div class="foto-info">
-                        <h5><?php echo $foto['judul']; ?></h5>
-                        <p><small><?php echo $foto['deskripsi']; ?></small></p>
+                        <h5><?php echo htmlspecialchars($foto['judul']); ?></h5>
+                        <p><small><?php echo htmlspecialchars($foto['deskripsi']); ?></small></p>
                         <p><small class="text-muted">Urutan: <?php echo $foto['urutan']; ?></small></p>
                         <div class="btn-group btn-group-sm">
-                            <button class="btn btn-warning" onclick="editFoto(<?php echo $foto['id']; ?>, '<?php echo htmlspecialchars($foto['judul']); ?>', '<?php echo htmlspecialchars($foto['deskripsi']); ?>', <?php echo $foto['urutan']; ?>)">
-                                <i class="fa fa-edit"></i>
+                            <button class="btn btn-warning" onclick="editFoto(<?php echo $foto['id']; ?>, '<?php echo htmlspecialchars(addslashes($foto['judul'])); ?>', '<?php echo htmlspecialchars(addslashes($foto['deskripsi'])); ?>', <?php echo $foto['urutan']; ?>)">
+                                <i class="fa fa-edit"></i> Edit
                             </button>
-                            <a href="?page=galeri&album=<?php echo $album_id; ?>&hapus=<?php echo $foto['id']; ?>" 
-                               class="btn btn-danger"
-                               onclick="return confirm('Hapus foto ini?')">
-                                <i class="fa fa-trash"></i>
-                            </a>
+                            <form method="POST" style="display: inline;" onsubmit="return confirm('Hapus foto ini?')">
+                                <input type="hidden" name="hapus" value="1">
+                                <input type="hidden" name="id" value="<?php echo $foto['id']; ?>">
+                                <input type="hidden" name="album_id" value="<?php echo $album_id; ?>">
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="fa fa-trash"></i> Hapus
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -609,7 +644,7 @@ if (isset($_GET['msg'])) {
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title"><i class="fa fa-album"></i> Tambah Album Baru dengan Foto</h4>
+                <h4 class="modal-title"><i class="fa fa-folder-open"></i> Tambah Album Baru dengan Foto</h4>
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
             </div>
             <form method="POST" enctype="multipart/form-data" id="formTambahAlbum">
@@ -644,7 +679,7 @@ if (isset($_GET['msg'])) {
                         <i class="fa fa-plus"></i> Tambah Field Foto
                     </button>
                     
-                    <div class="alert alert-info">
+                    <div class="alert alert-info mt-3">
                         <i class="fa fa-info-circle"></i> Anda bisa menambahkan foto sekarang atau nanti setelah album dibuat.
                     </div>
                 </div>
@@ -681,7 +716,7 @@ if (isset($_GET['msg'])) {
                         <label>Ganti Cover Album</label>
                         <input type="file" name="cover_url" class="form-control" accept="image/*">
                         <small class="text-muted">Kosongkan jika tidak ingin mengganti cover</small>
-                        <div id="current-cover" class="mt-2"></div>
+                        <div id="current-cover" class="current-cover"></div>
                     </div>
                     <div class="form-check mb-4">
                         <input type="checkbox" name="is_cover" class="form-check-input" id="edit_isCover">
@@ -764,6 +799,7 @@ if (isset($_GET['msg'])) {
                     <div class="form-group">
                         <label>Urutan</label>
                         <input type="number" name="urutan_foto" id="edit_foto_urutan" class="form-control" min="1" value="1">
+                        <small class="text-muted">Urutan foto dalam album (semakin kecil angka, semakin awal tampil)</small>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -777,7 +813,7 @@ if (isset($_GET['msg'])) {
 
 <!-- JavaScript Libraries -->
 <script src="js/jquery.min.js"></script>
-<script src="js/bootstrap.js"></script>
+
 
 <script>
 // Counter untuk foto tambahan
@@ -851,15 +887,17 @@ function hapusFieldFotoEdit(button) {
     fotoCounterEdit--;
 }
 
-// Fungsi untuk edit album
+// Fungsi untuk edit album (tanpa file eksternal)
 function editAlbum(albumId) {
+    console.log('Mengedit album ID:', albumId);
+    
     // AJAX untuk mendapatkan data album
     $.ajax({
-        url: 'get_album_data.php',
+        url: 'galeri.php?ajax=get_album&id=' + albumId,
         type: 'GET',
-        data: {id: albumId},
         dataType: 'json',
         success: function(data) {
+            console.log('Response:', data);
             if (data.success) {
                 $('#edit_id').val(data.album.id);
                 $('#edit_judul').val(data.album.judul);
@@ -868,8 +906,9 @@ function editAlbum(albumId) {
                 
                 // Tampilkan cover saat ini
                 let coverHtml = '<p><strong>Cover saat ini:</strong></p>';
-                if (data.album.url_gambar) {
+                if (data.album.url_gambar && data.album.url_gambar !== '') {
                     coverHtml += `<img src="${data.album.url_gambar}" style="max-width: 100px; max-height: 100px; border-radius: 5px;">`;
+                    coverHtml += `<p><small>${data.album.url_gambar}</small></p>`;
                 } else {
                     coverHtml += '<p><em>Tidak ada cover</em></p>';
                 }
@@ -881,10 +920,14 @@ function editAlbum(albumId) {
                 
                 // Tampilkan modal edit
                 $('#modalEditAlbum').modal('show');
+            } else {
+                alert('Gagal mengambil data album: ' + (data.message || 'Unknown error'));
             }
         },
-        error: function() {
-            alert('Gagal mengambil data album');
+        error: function(xhr, status, error) {
+            console.log('AJAX Error:', status, error);
+            console.log('Response Text:', xhr.responseText);
+            alert('Gagal mengambil data album. Silakan cek console untuk detail error.');
         }
     });
 }

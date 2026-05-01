@@ -157,27 +157,27 @@ if ($aksi == ''){
                                         <td class='text-center'>";
                                 
                                 // Tombol Lihat Detail
-                                echo "<a class='btn btn-info btn-xs btn-action' href='index.php?page=englishlegal&aksi=detail&id=$idData' title='Lihat Detail'>
+                                echo "<a class='btn btn-info btn-xs btn-action' href='index.php?page=english-legal&aksi=detail&id=$idData' title='Lihat Detail'>
                                         <i class='fa fa-folder-open'></i>
                                     </a>";
                                 
                                 // Tombol Edit
                                 if ($_SESSION['level'] == 'user_admin' || $_SESSION['level'] == 'user_input'){ 
-                                    echo "<a class='btn btn-warning btn-xs btn-action' href='index.php?page=englishlegal&aksi=edit&id=$idData' title='Edit Data'>
+                                    echo "<a class='btn btn-warning btn-xs btn-action' href='index.php?page=english-legal&aksi=edit&id=$idData' title='Edit Data'>
                                             <i class='fa fa-pencil-square-o'></i>
                                         </a>";
                                 }
                                 
                                 // Tombol Hapus hanya untuk admin
                                 if ($_SESSION['level'] == 'user_admin'){ 
-                                    echo "<a class='btn btn-danger btn-xs btn-action' href='index.php?page=englishlegal&aksi=hapus&id=$idData' 
+                                    echo "<a class='btn btn-danger btn-xs btn-action' href='index.php?page=english-legal&aksi=hapus&id=$idData' 
                                         title='Hapus' onclick='return confirm(\"Yakin menghapus data?\");'>
                                             <i class='fa fa-trash-o'></i>
                                         </a>";
                                 }
                                 
                                 // Tombol Export Word
-                                echo "<a class='btn btn-success btn-xs btn-action' href='index.php?page=englishlegal&aksi=eksport&id=$idData' title='Export Word'>
+                                echo "<a class='btn btn-success btn-xs btn-action' href='index.php?page=english-legal&aksi=eksport&id=$idData' title='Export Word'>
                                         <i class='fa fa-file-word-o'></i>
                                     </a>";
                                 
@@ -247,7 +247,7 @@ if ($aksi == ''){
     if ($_SESSION['level'] != 'user_admin') {
         echo "<script>
                 alert('Anda tidak memiliki akses untuk menghapus!');
-                window.location='index.php?page=englishlegal'
+                window.location='index.php?page=english-legal'
               </script>";
         exit();
     }
@@ -275,12 +275,12 @@ if ($aksi == ''){
     if(mysqli_query($koneksi, $delete_query)) {
         echo "<script>
                 alert('Data Dokumen Berhasil Dihapus.');
-                window.location='index.php?page=englishlegal'
+                window.location='index.php?page=english-legal'
               </script>";
     } else {
         echo "<script>
                 alert('Error: " . mysqli_error($koneksi) . "');
-                window.location='index.php?page=englishlegal'
+                window.location='index.php?page=english-legal'
               </script>";
     }
 
@@ -292,7 +292,7 @@ if ($aksi == ''){
     if ($_SESSION['level'] != 'user_admin' && $_SESSION['level'] != 'user_input') {
         echo "<script>
                 alert('Anda tidak memiliki akses untuk mengedit!');
-                window.location='index.php?page=englishlegal'
+                window.location='index.php?page=english-legal'
               </script>";
         exit();
     }
@@ -304,7 +304,7 @@ if ($aksi == ''){
     if(!$result || mysqli_num_rows($result) == 0) {
         echo "<script>
                 alert('Data tidak ditemukan!');
-                window.location='index.php?page=englishlegal'
+                window.location='index.php?page=english-legal'
               </script>";
         exit();
     }
@@ -313,6 +313,7 @@ if ($aksi == ''){
     
     // Proses update data
     if (isset($_POST['update'])){
+        $id = mysqli_real_escape_string($koneksi, $_POST['idData']);
         // Sanitasi semua input
         $tahun_pengundangan = mysqli_real_escape_string($koneksi, $_POST['tahun_pengundangan']);
         $tanggal_pengundangan = mysqli_real_escape_string($koneksi, $_POST['tanggal_pengundangan']);
@@ -407,12 +408,12 @@ if ($aksi == ''){
         if(mysqli_query($koneksi, $update_query)) {
             echo "<script>
                     alert('Sukses Update Data English Legal.');
-                    window.location='index.php?page=englishlegal'
+                    window.location='index.php?page=english-legal'
                   </script>";
         } else {
             echo "<script>
                     alert('Error: " . mysqli_error($koneksi) . "');
-                    window.location='index.php?page=englishlegal'
+                    window.location='index.php?page=english-legal'
                   </script>";
         }
     }
@@ -492,6 +493,7 @@ if ($aksi == ''){
             
             <div class="panel-body">
                 <form action='' method="POST" enctype='multipart/form-data' onsubmit="return validateForm()">
+                    <input type="hidden" name="idData" value="<?php echo $data['idData']; ?>">
                     <div class="row">
                         <!-- Kolom Kiri -->
                         <div class="col-md-6">
@@ -517,7 +519,7 @@ if ($aksi == ''){
                             <div class="form-group">
                                 <label class="control-label">Jenis Dokumen</label>
                                 <input type="text" class="form-control" value="English Legal" readonly>
-                                <input type="hidden" name="jenis" value="English_Legal">
+                                <input type="hidden" name="jenis" value="English_Legal_Product">
                             </div>
                             
                             <div class="form-group">
@@ -746,7 +748,7 @@ if ($aksi == ''){
                         <button type="reset" class="btn btn-default btn-custom">
                             <i class="fa fa-refresh"></i> Reset
                         </button>
-                        <a href="index.php?page=englishlegal" class="btn btn-default btn-custom">
+                        <a href="index.php?page=english-legal" class="btn btn-default btn-custom">
                             <i class="fa fa-times"></i> Batal
                         </a>
                         <button type="submit" name="update" class="btn btn-primary btn-custom">
@@ -833,7 +835,7 @@ function validateForm() {
     if(!$result || mysqli_num_rows($result) == 0) {
         echo "<script>
                 alert('Data tidak ditemukan!');
-                window.location='index.php?page=englishlegal'
+                window.location='index.php?page=english-legal'
               </script>";
         exit();
     }
@@ -1115,22 +1117,22 @@ function validateForm() {
         
         <!-- TOMBOL ACTION -->
         <div class="action-buttons">
-            <a href="index.php?page=englishlegal" class="btn btn-default btn-detail">
+            <a href="index.php?page=english-legal" class="btn btn-default btn-detail">
                 <i class="fa fa-arrow-left"></i> Kembali
             </a>
             <?php if ($_SESSION['level'] == 'user_admin' || $_SESSION['level'] == 'user_input'): ?>
-                <a href="index.php?page=englishlegal&aksi=edit&id=<?php echo $id; ?>" class="btn btn-warning btn-detail">
+                <a href="index.php?page=english-legal&aksi=edit&id=<?php echo $id; ?>" class="btn btn-warning btn-detail">
                     <i class="fa fa-edit"></i> Edit Data
                 </a>
             <?php endif; ?>
             <?php if ($_SESSION['level'] == 'user_admin'): ?>
-                <a href="index.php?page=englishlegal&aksi=hapus&id=<?php echo $id; ?>" 
+                <a href="index.php?page=english-legal&aksi=hapus&id=<?php echo $id; ?>" 
                    class="btn btn-danger btn-detail"
                    onclick="return confirm('Yakin menghapus data ini?')">
                     <i class="fa fa-trash"></i> Hapus
                 </a>
             <?php endif; ?>
-            <a href="index.php?page=englishlegal&aksi=eksport&id=<?php echo $id; ?>" class="btn btn-success btn-detail">
+            <a href="index.php?page=english-legal&aksi=eksport&id=<?php echo $id; ?>" class="btn btn-success btn-detail">
                 <i class="fa fa-file-word-o"></i> Export Word
             </a>
         </div>
@@ -1148,7 +1150,7 @@ function validateForm() {
     // LOGIC UNTUK EKSPORT WORD
     echo "<script>
             alert('Fitur export Word sedang dikembangan!');
-            window.location='index.php?page=englishlegal'
+            window.location='index.php?page=english-legal'
           </script>";
 }
 ?>

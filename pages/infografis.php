@@ -69,29 +69,15 @@ function sanitize_input($input) {
     return $input;
 }
 
-function validate_search_query($query) {
-    if (strlen($query) > 100) {
-        return false;
-    }
-    
-    if (!preg_match('/^[a-zA-Z0-9\s\-_,.()@:;\'"\/]+$/u', $query)) {
-        return false;
-    }
-    
-    return true;
-}
-
 function validate_tab_parameter($tab) {
     $allowed_tabs = ['infografis', 'videografis'];
     return in_array($tab, $allowed_tabs);
 }
 
-// Proses input GET
-$search_query_raw = isset($_GET['search']) ? $_GET['search'] : '';
+// Proses input GET (tanpa search)
 $tab_raw = isset($_GET['tab']) ? $_GET['tab'] : 'infografis';
 $page_raw = isset($_GET['page']) ? $_GET['page'] : '';
 
-$search_query_raw = sanitize_input($search_query_raw);
 $tab_raw = sanitize_input($tab_raw);
 $page_raw = sanitize_input($page_raw);
 
@@ -102,13 +88,6 @@ if ($page_raw !== 'grafis' && $page_raw !== 'infografis') {
 
 if (!validate_tab_parameter($tab_raw)) {
     $tab_raw = 'infografis';
-}
-
-$search_query = '';
-if (!empty($search_query_raw)) {
-    if (validate_search_query($search_query_raw)) {
-        $search_query = $search_query_raw;
-    }
 }
 
 $tab = $tab_raw;
@@ -127,37 +106,14 @@ try {
     die("<div style='padding:20px;text-align:center;color:#856404;background-color:#fff3cd;border:1px solid #ffeaa7;border-radius:5px;margin:20px;'>System maintenance in progress. Please try again later.</div>");
 }
 
-// 5. QUERY DATABASE AMAN
+// 5. QUERY DATABASE AMAN (tanpa filter search)
 $grafis_data = [];
 $total_infografis = 0;
 $total_videografis = 0;
-$search_results_count = 0;
-
-// VARIABEL BARU: untuk menghitung hasil search per tab
-$infografis_search_count = 0;
-$videografis_search_count = 0;
 
 try {
-    if (!empty($search_query)) {
-        $search_term = "%{$search_query}%";
-        $stmt = mysqli_prepare($koneksi, 
-            "SELECT * FROM grafis 
-             WHERE status = 'aktif' 
-             AND (judul LIKE ? OR deskripsi LIKE ? OR tipe LIKE ?)
-             ORDER BY tanggal_dibuat DESC");
-        
-        if ($stmt) {
-            mysqli_stmt_bind_param($stmt, 'sss', $search_term, $search_term, $search_term);
-            mysqli_stmt_execute($stmt);
-            $result = mysqli_stmt_get_result($stmt);
-        } else {
-            $result = mysqli_query($koneksi, 
-                "SELECT * FROM grafis WHERE status = 'aktif' ORDER BY tanggal_dibuat DESC");
-        }
-    } else {
-        $result = mysqli_query($koneksi, 
-            "SELECT * FROM grafis WHERE status = 'aktif' ORDER BY tanggal_dibuat DESC");
-    }
+    $result = mysqli_query($koneksi, 
+        "SELECT * FROM grafis WHERE status = 'aktif' ORDER BY tanggal_dibuat DESC");
     
     if ($result && mysqli_num_rows($result) > 0) {
         while ($row = mysqli_fetch_assoc($result)) {
@@ -165,19 +121,10 @@ try {
             
             if ($row['tipe'] == 'videografis') {
                 $total_videografis++;
-                // Hitung untuk search
-                if (!empty($search_query)) {
-                    $videografis_search_count++;
-                }
             } else {
                 $total_infografis++;
-                // Hitung untuk search
-                if (!empty($search_query)) {
-                    $infografis_search_count++;
-                }
             }
         }
-        $search_results_count = mysqli_num_rows($result);
         mysqli_data_seek($result, 0);
     }
     
@@ -201,83 +148,6 @@ include "style-keputusan-dprd.css";
 /* STYLE KHUSUS UNTUK HALAMAN GRAFIS */
 body {
     background: var(--bg-gray);
-}
-
-/* Search Section */
-.search-section {
-    background: var(--bg-white);
-    padding: 25px;
-    border-radius: 12px;
-    box-shadow: var(--shadow-sm);
-    margin-bottom: 30px;
-}
-
-.search-wrapper {
-    max-width: 600px;
-    margin: 0 auto;
-}
-
-.search-input-group {
-    display: flex;
-    gap: 10px;
-}
-
-.search-input {
-    flex: 1;
-    padding: 12px 20px;
-    border: 2px solid var(--border-light);
-    border-radius: 10px;
-    font-size: 1rem;
-    transition: all 0.3s ease;
-}
-
-.search-input:focus {
-    outline: none;
-    border-color: var(--primary-main);
-    box-shadow: 0 0 0 3px rgba(19, 84, 122, 0.15);
-}
-
-.search-btn {
-    background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
-    color: var(--bg-white);
-    border: none;
-    padding: 12px 25px;
-    border-radius: 10px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.search-btn:hover {
-    background: linear-gradient(135deg, var(--primary-dark), var(--primary-main));
-    box-shadow: 0 6px 16px rgba(19, 84, 122, 0.35);
-}
-
-.reset-btn {
-    background: var(--bg-white);
-    color: var(--text-medium);
-    border: 2px solid var(--border-light);
-    padding: 12px 25px;
-    border-radius: 10px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.reset-btn:hover {
-    background: var(--bg-gray);
-    border-color: var(--text-light);
-}
-
-.search-results-info {
-    text-align: center;
-    margin-top: 15px;
-    color: var(--text-medium);
-    font-size: 0.9rem;
-}
-
-.search-results-info .badge {
-    margin-left: 5px;
 }
 
 /* Tabs Section */
@@ -596,16 +466,6 @@ body {
 
 /* Responsive */
 @media (max-width: 768px) {
-    .search-input-group {
-        flex-direction: column;
-    }
-    
-    .search-input,
-    .search-btn,
-    .reset-btn {
-        width: 100%;
-    }
-    
     .nav-tabs .nav-link {
         padding: 10px 15px;
         font-size: 0.9rem;
@@ -668,47 +528,7 @@ body {
 ================================ -->
 <section class="main-content">
     <div class="container">
-        <!-- SEARCH SECTION -->
-        <div class="search-section">
-            <div class="search-wrapper">
-                <form method="GET" action="" class="search-form">
-                    <input type="hidden" name="page" value="infografis">
-                    <?php if (!empty($tab) && $tab != 'infografis'): ?>
-                    <input type="hidden" name="tab" value="<?php echo htmlspecialchars($tab); ?>">
-                    <?php endif; ?>
-                    <div class="search-input-group">
-                        <input type="text" 
-                               name="search" 
-                               class="search-input" 
-                               placeholder="Cari infografis atau videografis..." 
-                               value="<?php echo htmlspecialchars($search_query); ?>">
-                        <button type="submit" class="search-btn">
-                            <i class="bi bi-search"></i> Cari
-                        </button>
-                        <?php if (!empty($search_query)): ?>
-                            <a href="?page=infografis<?php echo !empty($tab) && $tab != 'infografis' ? '&tab=' . htmlspecialchars($tab) : ''; ?>" class="reset-btn">
-                                <i class="bi bi-x"></i> Reset
-                            </a>
-                        <?php endif; ?>
-                    </div>
-                </form>
-                
-                <?php if (!empty($search_query)): ?>
-                    <div class="search-results-info">
-                        Hasil pencarian untuk: <strong>"<?php echo htmlspecialchars($search_query); ?>"</strong>
-                        <span class="badge bg-primary"><?php echo $search_results_count; ?> hasil ditemukan</span>
-                        <?php if (!empty($search_query)): ?>
-                            <div style="margin-top: 5px; font-size: 0.8rem;">
-                                <span class="badge bg-info">Infografis: <?php echo $infografis_search_count; ?></span>
-                                <span class="badge bg-warning ms-1">Videografis: <?php echo $videografis_search_count; ?></span>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                <?php endif; ?>
-            </div>
-        </div>
-
-        <!-- TABS SECTION -->
+        <!-- TABS SECTION (SEARCH REMOVED) -->
         <div class="tabs-section">
             <ul class="nav nav-tabs" id="grafisTab" role="tablist">
                 <li class="nav-item" role="presentation">
@@ -720,9 +540,7 @@ body {
                             role="tab"
                             onclick="updateTab('infografis')">
                         <i class="bi bi-bar-chart me-2"></i>Infografis
-                        <span class="badge bg-primary ms-2">
-                            <?php echo !empty($search_query) ? $infografis_search_count : $total_infografis; ?>
-                        </span>
+                        <span class="badge bg-primary ms-2"><?php echo $total_infografis; ?></span>
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
@@ -734,9 +552,7 @@ body {
                             role="tab"
                             onclick="updateTab('videografis')">
                         <i class="bi bi-camera-video me-2"></i>Videografis
-                        <span class="badge bg-primary ms-2">
-                            <?php echo !empty($search_query) ? $videografis_search_count : $total_videografis; ?>
-                        </span>
+                        <span class="badge bg-primary ms-2"><?php echo $total_videografis; ?></span>
                     </button>
                 </li>
             </ul>
@@ -755,33 +571,9 @@ body {
                 <div class="card-container">
                     <?php 
                     $infografis_displayed = 0;
-                    if ($total_infografis > 0 || (!empty($search_query) && $infografis_search_count > 0)): 
+                    if ($total_infografis > 0): 
                         foreach ($grafis_data as $item): 
                             if ($item['tipe'] != 'videografis'): 
-                                // Filter berdasarkan search jika ada
-                                if (!empty($search_query)) {
-                                    $search_match = false;
-                                    $search_lower = strtolower($search_query);
-                                    
-                                    // Cek di judul
-                                    if (strpos(strtolower($item['judul']), $search_lower) !== false) {
-                                        $search_match = true;
-                                    }
-                                    // Cek di deskripsi
-                                    elseif (!empty($item['deskripsi']) && strpos(strtolower($item['deskripsi']), $search_lower) !== false) {
-                                        $search_match = true;
-                                    }
-                                    // Cek di tipe
-                                    elseif (strpos(strtolower($item['tipe']), $search_lower) !== false) {
-                                        $search_match = true;
-                                    }
-                                    
-                                    // Jika tidak match dengan search query, skip
-                                    if (!$search_match) {
-                                        continue;
-                                    }
-                                }
-                                
                                 $tanggal = date('d F Y', strtotime($item['tanggal_dibuat']));
                                 $infografis_displayed++;
                                 
@@ -901,25 +693,15 @@ body {
                         <?php if ($infografis_displayed == 0): ?>
                             <div class="empty-grafis">
                                 <i class="bi bi-bar-chart"></i>
-                                <?php if (!empty($search_query)): ?>
-                                    <h4>Tidak ada infografis ditemukan</h4>
-                                    <p>Tidak ada infografis yang sesuai dengan pencarian "<?php echo htmlspecialchars($search_query); ?>"</p>
-                                <?php else: ?>
-                                    <h4>Belum ada infografis tersedia</h4>
-                                    <p>Infografis akan segera ditambahkan</p>
-                                <?php endif; ?>
+                                <h4>Belum ada infografis tersedia</h4>
+                                <p>Infografis akan segera ditambahkan</p>
                             </div>
                         <?php endif; ?>
                     <?php else: ?>
                         <div class="empty-grafis">
                             <i class="bi bi-bar-chart"></i>
-                            <?php if (!empty($search_query)): ?>
-                                <h4>Tidak ada infografis ditemukan</h4>
-                                <p>Tidak ada infografis yang sesuai dengan pencarian "<?php echo htmlspecialchars($search_query); ?>"</p>
-                            <?php else: ?>
-                                <h4>Belum ada infografis tersedia</h4>
-                                <p>Infografis akan segera ditambahkan</p>
-                            <?php endif; ?>
+                            <h4>Belum ada infografis tersedia</h4>
+                            <p>Infografis akan segera ditambahkan</p>
                         </div>
                     <?php endif; ?>
                 </div>
@@ -935,33 +717,9 @@ body {
                 <div class="card-container">
                     <?php 
                     $videografis_displayed = 0;
-                    if ($total_videografis > 0 || (!empty($search_query) && $videografis_search_count > 0)): 
+                    if ($total_videografis > 0): 
                         foreach ($grafis_data as $item): 
                             if ($item['tipe'] == 'videografis'): 
-                                // Filter berdasarkan search jika ada
-                                if (!empty($search_query)) {
-                                    $search_match = false;
-                                    $search_lower = strtolower($search_query);
-                                    
-                                    // Cek di judul
-                                    if (strpos(strtolower($item['judul']), $search_lower) !== false) {
-                                        $search_match = true;
-                                    }
-                                    // Cek di deskripsi
-                                    elseif (!empty($item['deskripsi']) && strpos(strtolower($item['deskripsi']), $search_lower) !== false) {
-                                        $search_match = true;
-                                    }
-                                    // Cek di tipe
-                                    elseif (strpos(strtolower($item['tipe']), $search_lower) !== false) {
-                                        $search_match = true;
-                                    }
-                                    
-                                    // Jika tidak match dengan search query, skip
-                                    if (!$search_match) {
-                                        continue;
-                                    }
-                                }
-                                
                                 $tanggal = date('d M Y', strtotime($item['tanggal_dibuat']));
                                 $videografis_displayed++;
                                 
@@ -1096,25 +854,15 @@ body {
                         <?php if ($videografis_displayed == 0): ?>
                             <div class="empty-grafis">
                                 <i class="bi bi-camera-video"></i>
-                                <?php if (!empty($search_query)): ?>
-                                    <h4>Tidak ada videografis ditemukan</h4>
-                                    <p>Tidak ada videografis yang sesuai dengan pencarian "<?php echo htmlspecialchars($search_query); ?>"</p>
-                                <?php else: ?>
-                                    <h4>Belum ada videografis tersedia</h4>
-                                    <p>Video akan segera ditambahkan</p>
-                                <?php endif; ?>
+                                <h4>Belum ada videografis tersedia</h4>
+                                <p>Video akan segera ditambahkan</p>
                             </div>
                         <?php endif; ?>
                     <?php else: ?>
                         <div class="empty-grafis">
                             <i class="bi bi-camera-video"></i>
-                            <?php if (!empty($search_query)): ?>
-                                <h4>Tidak ada videografis ditemukan</h4>
-                                <p>Tidak ada videografis yang sesuai dengan pencarian "<?php echo htmlspecialchars($search_query); ?>"</p>
-                            <?php else: ?>
-                                <h4>Belum ada videografis tersedia</h4>
-                                <p>Video akan segera ditambahkan</p>
-                            <?php endif; ?>
+                            <h4>Belum ada videografis tersedia</h4>
+                            <p>Video akan segera ditambahkan</p>
                         </div>
                     <?php endif; ?>
                 </div>
@@ -1165,19 +913,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Search form validation
-    const searchForm = document.querySelector('.search-form');
-    if (searchForm) {
-        searchForm.addEventListener('submit', function(e) {
-            const searchInput = this.querySelector('input[name="search"]');
-            if (searchInput && searchInput.value.trim().length < 2 && searchInput.value.trim() !== '') {
-                alert('Masukkan minimal 2 karakter untuk pencarian');
-                e.preventDefault();
-                return false;
-            }
-        });
-    }
-    
     // Check URL for tab parameter
     const urlParams = new URLSearchParams(window.location.search);
     const tabParam = urlParams.get('tab');
@@ -1193,13 +928,8 @@ document.addEventListener('DOMContentLoaded', function() {
 // Function to update URL with tab parameter
 function updateTab(tabName) {
     const url = new URL(window.location);
-    const searchQuery = url.searchParams.get('search') || '';
-    
-    // Build new URL
+    // Build new URL without search parameter
     let newUrl = '?page=infografis';
-    if (searchQuery) {
-        newUrl += '&search=' + encodeURIComponent(searchQuery);
-    }
     if (tabName !== 'infografis') {
         newUrl += '&tab=' + tabName;
     }
